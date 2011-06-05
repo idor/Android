@@ -17,8 +17,8 @@ include defs.mk
 NLCP_RELEASE_VERSION:=r3-m1-rc5
 
 WL12xx_DIR:=$(WORKSPACE_DIR)/wl12xx
-#WL12xx_REPO:=$(GIT_PROTOCOL_PREFIX)git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
-WL12xx_REPO:=/data/wlan_wcs_android/Android/wl12xx.git
+WL12xx_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+#WL12xx_REPO:=/data/wlan_wcs_android/Android/wl12xx.git
 WL12xx_HASH:=842de05
 
 COMPAT_DIR:=$(WORKSPACE_DIR)/compat
