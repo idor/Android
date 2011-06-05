@@ -4,7 +4,7 @@ HOST PLATFORM: sdc4430
 CROSS COMPILE: arm-none-linux-gnueabi-
 JAVA HOME: /usr/lib/jvm/java-6-sun
 
-BUILD PATH: /tmp/idor/L27.INC1.13.1
+BUILD PATH: /tmp/idor/27.x
 PACKAGE SOURCE: git -> local
 BUILD COMMAND: binaries-install
 
