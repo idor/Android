@@ -1,0 +1,41 @@
+From a9917c46e14efa30b124526365230b9889235b3d Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Wed, 11 May 2011 11:49:17 +0300
+Subject: [PATCH 10/24] Revert "wl12xx: (drop?) abort suspend if we got an interrupt"
+
+This reverts commit 105f1ea3b9d32fb5cc388873253dded95b37ff7c.
+---
+ drivers/net/wireless/wl12xx/sdio.c |   15 ---------------
+ 1 files changed, 0 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 37d8dd0..74fd7c6 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -324,23 +324,8 @@ static int wl1271_suspend(struct device *dev)
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+ 	struct wl1271 *wl = sdio_get_drvdata(func);
+ 	mmc_pm_flag_t sdio_flags;
+-	unsigned long flags;
+-	bool abort;
+ 	int ret = 0;
+ 
+-	/*
+-	 * if there is a pending irq work, we should abort the suspension.
+-	 * (irq might come between mac80211 suspension and our suspension)
+-	 * TODO: maybe remove it, since system will wake up anyway?
+-	 */
+-	spin_lock_irqsave(&wl->wl_lock, flags);
+-	abort = !!test_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
+-	spin_unlock_irqrestore(&wl->wl_lock, flags);
+-	if (abort) {
+-		wl1271_info("pending irq work - aborting suspend");
+-		return -EBUSY;
+-	}
+-
+ 	wl1271_debug(DEBUG_MAC80211, "wl1271 suspend. wow_enabled: %d",
+ 		     wl->wow_enabled);
+ 
+-- 
+1.7.1
+

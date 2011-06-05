@@ -1,0 +1,28 @@
+From c7be399e3c0d84a5a620e78fc692a7478d84f7b1 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 8 Mar 2011 16:08:30 +0900
+Subject: [PATCH] crypto: add bn/bn_const.c to libcrypto
+
+This file is needed for the function get_rfc3526_prime_1536 which will
+is used in hostapd/wpa_supplicant
+
+Change-Id: Ia555f96da6e71fa26bcd44b9236d3cc49809c87f
+---
+ crypto/Android.mk |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/crypto/Android.mk b/crypto/Android.mk
+index 111374c..355c997 100644
+--- a/crypto/Android.mk
++++ b/crypto/Android.mk
+@@ -155,6 +155,7 @@ local_src_files := \
+ 	bn/bn_sqr.c \
+ 	bn/bn_sqrt.c \
+ 	bn/bn_word.c \
++	bn/bn_const.c \
+ 	buffer/buf_err.c \
+ 	buffer/buffer.c \
+ 	comp/c_rle.c \
+-- 
+1.7.1
+

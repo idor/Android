@@ -1,0 +1,64 @@
+From 92ed5d857103f9bda4feb4f3469a50e30413796b Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 23 Jan 2011 22:22:09 +0200
+Subject: [PATCH v2 3/4] driver_nl80211: allow setting probe-resp template to kernel drivers
+
+Pass the raw probe response template to kernel via netlink
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ src/drivers/driver_nl80211.c |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
+
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index fe46afd..9c86393 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -3601,6 +3601,36 @@ static int wpa_driver_nl80211_set_beacon(void *priv,
+ }
+ 
+ 
++static int wpa_driver_nl80211_set_probe_resp(void *priv, const u8 *resp,
++					     size_t resp_len)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int ret;
++	int ifindex = if_nametoindex(bss->ifname);
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		return -ENOMEM;
++
++	wpa_printf(MSG_DEBUG, "nl80211: Set Probe Response");
++
++	genlmsg_put(msg, 0, 0, genl_family_get_id(drv->nl80211), 0,
++		    0, NL80211_CMD_SET_PROBE_RESP, 0);
++	NLA_PUT(msg, NL80211_ATTR_PROBE_RESP, resp_len, resp);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, ifindex);
++
++	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
++	if (ret)
++		wpa_printf(MSG_DEBUG, "nl80211: Probe Resp set failed: %d (%s)",
++			   ret, strerror(-ret));
++	return ret;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++
++
+ static int wpa_driver_nl80211_set_freq(struct wpa_driver_nl80211_data *drv,
+ 				       int freq, int ht_enabled,
+ 				       int sec_channel_offset)
+@@ -6417,6 +6447,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.set_sta_vlan = i802_set_sta_vlan,
+ 	.set_wds_sta = i802_set_wds_sta,
+ 	.hapd_set_ssid = i802_set_ssid,
++	.set_probe_resp = wpa_driver_nl80211_set_probe_resp,
+ #endif /* HOSTAPD */
+ 	.set_freq = i802_set_freq,
+ 	.send_action = wpa_driver_nl80211_send_action,
+-- 
+1.7.1
+

@@ -1,0 +1,8 @@
+--- Makefile	2011-04-05 09:46:50.598742000 +0300
++++ Makefile_drivers_misc_hci	2011-04-04 19:05:38.851712000 +0300
+@@ -41,3 +41,4 @@
+ obj-$(CONFIG_SENSORS_AK8975)	+= akm8975.o
+ obj-$(CONFIG_TWL6040_VIB)	+= twl6040-vib.o
+ obj-y				+= ti-st/
++obj-y				+= ti-hci/
+\ No newline at end of file

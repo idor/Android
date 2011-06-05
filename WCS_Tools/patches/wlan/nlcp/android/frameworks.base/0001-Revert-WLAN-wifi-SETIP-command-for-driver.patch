@@ -1,0 +1,87 @@
+From 808981ebd4e411bd3455fc145da1d64b3861dc59 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sat, 19 Feb 2011 00:02:29 +0200
+Subject: [PATCH 1/2] Revert "WLAN - wifi SETIP command for driver"
+
+This reverts commit 5ac3db36bc7f3ee8fc270a0a4285a757fff176d4.
+---
+ core/jni/android_net_wifi_Wifi.cpp               |   11 -----------
+ wifi/java/android/net/wifi/WifiNative.java       |    2 --
+ wifi/java/android/net/wifi/WifiStateTracker.java |   12 ------------
+ 3 files changed, 0 insertions(+), 25 deletions(-)
+
+diff --git a/core/jni/android_net_wifi_Wifi.cpp b/core/jni/android_net_wifi_Wifi.cpp
+index 1716fc2..8addaad 100644
+--- a/core/jni/android_net_wifi_Wifi.cpp
++++ b/core/jni/android_net_wifi_Wifi.cpp
+@@ -118,16 +118,6 @@ static jboolean android_net_hotspot_unloadDriver(JNIEnv* env, jobject clazz)
+ {
+     return (jboolean)(::hotspot_unload_driver() == 0);
+ }
+-
+-static jboolean android_net_wifi_setIPAddressCommand(JNIEnv* env, jobject clazz, jint ip)
+-{
+-    char cmdstr[256];
+-
+-    int numWritten = snprintf(cmdstr, sizeof(cmdstr), "DRIVER SETIP %d", ip);
+-    int cmdTooLong = numWritten >= (int)sizeof(cmdstr);
+-
+-    return (jboolean)!cmdTooLong && doBooleanCommand(cmdstr, "OK");
+-}
+ #endif /*OMAP_ENHANCEMENT*/
+ 
+ static jboolean android_net_wifi_startSupplicant(JNIEnv* env, jobject clazz)
+@@ -559,7 +549,6 @@ static JNINativeMethod gWifiMethods[] = {
+ #ifdef OMAP_ENHANCEMENT
+     { "loadHotspotDriver", "()Z",  (void *)android_net_hotspot_loadDriver },
+     { "unloadHotspotDriver", "()Z",  (void *)android_net_hotspot_unloadDriver },
+-    { "setIPAddressCommand", "(I)Z", (void*) android_net_wifi_setIPAddressCommand },
+ #endif /*OMAP_ENHANCEMENT*/
+     { "startSupplicant", "()Z",  (void *)android_net_wifi_startSupplicant },
+     { "stopSupplicant", "()Z",  (void *)android_net_wifi_stopSupplicant },
+diff --git a/wifi/java/android/net/wifi/WifiNative.java b/wifi/java/android/net/wifi/WifiNative.java
+index 93030ba..1918dc0 100644
+--- a/wifi/java/android/net/wifi/WifiNative.java
++++ b/wifi/java/android/net/wifi/WifiNative.java
+@@ -48,8 +48,6 @@ public class WifiNative {
+ 
+     public native static boolean unloadHotspotDriver();
+ 
+-    public native static boolean setIPAddressCommand(int ip);
+-
+     public native static boolean startSupplicant();
+     
+     public native static boolean stopSupplicant();
+diff --git a/wifi/java/android/net/wifi/WifiStateTracker.java b/wifi/java/android/net/wifi/WifiStateTracker.java
+index 84f1e90..3ea032c 100644
+--- a/wifi/java/android/net/wifi/WifiStateTracker.java
++++ b/wifi/java/android/net/wifi/WifiStateTracker.java
+@@ -1240,12 +1240,6 @@ public class WifiStateTracker extends NetworkStateTracker {
+                 mHaveIpAddress = true;
+                 mObtainingIpAddress = false;
+                 mWifiInfo.setIpAddress(mDhcpInfo.ipAddress);
+-                if(SystemProperties.OMAP_ENHANCEMENT) {
+-                    // Sending IP address to wifi driver for ARP filtering
+-                    synchronized (this) {
+-                        WifiNative.setIPAddressCommand(mDhcpInfo.ipAddress);
+-                    }
+-                }
+                 mLastSignalLevel = -1; // force update of signal strength
+                 if (mNetworkInfo.getDetailedState() != DetailedState.CONNECTED) {
+                     setDetailedState(DetailedState.CONNECTED);
+@@ -1380,12 +1374,6 @@ public class WifiStateTracker extends NetworkStateTracker {
+         if (mDisconnectPending) {
+             cancelDisconnect();
+         }
+-        if(SystemProperties.OMAP_ENHANCEMENT) {
+-            // Undo ARP filtering
+-            synchronized (this) {
+-                WifiNative.setIPAddressCommand(0);
+-            }
+-        }
+         mDisconnectExpected = false;
+         resetConnections(disableInterface);
+         setDetailedState(newState);
+-- 
+1.7.1
+

@@ -1,0 +1,28 @@
+From f7d9a8b95246efd76dbdecd134592e20d0210e49 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Mon, 23 May 2011 01:30:40 +0300
+Subject: [PATCH 13/24] wl12xx: clear wl->wow_enabled on resume
+
+We set wl->wow_enabled on every suspend(), so we need to clear it
+on every resume().
+(we can't rely on setting wl->wow_enabled=false in suspend(),
+as it being called only when wowlan triggers are configured)
+---
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8eb52b7..4f20711 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1606,6 +1606,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 		wl1271_enable_interrupts(wl);
+ 	}
+ 	wl1271_configure_resume(wl);
++	wl->wow_enabled = false;
+ 
+ 	return 0;
+ }
+-- 
+1.7.1
+

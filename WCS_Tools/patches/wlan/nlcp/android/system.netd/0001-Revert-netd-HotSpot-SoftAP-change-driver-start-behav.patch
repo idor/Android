@@ -1,0 +1,117 @@
+From 2369d665362c10d93347f48fe089bf6dd47374c3 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 24 Mar 2011 08:17:27 +0200
+Subject: [PATCH 1/3] Revert "netd - HotSpot/SoftAP: change driver start behavior"
+
+This reverts commit 42e4e7bd82654d6eeed58750280c8974ea30d6bd.
+---
+ SoftapControllerTI.cpp |   58 ++++++++++++++++++++++++++++++++++++++++-------
+ SoftapControllerTI.h   |    1 +
+ 2 files changed, 50 insertions(+), 9 deletions(-)
+
+diff --git a/SoftapControllerTI.cpp b/SoftapControllerTI.cpp
+index 4787548..fbc455b 100644
+--- a/SoftapControllerTI.cpp
++++ b/SoftapControllerTI.cpp
+@@ -48,37 +48,77 @@ extern "C" {
+ 
+ SoftapController::SoftapController() {
+     mPid = 0;
++    mSock = socket(AF_INET, SOCK_DGRAM, 0);
++    if (mSock < 0)
++        LOGE("Failed to open socket");
+ }
+ 
+ SoftapController::~SoftapController() {
++    if (mSock >= 0)
++        close(mSock);
+ }
+ 
+ int SoftapController::startDriver(char *iface) {
++    struct iwreq wrq;
++    ti_private_cmd_t private_cmd;
+ 
+-    if (!iface || (iface[0] == '\0')) {
+-        LOGD("Softap driver start - wrong interface");
++    int ret, dummyBuf;
++
++    if (mSock < 0) {
++        LOGE("Softap driver start - failed to open socket");
+         return -1;
+     }
+-
+-    if (property_set("ctl.start", "ifcfg_softap") < 0) {
+-        LOGE("Failed to start Driver");
++    if (!iface || (iface[0] == '\0')) {
++        LOGD("Softap driver start - wrong interface");
+         return -1;
+     }
+ 
++    private_cmd.cmd = DRIVER_START_PARAM;
++    private_cmd.flags = PRIVATE_CMD_SET_FLAG;
++    private_cmd.in_buffer = &dummyBuf;
++    private_cmd.in_buffer_len = sizeof(dummyBuf);
++    private_cmd.out_buffer = NULL;
++    private_cmd.out_buffer_len = 0;
++
++    strncpy(wrq.ifr_name, iface, sizeof(wrq.ifr_name));
++    wrq.u.data.length = sizeof(ti_private_cmd_t);
++    wrq.u.data.pointer = &private_cmd;
++    wrq.u.data.flags = 0;
++    ret = ioctl(mSock, SIOCIWFIRSTPRIV, &wrq);
+     usleep(AP_DRIVER_START_DELAY);
+-    LOGD("Softap driver start: OK");
+-    return 0;
++    LOGD("Softap driver start: %d", ret);
++    return ret;
+ }
+ 
+ int SoftapController::stopDriver(char *iface) {
++    struct iwreq wrq;
++    ti_private_cmd_t private_cmd;
++
++    int ret, dummyBuf;
+ 
++    if (mSock < 0) {
++        LOGE("Softap driver stop - failed to open socket");
++        return -1;
++    }
+     if (!iface || (iface[0] == '\0')) {
+         LOGD("Softap driver stop - wrong interface");
+         return -1;
+     }
+ 
+-    LOGD("Softap driver stop: OK");
+-    return 0;
++    private_cmd.cmd = DRIVER_STOP_PARAM;
++    private_cmd.flags = PRIVATE_CMD_SET_FLAG;
++    private_cmd.in_buffer = &dummyBuf;
++    private_cmd.in_buffer_len = sizeof(dummyBuf);
++    private_cmd.out_buffer = NULL;
++    private_cmd.out_buffer_len = 0;
++
++    strncpy(wrq.ifr_name, iface, sizeof(wrq.ifr_name));
++    wrq.u.data.length = sizeof(ti_private_cmd_t);
++    wrq.u.data.pointer = &private_cmd;
++    wrq.u.data.flags = 0;
++    ret = ioctl(mSock, SIOCIWFIRSTPRIV, &wrq);
++    LOGD("Softap driver stop: %d", ret);
++    return ret;
+ }
+ 
+ int SoftapController::startSoftap() {
+diff --git a/SoftapControllerTI.h b/SoftapControllerTI.h
+index 15f2014..57e17d5 100644
+--- a/SoftapControllerTI.h
++++ b/SoftapControllerTI.h
+@@ -30,6 +30,7 @@
+ 
+ class SoftapController {
+     pid_t mPid;
++    int mSock;
+ 
+ public:
+     SoftapController();
+-- 
+1.7.1
+

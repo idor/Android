@@ -1,0 +1,153 @@
+From d0aaf3e2d689779b86573d21ac0d8023e9aff785 Mon Sep 17 00:00:00 2001
+From: Shahar Levi <shahar_levi@ti.com>
+Date: Mon, 16 May 2011 16:15:21 +0300
+Subject: [PATCH 20/24] wl12xx: Stop BA session event from device
+
+Adding new event that close RX BA session in case of periodic BT activity
+limiting WLAN activity.
+
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/boot.c   |    3 ++-
+ drivers/net/wireless/wl12xx/event.c  |   23 +++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/event.h  |   17 +++++++++++++++--
+ drivers/net/wireless/wl12xx/init.c   |    1 +
+ drivers/net/wireless/wl12xx/main.c   |    5 ++++-
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 6 files changed, 46 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index b07f8b7..7ccec07 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -485,7 +485,8 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
+ 	else
+-		wl->event_mask |= DUMMY_PACKET_EVENT_ID;
++		wl->event_mask |= DUMMY_PACKET_EVENT_ID |
++			BA_SESSION_RX_CONSTRAINT_EVENT_ID;
+ 
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 9102443..0b68f13 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -186,6 +186,21 @@ static void wl12xx_event_soft_gemini_sense(struct wl1271 *wl,
+ 
+ }
+ 
++static void wl1271_stop_ba_event(struct wl1271 *wl, u8 ba_allowed)
++{
++	/* Convert the value to bool */
++	wl->ba_allowed = !!ba_allowed;
++
++	/*
++	 * Return in case:
++	 * there are not BA open or the event indication is to allowed BA
++	 */
++	if ((!wl->ba_rx_bitmap) || (wl->ba_allowed))
++		return;
++
++	ieee80211_stop_rx_ba_session(wl->vif, wl->ba_rx_bitmap, wl->bssid);
++}
++
+ static void wl1271_event_mbox_dump(struct event_mailbox *mbox)
+ {
+ 	wl1271_debug(DEBUG_EVENT, "MBOX DUMP:");
+@@ -266,6 +281,14 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 			wl1271_event_rssi_trigger(wl, mbox);
+ 	}
+ 
++	if ((vector & BA_SESSION_RX_CONSTRAINT_EVENT_ID) && !is_ap) {
++		wl1271_debug(DEBUG_EVENT, "BA_SESSION_RX_CONSTRAINT_EVENT_ID. "
++			     "ba_allowed = 0x%x", mbox->ba_allowed);
++
++		if (wl->vif)
++			wl1271_stop_ba_event(wl, mbox->ba_allowed);
++	}
++
+ 	if ((vector & DUMMY_PACKET_EVENT_ID) && !is_ap) {
+ 		wl1271_debug(DEBUG_EVENT, "DUMMY_PACKET_ID_EVENT_ID");
+ 		if (wl->vif)
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index b6cf06e..ce99adf 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -71,7 +71,7 @@ enum {
+ 	HEALTH_CHECK_REPLY_EVENT_ID		 = BIT(27),
+ 	PERIODIC_SCAN_COMPLETE_EVENT_ID		 = BIT(28),
+ 	PERIODIC_SCAN_REPORT_EVENT_ID		 = BIT(29),
+-	BA_SESSION_TEAR_DOWN_EVENT_ID		 = BIT(30),
++	BA_SESSION_RX_CONSTRAINT_EVENT_ID	 = BIT(30),
+ 	EVENT_MBOX_ALL_EVENT_ID			 = 0x7fffffff,
+ };
+ 
+@@ -122,7 +122,20 @@ struct event_mailbox {
+ 	__le16 sta_aging_status;
+ 	__le16 sta_tx_retry_exceeded;
+ 
+-	u8 reserved_5[24];
++	/*
++	 * Bitmap, Each bit set represents the Role ID for which this constraint
++	 * is set. Range: 0 - FF, FF means ANY role
++	 */
++	u8 ba_role_id;
++	/*
++	 * Bitmap, Each bit set represents the Link ID for which this constraint
++	 * is set. Not applicable if ba_role_id is set to ANY role (FF).
++	 * Range: 0 - FFFF, FFFF means ANY link in that role
++	 */
++	u8 ba_link_id;
++	u8 ba_allowed;
++
++	u8 reserved_5[21];
+ } __packed;
+ 
+ int wl1271_event_unmask(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index b85edcc..741d7a4 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -546,6 +546,7 @@ static int wl1271_set_ba_policies(struct wl1271 *wl)
+ 
+ 	/* Reset the BA RX indicators */
+ 	wl->ba_rx_bitmap = 0;
++	wl->ba_allowed = true;
+ 
+ 	/* validate that FW support BA */
+ 	wl1271_check_ba_support(wl);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7d7c512..1180f0c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3507,9 +3507,12 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	wl1271_debug(DEBUG_MAC80211, "mac80211 ampdu: Rx tid %d action %d",
++		     tid, action);
++
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+-		if (wl->ba_support) {
++		if ((wl->ba_support) && (wl->ba_allowed)) {
+ 			ret = wl1271_acx_set_ba_receiver_session(wl, tid, *ssn,
+ 								 true);
+ 			if (!ret)
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index c13e250..0164ee5 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -583,6 +583,7 @@ struct wl1271 {
+ 	/* RX BA constraint value */
+ 	bool ba_support;
+ 	u8 ba_rx_bitmap;
++	bool ba_allowed;
+ 
+ 	int tcxo_clock;
+ 
+-- 
+1.7.1
+

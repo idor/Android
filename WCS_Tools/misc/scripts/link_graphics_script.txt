@@ -1,0 +1,1 @@
+find . | grep so.1.1.16.4061 | while read f ; do ln -sf `echo $f | sed -r 's:\./::'` `echo $f | sed -r 's:^\./(.*)\.1\.1\.16\.4061$:\1:'` ; done

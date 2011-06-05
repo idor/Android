@@ -1,0 +1,243 @@
+From fdf770bee53af6e8123ac30490288abd7ca01b29 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sat, 19 Feb 2011 00:02:45 +0200
+Subject: [PATCH 2/2] Revert "framework - HotSpot/softAP changes for enabling UI"
+
+This reverts commit e7ffe2aee020edced04b27cf2710fbe8bfc361e4.
+---
+ core/jni/android_net_wifi_Wifi.cpp                 |   16 ------
+ .../android/server/NetworkManagementService.java   |   16 ++----
+ services/java/com/android/server/WifiService.java  |   58 +++++---------------
+ wifi/java/android/net/wifi/WifiNative.java         |    4 --
+ wifi/java/android/net/wifi/WifiStateTracker.java   |   18 ------
+ 5 files changed, 17 insertions(+), 95 deletions(-)
+
+diff --git a/core/jni/android_net_wifi_Wifi.cpp b/core/jni/android_net_wifi_Wifi.cpp
+index 8addaad..fb029e6 100644
+--- a/core/jni/android_net_wifi_Wifi.cpp
++++ b/core/jni/android_net_wifi_Wifi.cpp
+@@ -108,18 +108,6 @@ static jboolean android_net_wifi_unloadDriver(JNIEnv* env, jobject clazz)
+     return (jboolean)(::wifi_unload_driver() == 0);
+ }
+ 
+-#ifdef OMAP_ENHANCEMENT
+-static jboolean android_net_hotspot_loadDriver(JNIEnv* env, jobject clazz)
+-{
+-    return (jboolean)(::hotspot_load_driver() == 0);
+-}
+-
+-static jboolean android_net_hotspot_unloadDriver(JNIEnv* env, jobject clazz)
+-{
+-    return (jboolean)(::hotspot_unload_driver() == 0);
+-}
+-#endif /*OMAP_ENHANCEMENT*/
+-
+ static jboolean android_net_wifi_startSupplicant(JNIEnv* env, jobject clazz)
+ {
+     return (jboolean)(::wifi_start_supplicant() == 0);
+@@ -546,10 +534,6 @@ static JNINativeMethod gWifiMethods[] = {
+ 
+     { "loadDriver", "()Z",  (void *)android_net_wifi_loadDriver },
+     { "unloadDriver", "()Z",  (void *)android_net_wifi_unloadDriver },
+-#ifdef OMAP_ENHANCEMENT
+-    { "loadHotspotDriver", "()Z",  (void *)android_net_hotspot_loadDriver },
+-    { "unloadHotspotDriver", "()Z",  (void *)android_net_hotspot_unloadDriver },
+-#endif /*OMAP_ENHANCEMENT*/
+     { "startSupplicant", "()Z",  (void *)android_net_wifi_startSupplicant },
+     { "stopSupplicant", "()Z",  (void *)android_net_wifi_stopSupplicant },
+     { "connectToSupplicant", "()Z",  (void *)android_net_wifi_connectToSupplicant },
+diff --git a/services/java/com/android/server/NetworkManagementService.java b/services/java/com/android/server/NetworkManagementService.java
+index 8e18549..f0acdc0 100644
+--- a/services/java/com/android/server/NetworkManagementService.java
++++ b/services/java/com/android/server/NetworkManagementService.java
+@@ -24,7 +24,6 @@ import android.content.IntentFilter;
+ import android.content.res.Resources;
+ import android.content.pm.PackageManager;
+ import android.net.Uri;
+-import android.net.NetworkUtils;
+ import android.net.InterfaceConfiguration;
+ import android.net.INetworkManagementEventObserver;
+ import android.net.wifi.WifiConfiguration;
+@@ -606,15 +605,9 @@ class NetworkManagementService extends INetworkManagementService.Stub {
+         mContext.enforceCallingOrSelfPermission(
+                 android.Manifest.permission.CHANGE_WIFI_STATE, "NetworkManagementService");
+         try {
+-            if(SystemProperties.OMAP_ENHANCEMENT) {
+-                mConnector.doCommand(String.format("softap start " + softapIface));
+-                mConnector.doCommand(String.format("softap startap " + softapIface));
+-                NetworkUtils.enableInterface(softapIface);
+-            } else {
+-                mConnector.doCommand(String.format("softap stop " + wlanIface));
+-                mConnector.doCommand(String.format("softap fwreload " + wlanIface + " AP"));
+-                mConnector.doCommand(String.format("softap start " + wlanIface));
+-            }
++            mConnector.doCommand(String.format("softap stop " + wlanIface));
++            mConnector.doCommand(String.format("softap fwreload " + wlanIface + " AP"));
++            mConnector.doCommand(String.format("softap start " + wlanIface));
+             if (wifiConfig == null) {
+                 mConnector.doCommand(String.format("softap set " + wlanIface + " " + softapIface));
+             } else {
+@@ -636,8 +629,7 @@ class NetworkManagementService extends INetworkManagementService.Stub {
+                                            convertQuotedString(wifiConfig.preSharedKey));
+                 mConnector.doCommand(str);
+             }
+-            if(!SystemProperties.OMAP_ENHANCEMENT)
+-                mConnector.doCommand(String.format("softap startap"));
++            mConnector.doCommand(String.format("softap startap"));
+         } catch (NativeDaemonConnectorException e) {
+             throw new IllegalStateException("Error communicating to native daemon to start softap", e);
+         }
+diff --git a/services/java/com/android/server/WifiService.java b/services/java/com/android/server/WifiService.java
+index 7e5b559..c1e9965 100644
+--- a/services/java/com/android/server/WifiService.java
++++ b/services/java/com/android/server/WifiService.java
+@@ -63,7 +63,6 @@ import android.os.PowerManager;
+ import android.os.Process;
+ import android.os.RemoteException;
+ import android.os.ServiceManager;
+-import android.os.SystemProperties;
+ import android.os.WorkSource;
+ import android.provider.Settings;
+ import android.util.Slog;
+@@ -100,7 +99,6 @@ public class WifiService extends IWifiManager.Stub {
+     private final WifiStateTracker mWifiStateTracker;
+     /* TODO: fetch a configurable interface */
+     private static final String SOFTAP_IFACE = "wl0.1";
+-    private static final String TI_SOFTAP_IFACE = "tiap0";
+ 
+     private Context mContext;
+     private int mWifiApState;
+@@ -683,13 +681,8 @@ public class WifiService extends IWifiManager.Stub {
+             /* Configuration changed on a running access point */
+             if(enable && (wifiConfig != null)) {
+                 try {
+-                    if(SystemProperties.OMAP_ENHANCEMENT) {
+-                        nwService.setAccessPoint(wifiConfig, mWifiStateTracker.getInterfaceName(),
+-                                                 TI_SOFTAP_IFACE);
+-                    } else {
+-                        nwService.setAccessPoint(wifiConfig, mWifiStateTracker.getInterfaceName(),
+-                                                 SOFTAP_IFACE);
+-                    }
++                    nwService.setAccessPoint(wifiConfig, mWifiStateTracker.getInterfaceName(),
++                                             SOFTAP_IFACE);
+                     setWifiApConfiguration(wifiConfig);
+                     return true;
+                 } catch(Exception e) {
+@@ -727,28 +720,15 @@ public class WifiService extends IWifiManager.Stub {
+                 wifiConfig.allowedKeyManagement.set(KeyMgmt.NONE);
+             }
+ 
+-            if (SystemProperties.OMAP_ENHANCEMENT) {
+-                if (!mWifiStateTracker.loadHotspotDriver()) {
+-                    Slog.e(TAG, "Failed to load Wi-Fi driver for AP mode");
+-                    setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.NO_DRIVER_UNLOAD);
+-                    return false;
+-                }
+-            } else {
+-                if (!mWifiStateTracker.loadDriver()) {
+-                    Slog.e(TAG, "Failed to load Wi-Fi driver for AP mode");
+-                    setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.NO_DRIVER_UNLOAD);
+-                    return false;
+-                }
++            if (!mWifiStateTracker.loadDriver()) {
++                Slog.e(TAG, "Failed to load Wi-Fi driver for AP mode");
++                setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.NO_DRIVER_UNLOAD);
++                return false;
+             }
+ 
+             try {
+-                if(SystemProperties.OMAP_ENHANCEMENT) {
+-                    nwService.startAccessPoint(wifiConfig, mWifiStateTracker.getInterfaceName(),
+-                                               TI_SOFTAP_IFACE);
+-                } else {
+-                    nwService.startAccessPoint(wifiConfig, mWifiStateTracker.getInterfaceName(),
+-                                               SOFTAP_IFACE);
+-                }
++                nwService.startAccessPoint(wifiConfig, mWifiStateTracker.getInterfaceName(),
++                                           SOFTAP_IFACE);
+             } catch(Exception e) {
+                 Slog.e(TAG, "Exception in startAccessPoint()");
+                 setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.DRIVER_UNLOAD);
+@@ -767,18 +747,10 @@ public class WifiService extends IWifiManager.Stub {
+                 return false;
+             }
+ 
+-            if(SystemProperties.OMAP_ENHANCEMENT) {
+-                if (!mWifiStateTracker.unloadHotspotDriver()) {
+-                    Slog.e(TAG, "Failed to unload Wi-Fi driver for AP mode");
+-                    setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.NO_DRIVER_UNLOAD);
+-                    return false;
+-                }
+-            } else {
+-                if (!mWifiStateTracker.unloadDriver()) {
+-                    Slog.e(TAG, "Failed to unload Wi-Fi driver for AP mode");
+-                    setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.NO_DRIVER_UNLOAD);
+-                    return false;
+-                }
++            if (!mWifiStateTracker.unloadDriver()) {
++                Slog.e(TAG, "Failed to unload Wi-Fi driver for AP mode");
++                setWifiApEnabledState(WIFI_AP_STATE_FAILED, uid, DriverAction.NO_DRIVER_UNLOAD);
++                return false;
+             }
+         }
+ 
+@@ -806,11 +778,7 @@ public class WifiService extends IWifiManager.Stub {
+          * Unload the driver if going to a failed state
+          */
+         if ((mWifiApState == WIFI_AP_STATE_FAILED) && (flag == DriverAction.DRIVER_UNLOAD)) {
+-            if(SystemProperties.OMAP_ENHANCEMENT) {
+-                mWifiStateTracker.unloadHotspotDriver();
+-            } else {
+-                mWifiStateTracker.unloadDriver();
+-            }
++            mWifiStateTracker.unloadDriver();
+         }
+ 
+         long ident = Binder.clearCallingIdentity();
+diff --git a/wifi/java/android/net/wifi/WifiNative.java b/wifi/java/android/net/wifi/WifiNative.java
+index 1918dc0..25f05c0 100644
+--- a/wifi/java/android/net/wifi/WifiNative.java
++++ b/wifi/java/android/net/wifi/WifiNative.java
+@@ -44,10 +44,6 @@ public class WifiNative {
+     
+     public native static boolean unloadDriver();
+ 
+-    public native static boolean loadHotspotDriver();
+-
+-    public native static boolean unloadHotspotDriver();
+-
+     public native static boolean startSupplicant();
+     
+     public native static boolean stopSupplicant();
+diff --git a/wifi/java/android/net/wifi/WifiStateTracker.java b/wifi/java/android/net/wifi/WifiStateTracker.java
+index 3ea032c..8028fe7 100644
+--- a/wifi/java/android/net/wifi/WifiStateTracker.java
++++ b/wifi/java/android/net/wifi/WifiStateTracker.java
+@@ -1672,24 +1672,6 @@ public class WifiStateTracker extends NetworkStateTracker {
+     }
+ 
+     /**
+-     * Load the Hotspot driver and firmware
+-     *
+-     * @return {@code true} if the operation succeeds, {@code false} otherwise
+-     */
+-    public synchronized boolean loadHotspotDriver() {
+-        return WifiNative.loadHotspotDriver();
+-    }
+-
+-    /**
+-     * Unload the Hotspot driver and firmware
+-     *
+-     * @return {@code true} if the operation succeeds, {@code false} otherwise
+-     */
+-    public synchronized boolean unloadHotspotDriver() {
+-        return WifiNative.unloadHotspotDriver();
+-    }
+-
+-    /**
+      * Check the supplicant config and
+      * start the supplicant daemon
+      *
+-- 
+1.7.1
+

@@ -1,0 +1,29 @@
+From 159ef7bb830dea84639a3071c0e2ac5aad5ea314 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Mon, 7 Feb 2011 20:20:31 +0200
+Subject: [PATCH 06/24] mmc: clear MMC_PM_KEEP_POWER flag on resume
+
+Since the MMC_PM_KEEP_POWER flag should be set on each suspend,
+it should also cleared on each resume.
+
+Upon resuming, we have to know if power was kept
+(for re-initialization, etc.), so clear it just after resuming.
+---
+ drivers/mmc/core/core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index c2350e4..99941eb 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -1789,6 +1789,7 @@ int mmc_resume_host(struct mmc_host *host)
+ 			err = 0;
+ 		}
+ 	}
++	host->pm_flags &= ~MMC_PM_KEEP_POWER;
+ 	mmc_bus_put(host);
+ 
+ 	return err;
+-- 
+1.7.1
+

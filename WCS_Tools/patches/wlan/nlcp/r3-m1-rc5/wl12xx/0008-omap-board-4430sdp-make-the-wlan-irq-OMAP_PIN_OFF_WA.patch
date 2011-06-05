@@ -1,0 +1,27 @@
+From 6d84ce17c50c5366dda2f9527f5fb70a181ea230 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Wed, 27 Apr 2011 10:17:46 +0300
+Subject: [PATCH 08/24] omap board-4430sdp: make the wlan irq OMAP_PIN_OFF_WAKEUPENABLE
+
+(this is needed for the Blaze board)
+---
+ arch/arm/mach-omap2/board-4430sdp.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
+index f777e5f..97f6d56 100644
+--- a/arch/arm/mach-omap2/board-4430sdp.c
++++ b/arch/arm/mach-omap2/board-4430sdp.c
+@@ -751,7 +751,8 @@ void omap_4430sdp_display_init(void)
+ static struct omap_board_mux board_mux[] __initdata = {
+ 	OMAP4_MUX(USBB2_ULPITLL_CLK, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+ 	/* WLAN IRQ - GPIO 53 */
+-	OMAP4_MUX(GPMC_NCS3, OMAP_MUX_MODE3 | OMAP_PIN_INPUT),
++	OMAP4_MUX(GPMC_NCS3, OMAP_MUX_MODE3 | OMAP_PIN_INPUT |
++		  OMAP_PIN_OFF_WAKEUPENABLE),
+ 	/* WLAN_EN - GPIO 54 */
+ 	OMAP4_MUX(GPMC_NWP, OMAP_MUX_MODE3 | OMAP_PIN_OUTPUT),
+ 	/* WLAN SDIO: MMC5 CMD */
+-- 
+1.7.1
+

@@ -1,0 +1,82 @@
+From 80e801f405c66c8547724ad23443cedaf480c733 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Tue, 8 Feb 2011 00:31:17 +0200
+Subject: [PATCH 03/24] omap_hsmmc: consider MMC_PM_KEEP_POWER in suspend/resume
+
+---
+ drivers/mmc/host/omap_hsmmc.c |   39 ++++++++++++++++++++++++---------------
+ 1 files changed, 24 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
+index ed6c9ec..9099f2f 100644
+--- a/drivers/mmc/host/omap_hsmmc.c
++++ b/drivers/mmc/host/omap_hsmmc.c
+@@ -2357,15 +2357,7 @@ static int omap_hsmmc_suspend(struct device *dev)
+ 		cancel_work_sync(&host->mmc_carddetect_work);
+ 		ret = mmc_suspend_host(host->mmc);
+ 		mmc_host_enable(host->mmc);
+-		if (ret == 0) {
+-			omap_hsmmc_disable_irq(host);
+-			OMAP_HSMMC_WRITE(host->base, HCTL,
+-				OMAP_HSMMC_READ(host->base, HCTL) & ~SDBP);
+-			mmc_host_disable(host->mmc);
+-			clk_disable(host->iclk);
+-			if (host->got_dbclk)
+-				clk_disable(host->dbclk);
+-		} else {
++		if (ret) {
+ 			host->suspended = 0;
+ 			if (host->pdata->resume) {
+ 				ret = host->pdata->resume(&pdev->dev,
+@@ -2375,9 +2367,23 @@ static int omap_hsmmc_suspend(struct device *dev)
+ 						"Unmask interrupt failed\n");
+ 			}
+ 			mmc_host_disable(host->mmc);
++			goto err;
++		}
++
++		if (!(host->mmc->pm_flags & MMC_PM_KEEP_POWER)) {
++			omap_hsmmc_disable_irq(host);
++			OMAP_HSMMC_WRITE(host->base, HCTL,
++				OMAP_HSMMC_READ(host->base, HCTL) & ~SDBP);
++			mmc_host_disable(host->mmc);
+ 		}
+ 
++		dev_dbg(mmc_dev(host->mmc), "disabling clocks!");
++		clk_disable(host->iclk);
++		if (host->got_dbclk)
++			clk_disable(host->dbclk);
++
+ 	}
++err:
+ 	return ret;
+ }
+ 
+@@ -2396,15 +2402,18 @@ static int omap_hsmmc_resume(struct device *dev)
+ 		if (ret)
+ 			goto clk_en_err;
+ 
+-		if (mmc_host_enable(host->mmc) != 0) {
+-			clk_disable(host->iclk);
+-			goto clk_en_err;
+-		}
+-
+ 		if (host->got_dbclk)
+ 			clk_enable(host->dbclk);
+ 
+-		omap_hsmmc_conf_bus_power(host);
++		if (!(host->mmc->pm_flags & MMC_PM_KEEP_POWER)) {
++			if (mmc_host_enable(host->mmc) != 0) {
++				clk_disable(host->iclk);
++				/* TODO: disable other clock? */
++				goto clk_en_err;
++			}
++
++			omap_hsmmc_conf_bus_power(host);
++		}
+ 
+ 		if (host->pdata->resume) {
+ 			ret = host->pdata->resume(&pdev->dev, host->slot_id);
+-- 
+1.7.1
+

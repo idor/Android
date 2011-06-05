@@ -1,0 +1,150 @@
+From adda8fa21d076090ffe93c50902593a48cb5d266 Mon Sep 17 00:00:00 2001
+From: Ido Yariv <ido@wizery.com>
+Date: Wed, 12 Jan 2011 23:01:38 +0200
+Subject: [PATCH 22/24] wl12xx: Avoid recovery while one is already in progress
+
+During the recovery work commands may be sent to the firmware, which
+could themselves trigger a recovery. Since we're about to power the chip
+down, it makes no sense to do another recovery.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c      |    4 ++--
+ drivers/net/wireless/wl12xx/main.c     |   14 +++++++++++++-
+ drivers/net/wireless/wl12xx/ps.c       |    2 +-
+ drivers/net/wireless/wl12xx/scan.c     |    2 +-
+ drivers/net/wireless/wl12xx/testmode.c |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h   |    2 ++
+ 6 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index b3a4f58..e3ad067 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -105,7 +105,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 
+ fail:
+ 	WARN_ON(1);
+-	ieee80211_queue_work(wl->hw, &wl->recovery_work);
++	wl1271_queue_recovery_work(wl);
+ 	return ret;
+ }
+ 
+@@ -351,7 +351,7 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ 
+ 	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
+ 	if (ret != 0) {
+-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
++		wl1271_queue_recovery_work(wl);
+ 		return ret;
+ 	}
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 2d4d883..724f2d4 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -924,7 +924,7 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
+ 			wl1271_error("watchdog interrupt received! "
+ 				     "starting recovery.");
+-			ieee80211_queue_work(wl->hw, &wl->recovery_work);
++			wl1271_queue_recovery_work(wl);
+ 
+ 			/* restarting the chip. ignore any other interrupt. */
+ 			goto out;
+@@ -1091,6 +1091,12 @@ out:
+ 	return ret;
+ }
+ 
++void wl1271_queue_recovery_work(struct wl1271 *wl)
++{
++	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
++		ieee80211_queue_work(wl->hw, &wl->recovery_work);
++}
++
+ static void wl1271_recovery_work(struct work_struct *work)
+ {
+ 	struct wl1271 *wl =
+@@ -1101,6 +1107,9 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	if (wl->state != WL1271_STATE_ON)
+ 		goto out;
+ 
++	/* Avoid a recursive recovery */
++	set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
++
+ 	wl1271_info("Hardware recovery in progress. FW ver: %s pc: 0x%x",
+ 		    wl->chip.fw_ver_str, wl1271_read32(wl, SCR_PAD4));
+ 
+@@ -1117,6 +1126,9 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 
+ 	/* reboot the chipset */
+ 	__wl1271_op_remove_interface(wl, false);
++
++	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
++
+ 	ieee80211_restart_hw(wl->hw);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index d3e377d..4e37ab4 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -118,7 +118,7 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl)
+ 			&compl, msecs_to_jiffies(WL1271_WAKEUP_TIMEOUT));
+ 		if (ret == 0) {
+ 			wl1271_error("ELP wakeup timeout!");
+-			ieee80211_queue_work(wl->hw, &wl->recovery_work);
++			wl1271_queue_recovery_work(wl);
+ 			ret = -ETIMEDOUT;
+ 			goto err;
+ 		} else if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index f37e5a3..bd0bdef 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -62,7 +62,7 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 
+ 	if (wl->scan.failed) {
+ 		wl1271_info("Scan completed due to error.");
+-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
++		wl1271_queue_recovery_work(wl);
+ 	}
+ 
+ out:
+diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
+index da351d7..fdf2279 100644
+--- a/drivers/net/wireless/wl12xx/testmode.c
++++ b/drivers/net/wireless/wl12xx/testmode.c
+@@ -260,7 +260,7 @@ static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
+ {
+ 	wl1271_debug(DEBUG_TESTMODE, "testmode cmd recover");
+ 
+-	ieee80211_queue_work(wl->hw, &wl->recovery_work);
++	wl1271_queue_recovery_work(wl);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 0164ee5..b1dfa4b 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -365,6 +365,7 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_PENDING_WORK,
+ 	WL1271_FLAG_SOFT_GEMINI,
+ 	WL1271_FLAG_RX_STREAMING_STARTED,
++	WL1271_FLAG_RECOVERY_IN_PROGRESS,
+ };
+ 
+ struct wl1271_link {
+@@ -622,6 +623,7 @@ struct wl1271_station {
+ int wl1271_plt_start(struct wl1271 *wl);
+ int wl1271_plt_stop(struct wl1271 *wl);
+ int wl1271_recalc_rx_streaming(struct wl1271 *wl);
++void wl1271_queue_recovery_work(struct wl1271 *wl);
+ 
+ #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
+ 
+-- 
+1.7.1
+

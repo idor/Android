@@ -1,0 +1,44 @@
+From f70c23828e2e5b1446762f99f45839c75287b7c7 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 21 Feb 2011 14:19:15 +0200
+Subject: [PATCH 1/2] ifc_utils: change ifc_configure to work with alias interfaces
+
+When bringing up an alias interface (i.e. wlan0:0) we must first set
+the addr/mask and only then IFUP it. Otherwise the IFUP fails.
+
+Change-Id: I1d7c8c3e0240469b5abb7c722461556c740e5312
+---
+ libnetutils/ifc_utils.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/libnetutils/ifc_utils.c b/libnetutils/ifc_utils.c
+index bde336f..dd98389 100644
+--- a/libnetutils/ifc_utils.c
++++ b/libnetutils/ifc_utils.c
+@@ -406,11 +406,6 @@ ifc_configure(const char *ifname,
+ 
+     ifc_init();
+ 
+-    if (ifc_up(ifname)) {
+-        printerr("failed to turn on interface %s: %s\n", ifname, strerror(errno));
+-        ifc_close();
+-        return -1;
+-    }
+     if (ifc_set_addr(ifname, address)) {
+         printerr("failed to set ipaddr %s: %s\n", ipaddr_to_string(address), strerror(errno));
+         ifc_close();
+@@ -421,6 +416,11 @@ ifc_configure(const char *ifname,
+         ifc_close();
+         return -1;
+     }
++    if (ifc_up(ifname)) {
++        printerr("failed to turn on interface %s: %s\n", ifname, strerror(errno));
++        ifc_close();
++        return -1;
++    }
+     if (ifc_create_default_route(ifname, gateway)) {
+         printerr("failed to set default route %s: %s\n", ipaddr_to_string(gateway), strerror(errno));
+         ifc_close();
+-- 
+1.7.1
+

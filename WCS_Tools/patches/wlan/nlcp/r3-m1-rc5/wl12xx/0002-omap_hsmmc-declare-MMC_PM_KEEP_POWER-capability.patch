@@ -1,0 +1,29 @@
+From 4426d6b994550b94b14d42d1ad1bc75d48f896f8 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Thu, 3 Feb 2011 13:29:59 +0200
+Subject: [PATCH 02/24] omap_hsmmc: declare MMC_PM_KEEP_POWER capability
+
+declare support for keeping power on while host is suspended.
+
+for wl12xx acting as AP, we will want the mmc to keep its power
+up during system suspend.
+---
+ drivers/mmc/host/omap_hsmmc.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
+index 259ece0..ed6c9ec 100644
+--- a/drivers/mmc/host/omap_hsmmc.c
++++ b/drivers/mmc/host/omap_hsmmc.c
+@@ -2165,6 +2165,8 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
+ 	if (mmc_slot(host).nonremovable)
+ 		mmc->caps |= MMC_CAP_NONREMOVABLE;
+ 
++	mmc->pm_caps |= MMC_PM_KEEP_POWER;
++
+ 	omap_hsmmc_conf_bus_power(host);
+ 
+ 	/* Select DMA lines */
+-- 
+1.7.1
+

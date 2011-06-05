@@ -1,0 +1,20 @@
+VERSION: L27.INC1.13.1
+WLAN project name: mcp_2.x
+HOST PLATFORM: sdc4430
+CROSS COMPILE: arm-none-linux-gnueabi-
+JAVA HOME: /usr/lib/jvm/java-6-sun
+
+BUILD PATH: /tmp/idor/L27.INC1.13.1
+PACKAGE SOURCE: git -> local
+BUILD COMMAND: binaries-install
+
+KERNEL VERSION: android-2.6.35
+
+CONFIG_TIST: y
+CONFIG_GPS: n
+CONFIG_BT: y
+CONFIG_FM: y
+CONFIG_WLAN_STA: n
+CONFIG_WLAN_SOFTAP: n
+
+

@@ -1,0 +1,29 @@
+From cc1c01626ad8667bf9908391e1621071ff764f01 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Tue, 22 Mar 2011 20:03:06 +0200
+Subject: [PATCH 07/24] omap: board-zoom: make the wlan irq OMAP_PIN_OFF_WAKEUPENABLE
+
+without it, the irq doesn't wake up the host
+
+Reported-by: Ido Yariv <ido@wizery.com>
+---
+ arch/arm/mach-omap2/board-zoom.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/board-zoom.c b/arch/arm/mach-omap2/board-zoom.c
+index 4b133d7..b8ed366 100644
+--- a/arch/arm/mach-omap2/board-zoom.c
++++ b/arch/arm/mach-omap2/board-zoom.c
+@@ -48,7 +48,8 @@ static void __init omap_zoom_init_early(void)
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
+ 	/* WLAN IRQ - GPIO 162 */
+-	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT),
++	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT |
++		  OMAP_PIN_OFF_WAKEUPENABLE),
+ 	/* WLAN POWER ENABLE - GPIO 101 */
+ 	OMAP3_MUX(CAM_D2, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+ 	/* WLAN SDIO: MMC3 CMD */
+-- 
+1.7.1
+

@@ -1,0 +1,159 @@
+From 9928e74698939bbc20255273385d5b57db457456 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 21 Feb 2011 23:42:35 +0200
+Subject: [PATCH 01/24] omap: blaze: add mmc5/wl1271 device support
+
+Add MMC5 support on Blaze, which has the wl1271 device hardwired to.
+
+The wl1271 is a 4-wire, 1.8V, embedded SDIO WLAN device with an external
+IRQ line, and power-controlled by a GPIO-based fixed regulator.
+
+Note: This version has ifdefs by vishal to allow MCP and wl12xx to
+operate with the same codebase.
+
+[Rebased on top of wl12xx/master and removed the MCP ifdefs.  Added
+tcxo configuration and changed the reference clock to 38.4 -- Luca]
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ arch/arm/mach-omap2/board-4430sdp.c |   71 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 71 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
+index 56702c5..f777e5f 100644
+--- a/arch/arm/mach-omap2/board-4430sdp.c
++++ b/arch/arm/mach-omap2/board-4430sdp.c
+@@ -24,6 +24,7 @@
+ #include <linux/regulator/machine.h>
+ #include <linux/leds.h>
+ #include <linux/leds_pwm.h>
++#include <linux/wl12xx.h>
+ 
+ #include <mach/hardware.h>
+ #include <mach/omap4-common.h>
+@@ -51,6 +52,9 @@
+ #define HDMI_GPIO_HPD 60 /* Hot plug pin for HDMI */
+ #define HDMI_GPIO_LS_OE 41 /* Level shifter for HDMI */
+ 
++#define GPIO_WIFI_PMENA		54
++#define GPIO_WIFI_IRQ		53
++
+ static const int sdp4430_keymap[] = {
+ 	KEY(0, 0, KEY_E),
+ 	KEY(0, 1, KEY_R),
+@@ -349,6 +353,30 @@ static struct twl4030_usb_data omap4_usbphy_data = {
+ 	.phy_suspend	= omap4430_phy_suspend,
+ };
+ 
++static int wifi_set_power(struct device *dev, int slot, int power_on, int vdd)
++{
++	static int power_state;
++
++	pr_debug("Powering %s wifi", (power_on ? "on" : "off"));
++
++	if (power_on == power_state)
++		return 0;
++	power_state = power_on;
++
++	if (power_on) {
++		gpio_set_value(GPIO_WIFI_PMENA, 1);
++		mdelay(15);
++		gpio_set_value(GPIO_WIFI_PMENA, 0);
++		mdelay(1);
++		gpio_set_value(GPIO_WIFI_PMENA, 1);
++		mdelay(70);
++	} else {
++		gpio_set_value(GPIO_WIFI_PMENA, 0);
++	}
++
++	return 0;
++}
++
+ static struct omap2_hsmmc_info mmc[] = {
+ 	{
+ 		.mmc		= 2,
+@@ -363,9 +391,23 @@ static struct omap2_hsmmc_info mmc[] = {
+ 		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_8_BIT_DATA,
+ 		.gpio_wp	= -EINVAL,
+ 	},
++        {
++                .mmc            = 5,
++                .caps           = MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD,
++                .gpio_cd        = -EINVAL,
++                .gpio_wp        = -EINVAL,
++                .ocr_mask       = MMC_VDD_165_195,
++		.nonremovable	= true,
++        },
+ 	{}	/* Terminator */
+ };
+ 
++static struct wl12xx_platform_data omap4_panda_wlan_data __initdata = {
++	.irq = OMAP_GPIO_IRQ(GPIO_WIFI_IRQ),
++	.board_ref_clock = WL12XX_REFCLOCK_38,
++	.board_tcxo_clock = WL12XX_TCXOCLOCK_26,
++};
++
+ static struct regulator_consumer_supply sdp4430_vaux_supply[] = {
+ 	{
+ 		.supply = "vmmc",
+@@ -395,6 +437,10 @@ static int omap4_twl6030_hsmmc_late_init(struct device *dev)
+ 						MMCDETECT_INTR_OFFSET;
+ 		pdata->slots[0].card_detect = twl6030_mmc_card_detect;
+ 	}
++        /* Set the MMC5 (wlan) power function */
++        if (pdev->id == 4)
++                pdata->slots[0].set_power = wifi_set_power;
++
+ 	return ret;
+ }
+ 
+@@ -704,6 +750,19 @@ void omap_4430sdp_display_init(void)
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
+ 	OMAP4_MUX(USBB2_ULPITLL_CLK, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
++	/* WLAN IRQ - GPIO 53 */
++	OMAP4_MUX(GPMC_NCS3, OMAP_MUX_MODE3 | OMAP_PIN_INPUT),
++	/* WLAN_EN - GPIO 54 */
++	OMAP4_MUX(GPMC_NWP, OMAP_MUX_MODE3 | OMAP_PIN_OUTPUT),
++	/* WLAN SDIO: MMC5 CMD */
++	OMAP4_MUX(SDMMC5_CMD, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC5 CLK */
++	OMAP4_MUX(SDMMC5_CLK, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC5 DAT[0-3] */
++	OMAP4_MUX(SDMMC5_DAT0, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP4_MUX(SDMMC5_DAT1, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP4_MUX(SDMMC5_DAT2, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP4_MUX(SDMMC5_DAT3, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
+ 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+ };
+ 
+@@ -768,6 +827,16 @@ static inline void board_serial_init(void)
+ 	omap_serial_init_port(&serial3_data);
+ 	omap_serial_init_port(&serial4_data);
+ }
++
++static void omap4_4430sdp_wifi_init(void)
++{
++	if (gpio_request(GPIO_WIFI_PMENA, "wl12xx") ||
++	    gpio_direction_output(GPIO_WIFI_PMENA, 0))
++		pr_err("Error initializing up WLAN_EN\n");
++	if (wl12xx_set_platform_data(&omap4_panda_wlan_data))
++		pr_err("Error setting wl12xx data\n");
++}
++
+ #else
+ #define board_mux	NULL
+ 
+@@ -795,6 +864,8 @@ static void __init omap_4430sdp_init(void)
+ 	board_serial_init();
+ 	omap4_twl6030_hsmmc_init(mmc);
+ 
++	omap4_4430sdp_wifi_init();
++
+ 	usb_musb_init(&musb_board_data);
+ 
+ 	status = omap_ethernet_init();
+-- 
+1.7.1
+

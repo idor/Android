@@ -1,0 +1,3739 @@
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/Android.mk hostapd_new/Android.mk
+--- hostapd_original/Android.mk	2011-03-27 16:18:38.135411000 +0200
++++ hostapd_new/Android.mk	2011-03-27 16:18:51.593321000 +0200
+@@ -1,25 +1,3 @@
+-#
+-# Copyright (C) 2008 The Android Open Source Project
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-#
+-
+-ifndef HOSTAPD_VERSION
+-HOSTAPD_VERSION := VER_0_6_X
+-endif
+-
+-ifeq ($(HOSTAPD_VERSION),VER_0_6_X)
+-
+ LOCAL_PATH := $(call my-dir)
+ 
+ ifndef AP_CFLAGS
+@@ -37,14 +15,6 @@
+ 	$(LOCAL_PATH)/src/common \
+ 	external/openssl/include
+ 
+-ifeq ($(BOARD_SOFTAP_DEVICE),wl1271)
+-AP_CONFIG_DRIVER_WILINK=y
+-else
+-ifeq ($(BOARD_SOFTAP_DEVICE),wl1283)
+-AP_CONFIG_DRIVER_WILINK=y
+-endif
+-endif
+-
+ # Uncomment following line and set the path to your kernel tree include
+ # directory if your C library does not include all header files.
+ # AP_CFLAGS += -DUSE_KERNEL_HEADERS +I/usr/src/linux/include
+@@ -150,9 +120,9 @@
+ TI_HOSTAPD_LIB = y
+ AP_CFLAGS += -DCONFIG_DRIVER_WILINK
+ C_INCLUDES += \
+-	hardware/ti/wlan/$(BOARD_SOFTAP_DEVICE)_softAP/stad/Export_Inc \
+-	hardware/ti/wlan/$(BOARD_SOFTAP_DEVICE)_softAP/utils \
+-	hardware/ti/wlan/$(BOARD_SOFTAP_DEVICE)_softAP/platforms/os/linux/inc
++	hardware/ti/wlan/mcp_2.x_softAP/stad/Export_Inc \
++	hardware/ti/wlan/mcp_2.x_softAP/utils \
++	hardware/ti/wlan/mcp_2.x_softAP/platforms/os/linux/inc
+ 
+ AP_CONFIG_L2_PACKET=linux
+ OBJS += hostapd/regulatory.c
+@@ -184,9 +154,9 @@
+ ifdef AP_CONFIG_DRIVER_NL80211
+ AP_CFLAGS += -DCONFIG_DRIVER_NL80211
+ OBJS += hostapd/driver_nl80211.c hostapd/radiotap.c
+-LIBS += -lnl
++LIBS += libnl
+ ifdef AP_CONFIG_LIBNL20
+-LIBS += -lnl-genl
++LIBS += libnl-genl
+ AP_CFLAGS += -DCONFIG_LIBNL20
+ endif
+ endif
+@@ -212,10 +182,10 @@
+ ifdef AP_CONFIG_L2_PACKET
+ ifdef AP_CONFIG_DNET_PCAP
+ ifdef AP_CONFIG_L2_FREEBSD
+-LIBS += -lpcap
++LIBS += libpcap
+ OBJS += src/l2_packet/l2_packet_freebsd.c
+ else
+-LIBS += -ldnet -lpcap
++LIBS += libdnet libpcap
+ OBJS += src/l2_packet/l2_packet_pcap.c
+ endif
+ else
+@@ -368,7 +338,7 @@
+ OBJS += src/eap_server/tncs.c
+ AP_NEED_BASE64=y
+ ifndef AP_CONFIG_DRIVER_BSD
+-LIBS += -ldl
++LIBS += libdl
+ endif
+ endif
+ 
+@@ -406,19 +376,19 @@
+ AP_NEED_TLS_PRF=y
+ ifeq ($(AP_CONFIG_TLS), openssl)
+ OBJS += src/crypto/tls_openssl.c
+-LIBS += -lssl -lcrypto
+-LIBS_p += -lcrypto
+-LIBS_h += -lcrypto
++LIBS += libssl libcrypto
++LIBS_p += libcrypto
++LIBS_h += libcrypto
+ endif
+ ifeq ($(AP_CONFIG_TLS), gnutls)
+ OBJS += src/crypto/tls_gnutls.c
+-LIBS += -lgnutls -lgcrypt -lgpg-error
+-LIBS_p += -lgcrypt
+-LIBS_h += -lgcrypt
++LIBS += libgnutls libgcrypt libgpg-error
++LIBS_p += libgcrypt
++LIBS_h += libgcrypt
+ endif
+ ifdef AP_CONFIG_GNUTLS_EXTRA
+ AP_CFLAGS += -DCONFIG_GNUTLS_EXTRA
+-LIBS += -lgnutls-extra
++LIBS += libgnutls-extra
+ endif
+ ifeq ($(AP_CONFIG_TLS), internal)
+ OBJS += src/crypto/tls_internal.c
+@@ -435,13 +405,13 @@
+ ifdef AP_CONFIG_INTERNAL_LIBTOMMATH
+ AP_CFLAGS += -DCONFIG_INTERNAL_LIBTOMMATH
+ else
+-LIBS += -ltommath
+-LIBS_p += -ltommath
++LIBS += libtommath
++LIBS_p += libtommath
+ endif
+ endif
+ ifeq ($(AP_CONFIG_CRYPTO), libtomcrypt)
+-LIBS += -ltomcrypt -ltfm
+-LIBS_p += -ltomcrypt -ltfm
++LIBS += libtomcrypt libtfm
++LIBS_p += libtomcrypt libtfm
+ endif
+ endif
+ AP_NEED_CRYPTO=y
+@@ -465,19 +435,19 @@
+ ifdef AP_NEED_CRYPTO
+ ifndef AP_TLS_FUNCS
+ ifeq ($(AP_CONFIG_TLS), openssl)
+-LIBS += -lcrypto
+-LIBS_p += -lcrypto
+-LIBS_h += -lcrypto
++LIBS += libcrypto
++LIBS_p += libcrypto
++LIBS_h += libcrypto
+ endif
+ ifeq ($(AP_CONFIG_TLS), gnutls)
+-LIBS += -lgcrypt
+-LIBS_p += -lgcrypt
+-LIBS_h += -lgcrypt
++LIBS += libgcrypt
++LIBS_p += libgcrypt
++LIBS_h += libgcrypt
+ endif
+ ifeq ($(AP_CONFIG_TLS), internal)
+ ifeq ($(AP_CONFIG_CRYPTO), libtomcrypt)
+-LIBS += -ltomcrypt -ltfm
+-LIBS_p += -ltomcrypt -ltfm
++LIBS += libtomcrypt libtfm
++LIBS_p += libtomcrypt libtfm
+ endif
+ endif
+ endif
+@@ -594,19 +564,19 @@
+ 
+ ifeq ($(TI_HOSTAPD_LIB), y)
+ AP_CFLAGS += -DTI_HOSTAPD_CLI_LIB
++endif
+ 
+ OBJS_c = \
+ 	hostapd/hostapd_cli.c \
+ 	src/common/wpa_ctrl.c \
+ 	src/utils/os_$(AP_CONFIG_OS).c
+-endif
+ 
+ ########################
+ 
+ include $(CLEAR_VARS)
+ LOCAL_MODULE := hostap
+-LOCAL_MODULE_TAGS := optional
+-LOCAL_SHARED_LIBRARIES := libc libcutils libcrypto libssl
++LOCAL_MODULE_TAGS := debug
++LOCAL_SHARED_LIBRARIES := libc libcutils $(LIBS)
+ #LOCAL_FORCE_STATIC_EXCUTABLE := true
+ #LOCAL_STATIC_LIBRARIES := libc libcutils
+ LOCAL_CFLAGS := $(AP_CFLAGS)
+@@ -616,17 +586,13 @@
+ 
+ ########################
+ 
+-ifeq ($(TI_HOSTAPD_LIB), y)
+ include $(CLEAR_VARS)
+ LOCAL_MODULE := libhostapdcli
+-LOCAL_MODULE_TAGS := optional
++LOCAL_MODULE_TAGS := debug
+ LOCAL_SHARED_LIBRARIES := libc libcutils
+ LOCAL_CFLAGS := $(AP_CFLAGS)
+ LOCAL_SRC_FILES := $(OBJS_c)
+ LOCAL_C_INCLUDES := $(C_INCLUDES)
+ include $(BUILD_STATIC_LIBRARY)
+-endif
+ 
+ ########################
+-
+-endif # VER_0_6_X
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/.config hostapd_new/hostapd/.config
+--- hostapd_original/hostapd/.config	2011-03-27 16:18:38.512395000 +0200
++++ hostapd_new/hostapd/.config	2011-03-27 16:18:46.428745000 +0200
+@@ -1,39 +1,148 @@
+-# AP_CONFIG_DRIVER_WILINK=y
++# Example hostapd build time configuration
++#
++# This file lists the configuration options that are used when building the
++# hostapd binary. All lines starting with # are ignored. Configuration option
++# lines must be commented out complete, if they are not to be included, i.e.,
++# just setting VARIABLE=n is not disabling that variable.
++#
++# This file is included in Makefile, so variables like CFLAGS and LIBS can also
++# be modified from here. In most cass, these lines should use += in order not
++# to override previous values of the variables.
++
++
++# Driver interface for WiLink AP driver
++AP_CONFIG_DRIVER_WILINK=y
++
++# Driver interface for Host AP driver
+ # AP_CONFIG_DRIVER_HOSTAP=y
+-# AP_CONFIG_DRIVER_WIRED=y
+-# AP_CONFIG_DRIVER_MADWIFI=y
+-# AP_CONFIG_DRIVER_PRISM54=y
+-# AP_CONFIG_DRIVER_NL80211=y
+-# AP_CONFIG_DRIVER_BSD=y
+-# AP_CONFIG_DRIVER_NONE=y
+-# AP_CONFIG_IAPP=y
+-# AP_CONFIG_RSN_PREAUTH=y
+-# AP_CONFIG_PEERKEY=y
+-# AP_CONFIG_IEEE80211W=y
++
++# Driver interface for wired authenticator
++#AP_CONFIG_DRIVER_WIRED=y
++
++# Driver interface for madwifi driver
++#AP_CONFIG_DRIVER_MADWIFI=y
++#CFLAGS += -I../../madwifi # change to the madwifi source directory
++
++# Driver interface for Prism54 driver
++#AP_CONFIG_DRIVER_PRISM54=y
++
++# Driver interface for drivers using the nl80211 kernel interface
++#AP_CONFIG_DRIVER_NL80211=y
++# driver_nl80211.c requires a rather new libnl (version 1.1) which may not be
++# shipped with your distribution yet. If that is the case, you need to build
++# newer libnl version and point the hostapd build to use it.
++# LIBNL=../src/libnl
++# CFLAGS += -I$(LIBNL)/include
++# LIBS += -L$(LIBNL)/lib
++
++# Driver interface for FreeBSD net80211 layer (e.g., Atheros driver)
++#AP_CONFIG_DRIVER_BSD=y
++#CFLAGS += -I/usr/local/include
++#LIBS += -L/usr/local/lib
++
++# Driver interface for no driver (e.g., RADIUS server only)
++#AP_CONFIG_DRIVER_NONE=y
++
++# IEEE 802.11F/IAPP
++#AP_CONFIG_IAPP=y
++
++# WPA2/IEEE 802.11i RSN pre-authentication
++#AP_CONFIG_RSN_PREAUTH=y
++
++# PeerKey handshake for Station to Station Link (IEEE 802.11e DLS)
++#AP_CONFIG_PEERKEY=y
++
++# IEEE 802.11w (management frame protection)
++# This version is an experimental implementation based on IEEE 802.11w/D1.0
++# draft and is subject to change since the standard has not yet been finalized.
++# Driver support is also needed for IEEE 802.11w.
++#AP_CONFIG_IEEE80211W=y
++
++# Integrated EAP server
+ AP_CONFIG_EAP=y
++
++# EAP-MD5 for the integrated EAP server
+ AP_CONFIG_EAP_MD5=y
+-# AP_CONFIG_EAP_TLS=y
+-# AP_CONFIG_EAP_MSCHAPV2=y
+-# AP_CONFIG_EAP_PEAP=y
+-# AP_CONFIG_EAP_GTC=y
+-# AP_CONFIG_EAP_TTLS=y
+-# AP_CONFIG_EAP_SIM=y
+-# AP_CONFIG_EAP_AKA=y
+-# AP_CONFIG_EAP_AKA_PRIME=y
+-# AP_CONFIG_EAP_PAX=y
+-# AP_CONFIG_EAP_PSK=y
+-# AP_CONFIG_EAP_SAKE=y
+-# AP_CONFIG_EAP_GPSK=y
+-# AP_CONFIG_EAP_GPSK_SHA256=y
+-# AP_CONFIG_EAP_FAST=y
++
++# EAP-TLS for the integrated EAP server
++#AP_CONFIG_EAP_TLS=y
++
++# EAP-MSCHAPv2 for the integrated EAP server
++#AP_CONFIG_EAP_MSCHAPV2=y
++
++# EAP-PEAP for the integrated EAP server
++#AP_CONFIG_EAP_PEAP=y
++
++# EAP-GTC for the integrated EAP server
++#AP_CONFIG_EAP_GTC=y
++
++# EAP-TTLS for the integrated EAP server
++#AP_CONFIG_EAP_TTLS=y
++
++# EAP-SIM for the integrated EAP server
++#AP_CONFIG_EAP_SIM=y
++
++# EAP-AKA for the integrated EAP server
++#AP_CONFIG_EAP_AKA=y
++
++# EAP-AKA' for the integrated EAP server
++# This requires AP_CONFIG_EAP_AKA to be enabled, too.
++#AP_CONFIG_EAP_AKA_PRIME=y
++
++# EAP-PAX for the integrated EAP server
++#AP_CONFIG_EAP_PAX=y
++
++# EAP-PSK for the integrated EAP server (this is _not_ needed for WPA-PSK)
++#AP_CONFIG_EAP_PSK=y
++
++# EAP-SAKE for the integrated EAP server
++#AP_CONFIG_EAP_SAKE=y
++
++# EAP-GPSK for the integrated EAP server
++#AP_CONFIG_EAP_GPSK=y
++# Include support for optional SHA256 cipher suite in EAP-GPSK
++#AP_CONFIG_EAP_GPSK_SHA256=y
++
++# EAP-FAST for the integrated EAP server
++# Note: Default OpenSSL package does not include support for all the
++# functionality needed for EAP-FAST. If EAP-FAST is enabled with OpenSSL,
++# the OpenSSL library must be patched (openssl-0.9.9-session-ticket.patch)
++# to add the needed functions.
++#AP_CONFIG_EAP_FAST=y
++
++# Wi-Fi Protected Setup (WPS)
+ AP_CONFIG_WPS=y
+-# AP_CONFIG_WPS_UPNP=y
+-# AP_CONFIG_EAP_IKEV2=y
+-# AP_CONFIG_EAP_TNC=y
+-# AP_CONFIG_PKCS12=y
+-# AP_CONFIG_RADIUS_SERVER=y
+-# AP_CONFIG_IPV6=y
+-# AP_CONFIG_IEEE80211R=y
+-# AP_CONFIG_DRIVER_RADIUS_ACL=y
+-# AP_CONFIG_IEEE80211N=y
+-# AP_CONFIG_NO_STDOUT_DEBUG=y
++# Enable UPnP support for external WPS Registrars
++#AP_CONFIG_WPS_UPNP=y
++
++# EAP-IKEv2
++#AP_CONFIG_EAP_IKEV2=y
++
++# Trusted Network Connect (EAP-TNC)
++#AP_CONFIG_EAP_TNC=y
++
++# PKCS#12 (PFX) support (used to read private key and certificate file from
++# a file that usually has extension .p12 or .pfx)
++#AP_CONFIG_PKCS12=y
++
++# RADIUS authentication server. This provides access to the integrated EAP
++# server from external hosts using RADIUS.
++#AP_CONFIG_RADIUS_SERVER=y
++
++# Build IPv6 support for RADIUS operations
++#AP_CONFIG_IPV6=y
++
++# IEEE Std 802.11r-2008 (Fast BSS Transition)
++#AP_CONFIG_IEEE80211R=y
++
++# Use the hostapd's IEEE 802.11 authentication (ACL), but without
++# the IEEE 802.11 Management capability (e.g., madwifi or FreeBSD/net80211)
++#AP_CONFIG_DRIVER_RADIUS_ACL=y
++
++# IEEE 802.11n (High Throughput) support
++#AP_CONFIG_IEEE80211N=y
++
++# Remove debugging code that is printing out debug messages to stdout.
++# This can be used to reduce the size of the hostapd considerably if debugging
++# code is not needed.
++#AP_CONFIG_NO_STDOUT_DEBUG=y
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/config.c hostapd_new/hostapd/config.c
+--- hostapd_original/hostapd/config.c	2011-03-27 16:18:38.571415000 +0200
++++ hostapd_new/hostapd/config.c	2011-03-27 16:18:46.012732000 +0200
+@@ -30,7 +30,7 @@
+ 
+ #ifndef CONFIG_NO_TI
+ #include "ieee802_11_auth.h"
+-#include "common/ieee802_11_defs.h"
++#include "common/ieee802_11_defs.h" 
+ #include "sta_info.h"
+ #include "eloop.h"
+ #endif
+@@ -188,6 +188,7 @@
+ 	bss->eapol_version = EAPOL_VERSION;
+ 
+ 	bss->max_listen_interval = 65535;
++	bss->hostapd_enterprise_discover_params.discover_enabled = 0;
+ 
+ #ifdef CONFIG_IEEE80211W
+ 	bss->assoc_sa_query_max_timeout = 1000;
+@@ -852,6 +853,218 @@
+ 	return val;
+ }
+ 
++int hostapd_parse_ssid_list(struct hostapd_bss_config *bss, int line,const char* value) 
++{
++	int counter = 0, last,tmp_count=0,flag=0;
++	char *start, *end, *buf;
++	buf = os_strdup(value);
++	start = buf;
++	bss->hostapd_enterprise_discover_params.ssids_num = 0;
++				
++	while (*start != '\0') 
++	{
++		if(counter < MAX_ACTIVE_SSID ) 
++		{
++			while (*start == ' ' || *start == '\t')
++				start++;
++			if (*start == '\0')
++				break;
++			end = start;
++			while (*end != ' ' && *end != '\t' && *end != '\0')
++				end++;
++			last = *end = '\0';
++			bss->hostapd_enterprise_discover_params.ssid_list[counter].len	 = os_strlen(start);
++			
++			if ( bss->hostapd_enterprise_discover_params.ssid_list[counter].len  > HOSTAPD_MAX_SSID_LEN ||
++				 bss->hostapd_enterprise_discover_params.ssid_list[counter].len < 1) 
++			{
++				wpa_printf(MSG_ERROR, "Line %d: invalid SSID "
++						   "'%s'", line, start);
++				return -1;
++			} 
++			else 
++			{
++				os_strlcpy(bss->hostapd_enterprise_discover_params.ssid_list[counter].str,start,sizeof(bss->hostapd_enterprise_discover_params.ssid_list[counter].str));
++			}
++			if (last)
++				break;
++			start = end + 1;
++			if (*start!= '\0') 
++			{
++				while ((*start != ' ')&&(*start!= '\0')) 
++				{
++					start ++ ;
++					tmp_count++;
++				}
++				if(*start=='\0')
++					flag=1;
++				*start ='\0';
++			}
++			
++			
++			start = end+1 ;
++			
++			if (0 == (os_strcmp(start,"h"))) {
++				bss->hostapd_enterprise_discover_params.ssid_list[counter].type=SSID_TYPE_HIDDEN;
++			}
++			else if (0 == (os_strcmp(start,"p"))) {
++				bss->hostapd_enterprise_discover_params.ssid_list[counter].type=SSID_TYPE_PUBLIC;
++			}
++			else{
++				wpa_printf(MSG_ERROR, "Line %d: invalid/"
++			   "type error '%s'", line,start);
++				return -1;
++			}
++			wpa_printf(MSG_ERROR, "SSID type: %d " , bss->hostapd_enterprise_discover_params.ssid_list[counter].type);
++			counter++;
++			if(flag)
++				start=tmp_count+end+1;
++			else
++				start=tmp_count+end+2;
++			flag=0;
++		}
++		else{
++			wpa_printf(MSG_ERROR, "Line %d: invalid/"
++			   "ssids numbers more than tha maximum number '%s'", line, start);
++			return -1;
++		}
++		tmp_count=0;
++	}
++	if(counter <= MAX_ACTIVE_SSID ) {
++		bss->hostapd_enterprise_discover_params.ssids_num=counter;
++	}
++	os_free(buf);
++	return 1;
++}
++
++int hostapd_parse_channel_list(const char* value,struct hostapd_bss_config *bss)
++{
++	char *buf = os_strdup(value);
++	char *curr_char = buf;
++	char *next_char = curr_char;
++	char curr_channel[2];
++	unsigned int channel_number, channel_count = 0;
++	bss->hostapd_enterprise_discover_params.channels_num = 0;
++	/* Parse Channel List*/
++	while (*curr_char != '\0') {
++		/* Skip Spaces*/
++		while(*curr_char == ' ') {
++			curr_char = curr_char + 1;
++		}
++		/* Read Channel Number*/
++		if (*curr_char == '\0') {
++			break;
++		}
++		curr_channel[0] = *curr_char;
++		next_char = curr_char + 1;
++		if (*next_char != ' ' & *next_char != '\0') {
++			curr_channel[1] = *next_char;
++			if (*(next_char+1) != ' ' && *(next_char+1) != '\0') {
++				os_free(buf);
++				return -1;				
++			}
++			if (curr_channel[1] < '0' || curr_channel[1] > '4') {
++				os_free(buf);
++				return -1;
++			}
++		}
++		if (curr_channel[0] < '1' || curr_channel[0] > '9') {
++			wpa_printf(MSG_ERROR, "Invalid/ channel number %s is not in range (1 - 14)", curr_char);
++			os_free(buf);
++			return -1;
++		}
++		/* Add Channel*/
++		channel_number = atoi(&curr_char[0]); 
++		bss->hostapd_enterprise_discover_params.channels_list[channel_count] = channel_number;
++		bss->hostapd_enterprise_discover_params.channels_num = bss->hostapd_enterprise_discover_params.channels_num + 1;
++		curr_char = next_char + 1; 
++		next_char = curr_char;
++		/* Set Channels Count*/
++		channel_count = channel_count + 1;
++	}
++	os_free(buf);
++	return 1;
++}
++
++int hostapd_parse_interval(const char* value,struct hostapd_bss_config *bss)
++{
++	char *buf = os_strdup(value);
++	char *curr_char = buf;
++	unsigned int interval_value;
++	int error = 0;
++	/* Parse Interval Value*/
++
++	if (*curr_char != '\0') {
++		/* Skip Spaces*/
++		while(*curr_char == ' ') {
++			curr_char = curr_char + 1;
++		}
++		/* Read Value Number*/
++		if (*curr_char == '\0') {
++			error = 1;
++		}
++		else {
++			interval_value = atoi(curr_char);
++			if(interval_value < 0 ||interval_value > 120000) {
++				error = 1;
++			}
++		}
++	}
++	else {
++		error = 1;
++	}
++	if (error) {
++		wpa_printf(MSG_ERROR, "Invalid/ interval value not found");
++		os_free(buf);
++		return -1;
++	}
++	else {
++		bss->hostapd_enterprise_discover_params.interval = interval_value;
++		wpa_printf(MSG_ERROR, "Interval Parse  = %d \n", bss->hostapd_enterprise_discover_params.interval);
++		os_free(buf);
++		return 1;		
++	}
++}
++
++int hostapd_parse_dwell_time(const char* value,struct hostapd_bss_config *bss)
++{
++	char *buf = os_strdup(value);
++	char *curr_char = buf;
++	unsigned int dwell_time_value;
++	int error = 0;
++	/* Parse Interval Value*/
++
++	if (*curr_char != '\0') {
++		/* Skip Spaces*/
++		while(*curr_char == ' ') {
++			curr_char = curr_char + 1;
++		}
++		/* Read Value Number*/
++		if (*curr_char == '\0') {
++			error = 1;
++		}
++		else {
++			dwell_time_value = atoi(curr_char);
++			if(dwell_time_value < 0 ||dwell_time_value > HOSTAPD_MAX_DWELL_TIME) {
++				error = 1;
++			}
++		}
++	}
++	else {
++		error = 1;
++	}
++	if (error) {
++		wpa_printf(MSG_ERROR, "Invalid/ dwell time value not found");
++		os_free(buf);
++		return -1;
++	}
++	else {
++		bss->hostapd_enterprise_discover_params.dwell_time = dwell_time_value;
++		wpa_printf(MSG_ERROR, "Dwell Time Parse  = %d \n", bss->hostapd_enterprise_discover_params.dwell_time);
++		os_free(buf);
++		return 1;		
++	}
++}
+ 
+ static int hostapd_config_parse_cipher(int line, const char *value)
+ {
+@@ -1437,18 +1650,18 @@
+ 					       void *ctx)
+ {
+ 	if (hostapd_should_remove_station(hapd, sta->addr) == HOSTAPD_ACL_REJECT) {
+-		wpa_printf(MSG_DEBUG, "HAPDTI %s: removing sta " MACSTR " !!!\n",
++		wpa_printf(MSG_DEBUG, "HAPDTI %s: removing sta " MACSTR " !!!\n", 
+ 				__func__, MAC2STR(sta->addr));
+-
++				
+ 		hostapd_wpa_auth_disconnect(hapd, sta->addr, WLAN_REASON_UNSPECIFIED);
+-
++		
+ 		/*hostapd_sta_disassoc(
+ 					hapd, sta->addr,
+ 					WLAN_REASON_UNSPECIFIED);
+-
++		
+ 		sta->flags &= ~WLAN_STA_ASSOC;
+ 		ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
+-
++		
+ 		accounting_sta_stop(hapd, sta);
+ 		ieee802_1x_free_station(sta);
+ 		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE80211,
+@@ -1464,7 +1677,7 @@
+ 
+ 		ap_free_sta(hapd, sta);*/
+ 	}
+-
++	
+ 	return 0;
+ }
+ 
+@@ -1484,7 +1697,7 @@
+ 	FILE *f;
+ 	char buf[256], *pos;
+ 	int line = 0;
+-
++	
+ 	wpa_printf(MSG_DEBUG, "HAPDTI %s: %s", __func__, fname);
+ 
+ 	f = fopen(fname, "r");
+@@ -1502,7 +1715,7 @@
+ 			continue;
+ 		pos = buf;
+ 		while (*pos != '\0') {
+-			if (*pos == '\n') {
++			if (*pos == '\n') { 
+ 				*pos = '\0';
+ 				break;
+ 			}
+@@ -1541,7 +1754,7 @@
+ 						line, pos);
+ 			}
+ 			else {
+-				wpa_printf(MSG_DEBUG, "HAPDTI %s: total of %d addresses in whitelist",
++				wpa_printf(MSG_DEBUG, "HAPDTI %s: total of %d addresses in whitelist", 
+ 						__func__, bss->num_accept_mac);
+ 			}
+ 		} else if (os_strcmp(buf, "deny_mac_file") == 0) {
+@@ -1555,7 +1768,7 @@
+ 						line, pos);
+ 			}
+ 			else {
+-				wpa_printf(MSG_DEBUG, "HAPDTI %s: total of %d addresses in blacklist",
++				wpa_printf(MSG_DEBUG, "HAPDTI %s: total of %d addresses in blacklist", 
+ 						__func__, bss->num_deny_mac);
+ 			}
+ 		}
+@@ -1563,7 +1776,7 @@
+ 	}
+ 
+ 	fclose(f);
+-
++	
+ 	return 0;
+ }
+ 
+@@ -1571,12 +1784,12 @@
+ int hostapd_reload_acl() {
+ 	struct hapd_interfaces *hapds = eloop_get_user_data();
+ 	int i, j;
+-
++	
+ 	wpa_printf(MSG_DEBUG, "HAPDTI %s", __func__);
+-
++	
+ 	for (i = 0; i < hapds->count; i++) {
+ 		for (j = 0; j < hapds->iface[i]->num_bss; j++) {
+-			if (hostapd_load_acl(hapds->iface[i]->config_fname,
++			if (hostapd_load_acl(hapds->iface[i]->config_fname, 
+ 					hapds->iface[i]->bss[j]->conf) < 0) {
+ 				wpa_printf(MSG_WARNING, "Failed to read new "
+ 						"configuration file - continuing with "
+@@ -1586,7 +1799,7 @@
+ 			hostapd_remove_invalid_stations(hapds->iface[i]->bss[j]);
+ 		}
+ 	}
+-
++	
+ 	return 0;
+ }
+ 
+@@ -1653,6 +1866,46 @@
+ 		if (os_strcmp(buf, "interface") == 0) {
+ 			os_strlcpy(conf->bss[0].iface, pos,
+ 				   sizeof(conf->bss[0].iface));
++		} else if (os_strcmp(buf, "discover_enabled") == 0) {  /*active scan in ap mode*/
++			unsigned int val;
++			val =atoi(pos);
++			 if (( val == 0 )||( val == 1 ))
++				bss->hostapd_enterprise_discover_params.discover_enabled=val;
++			
++			 else{
++				 wpa_printf(MSG_ERROR, "Line %d: invalid/"
++					   "discover enabled '%s'", line, pos);
++				 errors++;
++			 }
++
++		} else if (os_strcmp(buf, "interval") == 0) {  /*active scan in ap mode*/
++			if (atoi(pos) < 0 || atoi(pos) > 120000) {
++				 wpa_printf(MSG_ERROR, "Line %d: invalid/"
++					   "interval '%s'", line, pos);				
++				errors++;
++			}
++			else
++				bss->hostapd_enterprise_discover_params.interval=atoi(pos);
++		} else if (os_strcmp(buf, "dwell_time") == 0) {  /*active scan in ap mode*/
++			if (atoi(pos) < 0 || atoi(pos) > HOSTAPD_MAX_DWELL_TIME) {
++				 wpa_printf(MSG_ERROR, "Line %d: invalid/"
++					   "dwell time '%s'", line, pos);				
++				errors++;
++			}
++			else
++				bss->hostapd_enterprise_discover_params.dwell_time=atoi(pos);
++		}else if (os_strcmp(buf, "channels_list") == 0) {  /*active scan in ap mode*/
++			if(hostapd_parse_channel_list(pos, bss) == -1) {
++				 wpa_printf(MSG_ERROR, "Line %d: invalid/"
++					   "channel list '%s'", line, pos);
++				errors++;
++			}
++        }else if (os_strcmp(buf, "ssid_list") == 0){
++			if ((hostapd_parse_ssid_list(bss, line, pos) == -1)) {
++				 wpa_printf(MSG_ERROR, "Line %d: invalid/"
++					   "ssid list '%s'", line, pos);
++				errors++;
++			}
+ 		} else if (os_strcmp(buf, "bridge") == 0) {
+ 			os_strlcpy(bss->bridge, pos, sizeof(bss->bridge));
+ 		} else if (os_strcmp(buf, "driver") == 0) {
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/config.h hostapd_new/hostapd/config.h
+--- hostapd_original/hostapd/config.h	2011-03-27 16:18:38.538398000 +0200
++++ hostapd_new/hostapd/config.h	2011-03-27 16:18:46.019739000 +0200
+@@ -36,6 +36,7 @@
+ struct ft_remote_r1kh;
+ 
+ #define HOSTAPD_MAX_SSID_LEN 32
++#define HOSTAPD_MAX_DWELL_TIME 1000
+ 
+ #define NUM_WEP_KEYS 4
+ struct hostapd_wep_keys {
+@@ -143,6 +144,45 @@
+ 	int admission_control_mandatory;
+ };
+ 
++//#ifdef TI_AP_MODE
++	#define NUM_G_CHANNELS	(14)
++	#define MAX_ACTIVE_SSID	(8 )
++	#define ENTERPRISE_DISCOVERY_MAX_RESULT_SSID 51 /*Size includes: SSID & Channel*/
++
++	typedef enum
++	{
++		SSID_TYPE_PUBLIC = 0,
++		SSID_TYPE_HIDDEN
++	}e_HostapdSsidType;
++
++	typedef struct
++    {
++		e_HostapdSsidType	type;             			/* HIDDEN, PUBLIC */
++		unsigned char		len;           				/* SSID Length */
++		char				str[HOSTAPD_MAX_SSID_LEN]; 	/* SSID string buffer up to 32 chars */
++    }s_HostapdSsid;
++
++	typedef struct
++    {
++		e_HostapdSsidType	type;             			/* HIDDEN, PUBLIC */
++		unsigned char		len;           				/* SSID Length */
++		char				str[ENTERPRISE_DISCOVERY_MAX_RESULT_SSID]; 	/* SSID string buffer up to 32 chars plus 19 for channel result*/
++    }s_EnterpriseDiscoverResultSsid;
++
++	struct s_HostapdEnterpriseDiscoverParams
++	{
++		unsigned int					discover_enabled;
++		s_HostapdSsid					ssid_list[MAX_ACTIVE_SSID];
++		unsigned int    				ssids_num;
++		unsigned int					channels_list[NUM_G_CHANNELS];
++		unsigned int    				channels_num;
++        unsigned int					interval;
++		unsigned int					dwell_time;
++		s_EnterpriseDiscoverResultSsid 	ssid_result_list[MAX_ACTIVE_SSID];
++		unsigned int 					ssid_result_list_size;
++	};
++
++//#endif
+ 
+ /**
+  * struct hostapd_bss_config - Per-BSS configuration
+@@ -173,7 +213,9 @@
+ 	struct hostapd_radius_servers *radius;
+ 
+ 	struct hostapd_ssid ssid;
+-
++    //#ifdef TI_AP_MODE
++	struct s_HostapdEnterpriseDiscoverParams hostapd_enterprise_discover_params; 
++    //#endif
+ 	char *eap_req_id_text; /* optional displayable message sent with
+ 				* EAP Request-Identity */
+ 	size_t eap_req_id_text_len;
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/ctrl_iface.c hostapd_new/hostapd/ctrl_iface.c
+--- hostapd_original/hostapd/ctrl_iface.c	2011-03-27 16:18:38.533407000 +0200
++++ hostapd_new/hostapd/ctrl_iface.c	2011-03-27 16:18:46.027740000 +0200
+@@ -359,17 +359,50 @@
+ #ifndef CONFIG_NO_TI
+ 	} else if (os_strncmp(buf, "RELOAD_ACL", 12) == 0) {
+ 		if (hostapd_reload_acl())
+-			reply_len = -1;
++			reply_len = -1;	
+ #endif
++	} else if (os_strncmp(buf, "SET_SSIDS ", 10) == 0) {
++		if (hostapd_set_ssids_iface(hapd->iface, buf + 10))
++			reply_len = -1;
++	} else if (os_strncmp(buf, "SET_CHANNELS ", 13) == 0) {
++		if (hostapd_set_channels_iface(hapd->iface, buf + 13))
++			reply_len = -1;
++	} else if (os_strncmp(buf, "SET_INTERVAL ", 13) == 0) {
++		if (hostapd_set_interval_iface(hapd->iface, buf + 13)) 
++			reply_len = -1;
++	} else if (os_strncmp(buf, "SET_DWELL_TIME ", 15) == 0) {
++		if (hostapd_set_dwell_time(hapd->iface, buf + 15)) 
++			reply_len = -1;
++	} else if (os_strcmp(buf, "ENABLE_DISCOVERY") == 0) {
++		if (hostapd_enable_discovery(hapd->iface))
++			reply_len = -1;
++	} else if (os_strcmp(buf, "DISABLE_DISCOVERY") == 0) {
++		hostapd_call_stop_enterprise_discovery(hapd);
++		if (hostapd_disable_discovery(hapd->iface))
++			reply_len = -1;
++	} else if (os_strcmp(buf, "GET_AP_TABLE") == 0) {
++		wpa_printf(MSG_ERROR, "\n$ AP Result Table $\n");
++		hostapd_get_ap_table(hapd->iface, reply);
++		reply_len = ENTERPRISE_DISCOVERY_MAX_RESULT_SSID * MAX_ACTIVE_SSID + MAX_ACTIVE_SSID;
++	} else if (os_strcmp(buf, "COMMIT_CONFIG") == 0) {
++		if (hostapd_call_commit_discovery_config(hapd))
++			reply_len = -1;
+ 	} else if (os_strcmp(buf, "RECONFIG") == 0) {
+ 		if (hostapd_reconfig_iface(hapd->iface))
+ 			reply_len = -1;
+ 	} else if (os_strcmp(buf, "STOP") == 0) {
++		hostapd_call_stop_enterprise_discovery(hapd);
+ 		if (hostapd_stop_iface_driver(hapd->iface))
+ 			reply_len = -1;
+ 	} else if (os_strncmp(buf, "START ", 6) == 0) {
+ 		if (hostapd_start_iface(hapd->iface, buf + 6))
+ 			reply_len = -1;
++	} else if (os_strcmp(buf, "START_SCAN") == 0) {
++		if (hostapd_call_start_enterprise_discovery(hapd))
++			reply_len = -1;
++	} else if (os_strcmp(buf, "STOP_SCAN") == 0) {
++		if (hostapd_call_stop_enterprise_discovery(hapd))
++			reply_len = -1;
+ 	} else {
+ 		os_memcpy(reply, "UNKNOWN COMMAND\n", 16);
+ 		reply_len = 16;
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/driver.h hostapd_new/hostapd/driver.h
+--- hostapd_original/hostapd/driver.h	2011-03-27 16:18:38.410415000 +0200
++++ hostapd_new/hostapd/driver.h	2011-03-27 16:18:46.081741000 +0200
+@@ -195,6 +195,22 @@
+ 				 const u8 *ie, size_t len);
+ 	int (*set_wps_probe_resp_ie)(const char *ifname, void *priv,
+ 				     const u8 *ie, size_t len);
++
++	/** 
++	 * enterprise environment discovery functions
++	 */
++	/*  function start_enterprise_discovery :  *
++	 *  start active scan using the configured *
++	 *  enterprise discovery parameters  	   */
++	 int (*start_enterprise_discovery)(void *priv);
++	/*  function stop_enterprise_discovery :  *
++	 *  stop active scan that was configured  *
++	 *  by enterprise discovery 			  */
++	 int (*stop_enterprise_discovery) (void *priv);
++	/*  function set_enterprise_discovery_params :   *
++	 *  configure periodic scan parameters according *
++	 *  to the enterprise discovery parameters  	 */
++	 int (*set_enterprise_discovery_params)(void *priv,void *params);
+ };
+ 
+ static inline void *
+@@ -795,4 +811,35 @@
+ 						   hapd->drv_priv, ie, len);
+ }
+ 
++static inline int
++hostapd_commit_discovery_config(struct hostapd_data *hapd)
++{
++	if(hapd->driver == NULL ||
++	   hapd->driver->set_enterprise_discovery_params == NULL) 
++		return 0;
++	return (hapd->driver->set_enterprise_discovery_params(hapd->drv_priv, &(hapd->iface->conf->bss->hostapd_enterprise_discover_params)));
++}
++
++static inline int
++hostapd_start_enterprise_discovery(struct hostapd_data *hapd)
++{
++	if(hapd->driver == NULL ||
++	   hapd->driver->start_enterprise_discovery == NULL) {
++		fprintf(stderr,"\n BSS is not started - cannot start scan\n");
++		return 0;
++	}
++	return(hapd->driver->start_enterprise_discovery(hapd->drv_priv));
++
++}
++
++static inline int
++hostapd_stop_enterprise_discovery(struct hostapd_data *hapd)
++{
++	if(hapd->driver == NULL ||
++	   hapd->driver->stop_enterprise_discovery == NULL) 
++	    return 0;
++	fprintf(stderr,"\n$ Stopping Scan $\n");
++	return(hapd->driver->stop_enterprise_discovery(hapd->drv_priv));
++}
++
+ #endif /* DRIVER_H */
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/driver_wilink.c hostapd_new/hostapd/driver_wilink.c
+--- hostapd_original/hostapd/driver_wilink.c	2011-03-27 16:18:38.766361000 +0200
++++ hostapd_new/hostapd/driver_wilink.c	2011-03-27 16:18:46.747713000 +0200
+@@ -1,5 +1,5 @@
+ /*
+- * hostapd / Module short description
++ * hostapd / Driver interaction with TI WiLink AP driver
+  * Copyright (c) 2010, Texas Instruments, Inc. - http://www.ti.com/
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -7,9 +7,7 @@
+  * published by the Free Software Foundation.
+  *
+  * Alternatively, this software may be distributed under the terms of BSD
+- * license.
+- *
+- * For more details please review the below BSD terms:
++ * license below:
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+@@ -39,12 +37,6 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-/** \file driver_wilink.c
+- *  \brief hostapd interface to WiLink driver
+- *
+- *  \see driver.h
+- */
+-
+ #include "includes.h"
+ 
+ #include <sys/ioctl.h>
+@@ -97,6 +89,7 @@
+ 
+ 	int dtim_int;
+ 	int beacon_int;
++    int port_open;
+ };
+ 
+ 
+@@ -125,7 +118,7 @@
+ 
+ 	switch (type) {
+ 	case WLAN_FC_TYPE_MGMT:
+-		wpa_printf(MSG_DEBUG, "HAPDTI %s: MGMT (TX callback) %s", __func__, ok ? "ACK" : "fail");
++		wpa_printf(MSG_MSGDUMP, "HAPDTI %s: MGMT (TX callback) %s", __func__, ok ? "ACK" : "fail");
+ 		ieee802_11_mgmt_cb(hapd, buf, len, stype, ok);
+ 		break;
+ 	default:
+@@ -143,18 +136,17 @@
+ 	u16 fc, type, stype;
+ 	size_t data_len = len;
+ 	u8* buf;
+-	struct sta_info *sta;
++    struct sta_info *sta;
+ 	struct hostapd_frame_info fi;
+ 
+-
+ 	len -=  sizeof(TApFrameHeader);
+ 	buf = ((u8*) data) + sizeof(TApFrameHeader);
+ 	/* 'len' and 'buf' now refer to the actual frame less the WILINK hdr */
+ 
+-	wpa_printf(MSG_DEBUG, "%s: received MGMT with len %d from " MACSTR, __func__,
++	wpa_printf(MSG_MSGDUMP, "%s: received MGMT with len %d from " MACSTR, __func__,
+ 			(int) len, MAC2STR(src_addr));
+-	wpa_hexdump(MSG_DEBUG, "MGMT", data, data_len);
+-    wpa_printf(MSG_DEBUG,"\n");
++	wpa_hexdump(MSG_MSGDUMP, "MGMT", data, data_len);
++    wpa_printf(MSG_MSGDUMP,"\n");
+ 
+ 	hdr = (struct ieee80211_hdr *) buf;
+ 	fc = le_to_host16(hdr->frame_control);
+@@ -169,13 +161,13 @@
+ 
+ 	switch (((TApFrameHeader*)data)->sCtrlHdr) { 
+ 	case AP_CTRL_HDR_RX:
+-		wpa_printf(MSG_DEBUG, "HAPDTI %s: processing management frame", __func__);
+-		memset(&fi, 0, sizeof(struct hostapd_frame_info));
++		wpa_printf(MSG_MSGDUMP, "HAPDTI %s: processing management frame", __func__);
++        memset(&fi, 0, sizeof(struct hostapd_frame_info));
+ 		fi.phytype = 7;
+ 		ieee802_11_mgmt(hapd, buf, len, stype, &fi);
+ 		break;
+     case AP_CTRL_HDR_TX_SUCCESS: 		/* successful TX Complete event */
+-        wpa_printf(MSG_DEBUG, "HAPDTI %s: GET TX SUCCSESS", __func__);
++        wpa_printf(MSG_MSGDUMP, "HAPDTI %s: GET TX SUCCSESS", __func__);
+ 		wilink_tx_callback(hapd, buf, len, 1);
+ 		return;
+     case AP_CTRL_HDR_TX_FAIL: 			/* fail TX Complete event */
+@@ -186,7 +178,7 @@
+ 
+     sta = ap_get_sta(hapd,  hdr->addr2);
+     if (!sta) {
+-        wpa_printf(MSG_ERROR,"station is not found" MACSTR, MAC2STR(hdr->addr2));
++        wpa_printf(MSG_MSGDUMP,"station is not found" MACSTR, MAC2STR(hdr->addr2));
+     }
+     else {
+         sta->flags |= WLAN_STA_AUTH;
+@@ -488,10 +480,10 @@
+ 	struct wilink_driver_data *drv = priv;
+ 	const struct ieee80211_mgmt *mgmt = data;
+ 
+-	wpa_printf(MSG_DEBUG, " HAPDTI %s: sending %d byte MGMT frame to " MACSTR, __func__,
++	wpa_printf(MSG_MSGDUMP, " HAPDTI %s: sending %d byte MGMT frame to " MACSTR, __func__,
+ 			(int) len, MAC2STR(mgmt->da));
+-	wpa_hexdump(MSG_DEBUG, "MGMT", data, len);
+-    wpa_printf(MSG_DEBUG,"\n");
++	wpa_hexdump(MSG_MSGDUMP, "MGMT", data, len);
++    wpa_printf(MSG_MSGDUMP,"\n");
+    
+     return (l2_packet_send(drv->mlme_l2, mgmt->da, AP_MGMT_ETH_TYPE, data, len) < 0);
+ }
+@@ -722,15 +714,15 @@
+ {
+ 	struct wilink_driver_data *drv = priv;
+ 	int ret = 0;
+-
+-	if (country)
+-	{
+-		strcpy(drv->pRegDomain->cCountry, country);
+-	}
+-	/* build hw capability table */
+-	ret = wilink_send_ti_private_cmd(drv,ROLE_AP_GET_HW, (char*)drv->pRegDomain, sizeof(*drv->pRegDomain));
+-	regulatory_build_hw_capability(drv->pRegDomainHandle,drv->pRegDomain,drv->hapd->iconf->channel,drv->hapd->iconf->hw_mode);
+-        
++    
++    if (country)
++    {
++        strcpy(drv->pRegDomain->cCountry, country);
++    }
++    /* build hw capability table */
++    ret = wilink_send_ti_private_cmd(drv,ROLE_AP_GET_HW, (char*)drv->pRegDomain, sizeof(*drv->pRegDomain));
++    regulatory_build_hw_capability(drv->pRegDomainHandle,drv->pRegDomain,drv->hapd->iconf->channel,drv->hapd->iconf->hw_mode);
++   
+ 	return ret;
+ }
+ 
+@@ -741,7 +733,7 @@
+ 	TApGeneralParam GenStruct;
+ 	int ret = 0;
+ 
+-	GenStruct.lValue = rts;
++    GenStruct.lValue = rts;
+ 	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_RTS,(char*)&GenStruct,sizeof(GenStruct));
+ 	return ret;
+ }
+@@ -752,7 +744,7 @@
+ 	TApGeneralParam GenStruct;
+ 	int ret = 0;
+ 
+-	GenStruct.lValue = (value == 1) ? AP_SSID_TYPE_HIDDEN : AP_SSID_TYPE_PUBLIC;
++    GenStruct.lValue = (value == 1) ? AP_SSID_TYPE_HIDDEN : AP_SSID_TYPE_PUBLIC;
+ 	ret  = wilink_send_ti_private_cmd(drv, ROLE_AP_SET_SSID_TYPE, (char*)&GenStruct,sizeof(GenStruct));
+ 	return ret;
+ }
+@@ -804,34 +796,59 @@
+ 	TApGeneralParam GenStruct;
+ 	int ret = 0;
+ 
++    memset(&GenStruct, 0, sizeof(TApGeneralParam));
++
+     if (addr == NULL) 
+         return ret;
+     
+     memcpy(GenStruct.cMac,addr,AP_MAC_ADDR);
++
++
++	if (flags_or & WLAN_STA_AUTH)
++		return wilink_send_ti_private_cmd(drv,TWD_SET_CONNECTION_PHASE,(char*)&GenStruct,sizeof(GenStruct));
++
++
+ 	if (flags_or & WLAN_STA_AUTHORIZED)
++    {
+ 		GenStruct.lValue = 1;
++        ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_PORT_STATUS,(char*)&GenStruct,sizeof(GenStruct));
++    }
+ 	if (!(flags_and & WLAN_STA_AUTHORIZED))
++    {
+ 		GenStruct.lValue = 0;
++        ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_PORT_STATUS,(char*)&GenStruct,sizeof(GenStruct));
++    }
+ 
+-	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_PORT_STATUS,(char*)&GenStruct,sizeof(GenStruct));
+ 	if (ret) 
+ 		return ret;
+ 
+ 	if (flags_or & WLAN_STA_WME)
++    {
+ 		GenStruct.lValue = 1;
++        ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_WME,(char*)&GenStruct,sizeof(GenStruct));
++    }
+ 	if (!(flags_and & WLAN_STA_WME))
++    {
+ 		GenStruct.lValue = 0;
++        ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_WME,(char*)&GenStruct,sizeof(GenStruct));
++    }
+ 
+-	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_WME,(char*)&GenStruct,sizeof(GenStruct));
++	
+ 	if (ret) 
+ 		return ret;
+ 
+ 	if (flags_or & WLAN_STA_SHORT_PREAMBLE)
++    {
+ 		GenStruct.lValue = 1;
++        ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_SHORT_PREAMBLE,(char*)&GenStruct,sizeof(GenStruct));
++    }
+ 	if (!(flags_and & WLAN_STA_SHORT_PREAMBLE))
++    {
+ 		GenStruct.lValue = 0;
++        ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_SHORT_PREAMBLE,(char*)&GenStruct,sizeof(GenStruct));
++    }
+ 
+-	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_SHORT_PREAMBLE,(char*)&GenStruct,sizeof(GenStruct));
++	
+ 	return ret;
+ }
+ 
+@@ -889,6 +906,30 @@
+ 	return ret;
+ }
+ 
++static int wilink_start_enterprise_discovery(void *priv)
++{
++	struct wilink_driver_data *drv = priv;
++	int ret = 0;
++	ret  = wilink_send_ti_private_cmd(drv, ROLE_AP_START_ENTERPRISE_DISCOVER, NULL, 0);
++	return ret;
++}
++
++static int wilink_stop_enterprise_discovery(void *priv)
++{
++	struct wilink_driver_data *drv = priv;
++	int ret = 0;
++	ret  = wilink_send_ti_private_cmd(drv, ROLE_AP_STOP_ENTERPRISE_DISCOVER, NULL, 0);
++	return ret;
++}
++
++static int wilink_set_enterprise_discovery_params(void *priv,void *params)
++{
++	int ret = 0;
++	struct wilink_driver_data *drv = priv;
++	/*Forrword Command*/
++	ret  = wilink_send_ti_private_cmd(drv, TWD_SET_ENTERPRISE_DISCOVER_PARAMS, (char*)params, sizeof(TApActiveScanParams));
++	return ret;
++}
+ 
+ static int wilink_set_rate_sets(void *priv, int *supp_rates, int *basic_rates,
+ 		int mode)
+@@ -906,15 +947,14 @@
+ 	{
+ 		if (supp_rates != NULL)
+ 		{
+-		  for (i=0; (i<AP_MAX_SUPPORT_RATE) ;i++)
++		  for (i=0; i<AP_MAX_SUPPORT_RATE && supp_rates[i]>0;i++)
+ 		  {
+-		    if (supp_rates[i]>0)        
+ 			 RateParams.aSupportedRates[i] = supp_rates[i];
+ 		  }
+ 		  RateParams.cSuppRateLen = i;
+ 		}
+-	
+-		if (basic_rates != NULL)
++
++        if (basic_rates != NULL)
+ 		{
+ 		  for (i=0; (i<AP_MAX_SUPPORT_RATE && basic_rates[i]>0) ;i++)
+ 		  {
+@@ -984,6 +1024,14 @@
+ 
+ 	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_ADD_STATION_PARAM,(char*)&addStaParams,sizeof(addStaParams));
+ 
++    if(drv->port_open)
++    {
++        TApGeneralParam GenParams;
++        GenParams.lValue = 1;
++        memcpy(GenParams.cMac,params->addr,AP_MAC_ADDR);
++        wilink_send_ti_private_cmd(drv,ROLE_AP_SET_PORT_STATUS,(char*)&GenParams,sizeof(GenParams));
++    }
++
+ 	return ret;
+ }
+ 
+@@ -1072,11 +1120,16 @@
+ 	if (strcmp(alg, "none") == 0)
+ 	{
+ 		ret  = wilink_send_ti_private_cmd(drv,TWD_DEL_KEY_PARAMS,(char*)&AddKeyParams,sizeof(AddKeyParams));
++        drv->port_open = 1;
+     }
+ 	else
+ 	{
++        drv->port_open = 0;
+ 		if (strcmp(alg, "WEP") == 0)
++        {
+ 			AddKeyParams.cAlg = AP_WEP_CIPHER;
++            drv->port_open = 1;
++        }
+ 		else if (strcmp(alg, "TKIP") == 0)
+ 			AddKeyParams.cAlg = AP_TKIP_CIPHER;
+ 		else if (strcmp(alg, "CCMP") == 0)
+@@ -1098,7 +1151,7 @@
+         }
+              
+         ret  = wilink_send_ti_private_cmd(drv,TWD_ADD_KEY_PARAMS,(char*)&AddKeyParams,sizeof(AddKeyParams));
+-        
++
+ 	}
+ 
+ 	return ret;
+@@ -1156,11 +1209,11 @@
+ static struct hostapd_hw_modes *
+  wilink_get_hw_feature_data(void *priv, u16 *num_modes, u16 *flags)
+ {
+-   struct wilink_driver_data *drv = priv;
+-   TApGeneralParam GenStruct;
+-   int i,j;
++    struct wilink_driver_data *drv = priv;
++    TApGeneralParam GenStruct;
++    int i,j;
+     
+-   /* Build hw capability table for default regulatory domain (all channels) if country code is not set */
++    /* Build hw capability table for default regulatory domain (all channels) if country code is not set */
+    wilink_send_ti_private_cmd(drv, ROLE_AP_GET_HW, (char*)drv->pRegDomain, sizeof(*drv->pRegDomain));
+ 
+    if (!drv->hapd->iconf->ieee80211d)
+@@ -1183,12 +1236,12 @@
+         }
+    }
+   
+-   wilink_send_ti_private_cmd(drv,ROLE_AP_SET_TX_POWER,(char*)&GenStruct,sizeof(TApGeneralParam));
++  wilink_send_ti_private_cmd(drv,ROLE_AP_SET_TX_POWER,(char*)&GenStruct,sizeof(TApGeneralParam));
+  
+-   *num_modes =  drv->pRegDomainHandle->NumOfModes;
+-   *flags = 0;
++  *num_modes =  drv->pRegDomainHandle->NumOfModes;
++  *flags = 0;
+     
+-   return drv->pRegDomainHandle->modes;
++  return drv->pRegDomainHandle->modes;
+ }
+ 
+ static int
+@@ -1222,8 +1275,6 @@
+ }
+ 
+ 
+-
+-
+ const struct wpa_driver_ops wpa_driver_wilink_ops = {
+ 		.name = "wilink",
+ 		.init = wilink_init,
+@@ -1239,28 +1290,31 @@
+ 		
+ 		/* commands */
+ 		.set_privacy = wilink_set_privacy,
+-		.set_encryption = wilink_set_encryption,
++	    .set_encryption = wilink_set_encryption,
+ 		.flush = wilink_flush,
+ 		.read_sta_data = wilink_read_sta_data,
+ 		.sta_set_flags = wilink_sta_set_flags,
+ 		.sta_remove = wilink_sta_remove,
+ 		.sta_add2 = wilink_sta_add2,
+-		.set_freq = wilink_set_channel,
++	    .set_freq = wilink_set_channel,
+ 		.set_rts = wilink_set_rts,
+ 		.set_rate_sets = wilink_set_rate_sets,
+ 		.set_beacon = wilink_set_beacon,
+-		.set_internal_bridge = wilink_set_internal_bridge,
++        .set_internal_bridge = wilink_set_internal_bridge,
+ 		.set_beacon_int = wilink_set_beacon_int,
++		.start_enterprise_discovery = wilink_start_enterprise_discovery,
++		.stop_enterprise_discovery = wilink_stop_enterprise_discovery,
++		.set_enterprise_discovery_params = wilink_set_enterprise_discovery_params,
+ 		.set_dtim_period = wilink_set_dtim_period,
+-		.set_broadcast_ssid = wilink_set_broadcast_ssid,
++        .set_broadcast_ssid = wilink_set_broadcast_ssid,
+ 		.set_cts_protect = wilink_set_cts_protect,
+ 		.set_preamble = wilink_set_preamble,
+ 		.set_short_slot_time = wilink_set_short_slot_time,
+ 		.set_tx_queue_params = wilink_set_tx_queue_params,
+-		.set_country = wilink_set_country,
+-		.commit = wilink_commit,
+-		.set_ssid = wilink_set_ssid,
+-		.get_hw_feature_data = wilink_get_hw_feature_data,
+-		.set_wps_beacon_ie	= wilink_set_wps_beacon_ie,
+-		.set_wps_probe_resp_ie	= wilink_set_wps_probe_resp_ie,
++	    .set_country = wilink_set_country,
++        .commit = wilink_commit,
++        .set_ssid = wilink_set_ssid,
++        .get_hw_feature_data = wilink_get_hw_feature_data,
++        .set_wps_beacon_ie	= wilink_set_wps_beacon_ie,
++        .set_wps_probe_resp_ie	= wilink_set_wps_probe_resp_ie,
+ };
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/hostapd.c hostapd_new/hostapd/hostapd.c
+--- hostapd_original/hostapd/hostapd.c	2011-03-27 16:18:38.873327000 +0200
++++ hostapd_new/hostapd/hostapd.c	2011-03-27 16:18:46.250739000 +0200
+@@ -67,6 +67,13 @@
+ extern int wpa_debug_show_keys;
+ extern int wpa_debug_timestamp;
+ 
++typedef enum
++{
++	SCAN_IDLE    = 0,
++	SCAN_STARTED = 1
++}e_ScanState;
++
++static e_ScanState EnterpriseDiscoverScanState;
+ 
+ static void hostapd_logger_cb(void *ctx, const u8 *addr, unsigned int module,
+ 			      int level, const char *txt, size_t len)
+@@ -702,7 +709,7 @@
+ {
+ 	hostapd_free_hw_features(iface->hw_features, iface->num_hw_features);
+ 	iface->hw_features = NULL;
+-	os_free(iface->current_rates);
++    os_free(iface->current_rates);
+ 	iface->current_rates = NULL;
+ 	ap_list_deinit(iface);
+ 	hostapd_config_free(iface->conf);
+@@ -1642,6 +1649,15 @@
+ 			   "configuration", __func__);
+ 		return -1;
+ 	}
++	
++	/* Send Enterprise Discovery parameters to Firmware only if Enterprise Discovery is enabled*/
++	if (iface->conf->bss->hostapd_enterprise_discover_params.discover_enabled == 1) {
++		hostapd_commit_discovery_config(hapd);
++		/* In case we are performing recovery, we need to check if enterprisr dicovery scan was started. If so, start it again*/
++		if (EnterpriseDiscoverScanState == SCAN_STARTED) {
++			hostapd_start_enterprise_discovery(hapd);
++		}
++	}
+ 
+ 	return ret;
+ }
+@@ -1870,7 +1886,7 @@
+ 	int ret, k;
+ 
+ 	wpa_printf(MSG_DEBUG, "**************%s**************", __func__);
+-
++	
+ 	ret = hostapd_init(iface, config_file);
+ 	if (ret)
+ 		return -1;
+@@ -2008,7 +2024,7 @@
+ 	if (!iface)
+ 		return -1;
+ 
+-	for (i = 0; i < iface->num_bss; i++)
++	for (i = 0; i < iface->num_bss; i++) 
+ 	{
+ 		struct hostapd_data *hapd = iface->bss[i];
+ 
+@@ -2016,6 +2032,9 @@
+ 		hostapd_flush_old_stations(hapd);
+ 		/*Sleep in order to wait for DEAUTH frame to be transmitted*/
+ 		sleep(1);
++
++		hostapd_wireless_event_deinit(hapd);
++
+ 		if ((i == iface->num_bss - 1) && (hapd->driver))
+ 			hostapd_driver_deinit(hapd);
+ 		hapd->driver = NULL;
+@@ -2024,6 +2043,133 @@
+ 	return 0;
+ }
+ 
++int hostapd_set_ssids_iface(struct hostapd_iface *iface, const char *ssid_params)
++{
++	if (!iface)
++		return -1;
++	hostapd_parse_ssid_list(iface->conf->bss, 1, ssid_params);
++	return 0;
++}
++
++int hostapd_set_channels_iface(struct hostapd_iface *iface, const char *channels)
++{
++	return hostapd_parse_channel_list(channels, iface->conf->bss);
++}
++
++int hostapd_set_interval_iface(struct hostapd_iface *iface, const char *interval)
++{
++	return hostapd_parse_interval(interval, iface->conf->bss);
++}
++
++int hostapd_set_dwell_time(struct hostapd_iface *iface, const char *dwell_time)
++{
++	return hostapd_parse_dwell_time(dwell_time, iface->conf->bss);
++}
++
++int hostapd_enable_discovery(struct hostapd_iface *iface)
++{
++	iface->conf->bss->hostapd_enterprise_discover_params.discover_enabled = 1;
++	return 1;
++}
++
++int hostapd_disable_discovery(struct hostapd_iface *iface)
++{
++	iface->conf->bss->hostapd_enterprise_discover_params.discover_enabled = 0;
++	return 1;
++}
++
++void hostapd_get_ap_table(struct hostapd_iface *iface, char *reply)
++{
++	int iter;
++	iface->conf->bss->hostapd_enterprise_discover_params.ssid_result_list_size = 0;
++	ap_ap_for_each(iface, hostapd_compare_ap_tables, &(iface->conf->bss->hostapd_enterprise_discover_params));
++	
++	reply[0] = '\0';
++	for (iter = 0; iter < iface->conf->bss->hostapd_enterprise_discover_params.ssid_result_list_size; iter++) {
++		strcat(reply, iface->conf->bss->hostapd_enterprise_discover_params.ssid_result_list[iter].str);
++		strcat(reply, "\n");
++	}
++}
++
++int hostapd_compare_ap_tables(struct ap_info* s, void *data)
++{
++	struct s_HostapdEnterpriseDiscoverParams *host_params = (struct s_HostapdEnterpriseDiscoverParams*) data;
++	struct ap_info* curr_entry = s;
++	char curr_ssid[51];
++	char curr_channel[15];
++	int curr_ssid_len;
++	int iter, ssid_list_iter;
++
++	/*Get Curren SSID*/
++	curr_ssid_len = curr_entry->ssid_len + 1;
++	os_strlcpy(curr_ssid, curr_entry->ssid, curr_ssid_len);
++	/*Compare Current SSID With Our Enterprise Descovery Parameters*/
++	for(iter=0; iter < host_params->ssids_num; iter++) {
++		if (os_strcmp(host_params->ssid_list[iter].str, curr_ssid) == 0) {
++			/*SSID Found: Check If Already Added. If Not, Save It*/
++			ssid_list_iter = 0;
++			while (ssid_list_iter < host_params->ssid_result_list_size ) {
++				if (os_strcmp(host_params->ssid_result_list[ssid_list_iter].str, curr_ssid) == 0) {
++					/*SSID Already In List - Return*/
++					return 1;
++				}
++				else {
++					ssid_list_iter = ssid_list_iter + 1;
++				}
++			}
++			/*SSID Not In List - Add It*/
++			/*Check If SSID Is Configured As Hidden, Add "***" If Hidden*/
++			if (host_params->ssid_list[iter].type == SSID_TYPE_HIDDEN) {
++				strcat(curr_ssid, "***");
++				curr_ssid_len = curr_ssid_len + 3;
++			}
++			/*Add Channel To Result*/
++			snprintf(curr_channel, sizeof(curr_channel), "   Channel: %d", curr_entry->channel);
++			strcat(curr_ssid, curr_channel);
++			curr_ssid_len = curr_ssid_len + 15;
++			os_strlcpy(host_params->ssid_result_list[host_params->ssid_result_list_size].str, curr_ssid, curr_ssid_len);
++			host_params->ssid_result_list_size = host_params->ssid_result_list_size + 1;
++		}
++	}	 
++	return 0;
++}
++
++int hostapd_call_commit_discovery_config(struct hostapd_data *hapd)
++{
++	if (EnterpriseDiscoverScanState == SCAN_STARTED) {
++		fprintf(stderr,"\n Please stop scan before commiting new configurations\n");
++		return 0;
++	}
++	return hostapd_commit_discovery_config(hapd);
++}
++int hostapd_call_start_enterprise_discovery(struct hostapd_data *hapd)
++{
++	if (hapd->iface->conf->bss->hostapd_enterprise_discover_params.discover_enabled == 0) {
++			fprintf(stderr,"\n enterprise_discovery is disabled - cannot start scan\n");
++			return 0;
++	}
++	if (EnterpriseDiscoverScanState != SCAN_STARTED) {
++		EnterpriseDiscoverScanState = SCAN_STARTED;
++		return hostapd_start_enterprise_discovery(hapd);
++	}
++	else {
++		fprintf(stderr,"\n scan is already started\n");
++		return 0;
++	}
++}
++int hostapd_call_stop_enterprise_discovery(struct hostapd_data *hapd)
++{
++	if (hapd->iface->conf->bss->hostapd_enterprise_discover_params.discover_enabled == 0) {
++		fprintf(stderr,"\n scan is already stopped\n");
++		return 0;
++	}	
++	if (EnterpriseDiscoverScanState != SCAN_IDLE) {
++		EnterpriseDiscoverScanState = SCAN_IDLE;
++		return hostapd_stop_enterprise_discovery(hapd);
++	}
++	fprintf(stderr,"\n scan is already stopped\n");
++	return 0;
++}
+ 
+ int main(int argc, char *argv[])
+ {
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/hostapd_cli.c hostapd_new/hostapd/hostapd_cli.c
+--- hostapd_original/hostapd/hostapd_cli.c	2011-03-27 16:18:38.671415000 +0200
++++ hostapd_new/hostapd/hostapd_cli.c	2011-03-27 16:18:46.322742000 +0200
+@@ -100,6 +100,7 @@
+ "   start                start the AP\n" 
+ "   quit                 exit hostapd_cli\n";
+ 
++
+ static struct wpa_ctrl *ctrl_conn;
+ static int hostapd_cli_quit = 0;
+ static int hostapd_cli_attached = 0;
+@@ -135,6 +136,7 @@
+ 	char *cfile;
+ 	int flen;
+ 
++   
+ 	if (ifname == NULL)
+ 		return NULL;
+ 
+@@ -278,14 +280,14 @@
+ 		return -1;
+ 	}
+ 	snprintf(buf, sizeof(buf), "WPS_PIN %s %s", argv[0], argv[1]);
+-	return wpa_ctrl_command(ctrl, buf);
++    return wpa_ctrl_command(ctrl, buf);
+ }
+ 
+ 
+ static int hostapd_cli_cmd_wps_pbc(struct wpa_ctrl *ctrl, int argc,
+ 				   char *argv[])
+ {
+-	return wpa_ctrl_command(ctrl, "WPS_PBC");
++    return wpa_ctrl_command(ctrl, "WPS_PBC");
+ }
+ #endif /* CONFIG_WPS */
+ 
+@@ -372,6 +374,85 @@
+ 	return wpa_ctrl_command(ctrl, "STOP");
+ }
+ 
++static int hostapd_cli_cmd_enable_discovery(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "ENABLE_DISCOVERY");
++}
++
++static int hostapd_cli_cmd_disable_discovery(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "DISABLE_DISCOVERY");
++}
++
++static int hostapd_cli_cmd_get_ap_table(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "GET_AP_TABLE");
++}
++
++static int hostapd_cli_cmd_commit_config(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "COMMIT_CONFIG");
++}
++
++static int hostapd_cli_cmd_start_scan(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "START_SCAN");
++}
++
++static int hostapd_cli_cmd_stop_scan(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "STOP_SCAN");
++}
++
++static int hostapd_cli_cmd_set_ssid(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	char cmd[256];
++
++	if (argc != 1) {
++		printf("Invalid SET_SIIDS command: needs one argument (ssid "
++		       "list)\n");
++		return 0;
++	}
++	snprintf(cmd, sizeof(cmd), "SET_SSIDS %s", argv[0]);
++
++	return wpa_ctrl_command(ctrl, cmd);
++}
++
++static int hostapd_cli_cmd_set_channels(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	char cmd[256];
++
++	if (argc != 1) {
++		printf("Invalid Set Channel command: needs one argument\n");
++		return 0;
++	}
++	snprintf(cmd, sizeof(cmd), "SET_CHANNELS %s", argv[0]);
++
++	return wpa_ctrl_command(ctrl, cmd);	
++}
++
++static int hostapd_cli_cmd_set_interval(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	char cmd[256];
++	if (argc != 1) {
++		printf("Invalid Set Interval command: needs one argument\n");
++		return 0;
++	}
++	snprintf(cmd, sizeof(cmd), "SET_INTERVAL %d", *((int*)argv[0]));
++	return wpa_ctrl_command(ctrl, cmd);	
++}
++
++static int hostapd_cli_cmd_set_dwell_time(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	char cmd[256];
++	if (argc != 1) {
++		printf("Invalid Set Dwell Time command: needs one argument\n");
++		return 0;
++	}
++	snprintf(cmd, sizeof(cmd), "SET_DWELL_TIME %d", *((int*)argv[0]));
++	return wpa_ctrl_command(ctrl, cmd);	
++}
++
+ static int hostapd_cli_cmd_start(struct wpa_ctrl *ctrl, int argc, char *argv[])
+ {
+ 	char cmd[256];
+@@ -479,6 +560,16 @@
+ 	{ "reset", hostapd_cli_cmd_reset},
+ 	{ "stop", hostapd_cli_cmd_stop},
+ 	{ "start", hostapd_cli_cmd_start},
++	{ "SET_SSIDS", hostapd_cli_cmd_set_ssid},
++	{ "SET_CHANNELS", hostapd_cli_cmd_set_channels},
++	{ "SET_INTERVAL", hostapd_cli_cmd_set_interval},
++	{ "START_SCAN", hostapd_cli_cmd_start_scan},
++	{ "STOP_SCAN", hostapd_cli_cmd_stop_scan},
++	{ "ENABLE_DISCOVERY", hostapd_cli_cmd_enable_discovery},
++	{ "DISABLE_DISCOVERY", hostapd_cli_cmd_disable_discovery},
++	{ "GET_AP_TABLE", hostapd_cli_cmd_get_ap_table},
++	{ "COMMIT_CONFIG", hostapd_cli_cmd_commit_config},
++	{ "SET_DWELL_TIME", hostapd_cli_cmd_set_dwell_time},
+ 	{ NULL, NULL }
+ };
+ 
+@@ -490,15 +581,18 @@
+ 
+ 	count = 0;
+ 	cmd = hostapd_cli_commands;
+-	while (cmd->cmd) {
+-		if (strncasecmp(cmd->cmd, argv[0], strlen(argv[0])) == 0) {
+-			match = cmd;
+-			count++;
+-		}
+-		cmd++;
++
++   	while (cmd->cmd) 
++    {
++        if (os_strcmp(cmd->cmd, argv[0]) == 0) 
++        {
++            match = cmd;
++            count++;
++        }
++        cmd++;
+ 	}
+ 
+-	if (count > 1) {
++    if (count > 1) {
+ 		printf("Ambiguous command '%s'; possible commands:", argv[0]);
+ 		cmd = hostapd_cli_commands;
+ 		while (cmd->cmd) {
+@@ -512,7 +606,7 @@
+ 	} else if (count == 0) {
+ 		printf("Unknown command '%s'\n", argv[0]);
+ 	} else {
+-		match->handler(ctrl, argc - 1, &argv[1]);
++        match->handler(ctrl, argc - 1, &argv[1]);
+ 	}
+ }
+ 
+@@ -624,7 +718,7 @@
+ 
+     for (i = 0 ;i < HOSTAPD_CLI_CMD_LAST ; i++)
+     {
+-        printf("%d. %s => %s",i+1 , tCmdsNames[i].cmdName, tCmdsNames[i].cmdDescription);
++        printf("%d. %s => %s",i+1 , tCmdsNames[i].cmdName, tCmdsNames[i].cmdDescription); 
+     }
+ }
+ 
+@@ -666,16 +760,43 @@
+ 	case HOSTAPD_CLI_CMD_WPS_PBC:
+ 	case HOSTAPD_CLI_CMD_RESET:
+ 	case HOSTAPD_CLI_CMD_STOP:
+-        break;
++	case HOSTAPD_CLI_CMD_COMMIT_CONFIGURATION:
++	case HOSTAPD_CLI_CMD_ENABLE_SCAN:
++	case HOSTAPD_CLI_CMD_DISABLE_SCAN:
++	case HOSTAPD_CLI_CMD_START_SCAN:
++	case HOSTAPD_CLI_CMD_STOP_SCAN:
++         break;
+ 	case HOSTAPD_CLI_CMD_START:
+ 		argv[1] = malloc(MAX_FILENAME_SIZE);
+ 		memcpy(argv[1], pCmd->u.tCmdStart.config_fname , MAX_FILENAME_SIZE);
+ 		argc = 2;
+         break;
++	case HOSTAPD_CLI_CMD_SET_SSID_LIST:
++		argv[1] = malloc(MAX_SSID_LIST_SIZE);
++		memcpy(argv[1], pCmd->u.tCmdSetSsid.ssid_list , MAX_SSID_LIST_SIZE);
++		argc = 2;
++        break;
++	case HOSTAPD_CLI_CMD_SET_CHANNEL_LIST:
++		argv[1] = malloc(MAX_CHANNEL_LIST_SIZE);
++		memcpy(argv[1], pCmd->u.tCmdSetChannels.channel_list, MAX_CHANNEL_LIST_SIZE);
++		argc = 2;
++        break;
++	case HOSTAPD_CLI_CMD_SET_SCAN_INTERVAL:
++		argv[1] = malloc(sizeof(unsigned int));
++		memcpy(argv[1], &(pCmd->u.tCmdSetInterval.interval), sizeof(unsigned int));
++		argc = 2;
++        break;
++	case HOSTAPD_CLI_CMD_SET_DWELL_TIME:
++		argv[1] = malloc(sizeof(unsigned int));
++		memcpy(argv[1], &(pCmd->u.tCmdSetDwellTime.dwell_time), sizeof(unsigned int));
++		argc = 2;
++        break;
++	case HOSTAPD_CLI_CMD_GET_AP_RESULTS:
++		argc = 1;
++		break;
+     case HOSTAPD_CLI_CMD_STA:
+     case HOSTAPD_CLI_CMD_NEW_STA:
+ 	case HOSTAPD_CLI_CMD_SA_QUERY:
+-
+        argv[1] = malloc(MAX_ADDRESS_SIZE);
+        memcpy(argv[1], pCmd->u.tCmdSta.address , MAX_ADDRESS_SIZE);
+        argc = 2;
+@@ -697,9 +818,8 @@
+     default:
+         printf("Error!, Command number %d is not legal!!!", pCmd->eCmdType);
+     }
+-
+-    printf("\n Sending Command: name=%s, argc=%d \n" ,argv[0], argc);
+-	wpa_request(ctrl_conn, argc, &argv[0]);
++    printf("\n Sending Command: name=%s, argc=%d  \n" ,argv[0], argc);
++    wpa_request(ctrl_conn, argc, &argv[0]);
+ 
+ 	free(ctrl_ifname);
+ 
+@@ -707,6 +827,7 @@
+     {
+         free(argv[i]);
+     }
++	printf("HostapdCLI_RunCommand - Close connection\n");
+ 	hostapd_cli_close_connection();
+ 
+ 	return 0;
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/hostapd_cli.h hostapd_new/hostapd/hostapd_cli.h
+--- hostapd_original/hostapd/hostapd_cli.h	2011-03-27 16:18:38.760350000 +0200
++++ hostapd_new/hostapd/hostapd_cli.h	2011-03-27 16:18:46.764726000 +0200
+@@ -1,5 +1,5 @@
+ /*
+- * hostapd / Module short description
++ * hostapd / Hostapd daemon command line interface definition
+  * Copyright (c) 2010, Texas Instruments, Inc. - http://www.ti.com/
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -7,9 +7,7 @@
+  * published by the Free Software Foundation.
+  *
+  * Alternatively, this software may be distributed under the terms of BSD
+- * license.
+- *
+- * For more details please review the below BSD terms:
++ * license below:
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+@@ -39,7 +37,6 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-
+ #ifndef HOSTAPD_CLI_H
+ #define HOSTAPD_CLI_H
+ 
+@@ -50,7 +47,14 @@
+ #define MAX_CMD_NAME_SIZE   20
+ #define MAX_CMD_DESCRIPTION_SIZE 150
+ #define MAX_FILENAME_SIZE	80
+-
++#define MAX_SSID_LEN        (32)
++#define MAX_SSID_TYPE_LEN	(1)
++#define MAX_SUPPORTED_SSIDS (32)
++#define SSID_TYPE_DELIMITER_LEN (2)
++#define MAX_CHANNEL_LEN (3)
++#define NUM_OF_G_CHANNELS (14)
++#define MAX_SSID_LIST_SIZE  ((MAX_SSID_LEN+MAX_SSID_TYPE_LEN+SSID_TYPE_DELIMITER_LEN) * MAX_SUPPORTED_SSIDS)
++#define MAX_CHANNEL_LIST_SIZE (NUM_OF_G_CHANNELS*MAX_CHANNEL_LEN )
+ #define MAX_PARAMS_IN_CMD   10
+ 
+ 
+@@ -71,11 +75,21 @@
+     HOSTAPD_CLI_CMD_SA_QUERY,
+     HOSTAPD_CLI_CMD_WPS_PIN,
+     HOSTAPD_CLI_CMD_WPS_PBC,
+-    HOSTAPD_CLI_CMD_RESET,
+-    HOSTAPD_CLI_CMD_STOP,
+-    HOSTAPD_CLI_CMD_START,
++	HOSTAPD_CLI_CMD_RESET,
++	HOSTAPD_CLI_CMD_STOP,
++	HOSTAPD_CLI_CMD_START,
++	HOSTAPD_CLI_CMD_SET_SSID_LIST,
++	HOSTAPD_CLI_CMD_SET_CHANNEL_LIST,
++	HOSTAPD_CLI_CMD_COMMIT_CONFIGURATION,
++	HOSTAPD_CLI_CMD_START_SCAN,
++	HOSTAPD_CLI_CMD_STOP_SCAN,
++	HOSTAPD_CLI_CMD_SET_SCAN_INTERVAL,
++	HOSTAPD_CLI_CMD_DISABLE_SCAN,
++	HOSTAPD_CLI_CMD_ENABLE_SCAN,
++	HOSTAPD_CLI_CMD_GET_AP_RESULTS,
++	HOSTAPD_CLI_CMD_SET_DWELL_TIME,
+ #ifndef CONFIG_NO_TI          
+-    HOSTAPD_CLI_CMD_RELOAD_ACL,
++	HOSTAPD_CLI_CMD_RELOAD_ACL,
+ #endif
+     HOSTAPD_CLI_CMD_LAST
+ } EHostapdCLICmds;
+@@ -83,19 +97,29 @@
+ 
+ static TCmdInfo tCmdsNames[HOSTAPD_CLI_CMD_LAST] =
+ {
+-    {"ping",    "Get MIB variables (dot1x, dot11, radius)\n"},              /* HOSTAPD_CLI_CMD_PING */
+-    {"mib",     "Get MIB variables for one station\n"},                     /* HOSTAPD_CLI_CMD_MIB */
+-    {"sta",     "Get MIB variables for one station (Param: <addr>)\n"},     /* HOSTAPD_CLI_CMD_STA */
+-    {"all_sta", "Get MIB variables for all stations\n"},                    /* HOSTAPD_CLI_CMD_ALL_STA */
+-    {"new_sta", "Add a new station (Param0: <addr>)\n"},                    /* HOSTAPD_CLI_CMD_NEW_STA */
+-    {"sa_query","Send SA Query to a station (Param: <addr>)\n"},            /* HOSTAPD_CLI_CMD_SA_QUERY */
+-    {"wps_pin", "Add WPS Enrollee PIN (Param: <pin> <uuid>)\n"},            /* HOSTAPD_CLI_CMD_WPS_PIN */
+-    {"wps_pbc", "indicate button pushed to initiate PBC \n"},               /* HOSTAPD_CLI_CMD_WPS_PBC */
+-    {"reset",   "Reload config file and reset the AP\n"},	                /* HOSTAPD_CLI_CMD_RESET */
+-    {"stop",    "Stop the AP\n"},							                /* HOSTAPD_CLI_CMD_STOP */
+-    {"start",   "Start the AP <config filename>\n"},		                /* HOSTAPD_CLI_CMD_START */
++    {"ping",    			"Get MIB variables (dot1x, dot11, radius)\n"},              /* HOSTAPD_CLI_CMD_PING */
++    {"mib",     			"Get MIB variables for one station\n"},                     /* HOSTAPD_CLI_CMD_MIB */
++    {"sta",     			"Get MIB variables for one station (Param: <addr>)\n"},     /* HOSTAPD_CLI_CMD_STA */
++    {"all_sta", 			"Get MIB variables for all stations\n"},                    /* HOSTAPD_CLI_CMD_ALL_STA */
++    {"new_sta", 			"Add a new station (Param0: <addr>)\n"},                    /* HOSTAPD_CLI_CMD_NEW_STA */
++    {"sa_query",			"Send SA Query to a station (Param: <addr>)\n"},            /* HOSTAPD_CLI_CMD_SA_QUERY */
++    {"wps_pin", 			"Add WPS Enrollee PIN (Param: <pin> <uuid>)\n"},            /* HOSTAPD_CLI_CMD_WPS_PIN */
++    {"wps_pbc", 			"indicate button pushed to initiate PBC \n"},               /* HOSTAPD_CLI_CMD_WPS_PBC */
++    {"reset",   			"Reload config file and reset the AP\n"},	                /* HOSTAPD_CLI_CMD_RESET */
++    {"stop",    			"Stop the AP\n"},							                /* HOSTAPD_CLI_CMD_STOP */
++    {"start",   			"Start the AP <config filename>\n"},		                /* HOSTAPD_CLI_CMD_START */
++	{"SET_SSIDS",   		"Set ssid list <ssid list: ap1 p ap2 h>\n"},		    	/* HOSTAPD_CLI_CMD_SET_SSID_LIST */
++	{"SET_CHANNELS",   		"Set channel list <channel list: c1 c2>\n"},		   		/* HOSTAPD_CLI_CMD_SET_CHANNEL_LIST */
++	{"COMMIT_CONFIG",		"Commit the discovery params configuration\n"},	    		/* HOSTAPD_CLI_CMD_COMMIT_CONFIGURATION */
++	{"START_SCAN",    		"Start enterprise discovery\n"},	    					/* HOSTAPD_CLI_CMD_START_SCAN */
++	{"STOP_SCAN",     		"Stop enterprise discovery\n"},	    						/* HOSTAPD_CLI_CMD_STOP_SCAN */
++	{"SET_INTERVAL",  		"Set interval value between cycles in mSec\n"},				/* HOSTAPD_CLI_CMD_SET_INTERVAL_SCAN      */
++	{"DISABLE_DISCOVERY",   "Disable enterprise discovery\n"},	    					/* HOSTAPD_CLI_CMD_DISABLE_SCAN */
++	{"ENABLE_DISCOVERY",   	"Enable enterprise discovery\n"},	    					/* HOSTAPD_CLI_CMD_ENABLE_SCAN       */
++	{"GET_AP_TABLE",   	  	"Get enterprise discovery ap results\n"},	    			/* HOSTAPD_CLI_CMD_ENABLE_SCAN       */
++	{"SET_DWELL_TIME",   	"Set dwell time <0...1000\n"},	    						/* HOSTAPD_CLI_CMD_SET_DWELL_TIME       */
+ #ifndef CONFIG_NO_TI
+-	{"reload_acl", "reload acl configuration \n"}                           /* HOSTAPD_CLI_CMD_RELOAD_ACL */
++	{"reload_acl", "reload acl configuration \n"}                                       /* HOSTAPD_CLI_CMD_RELOAD_ACL */
+ #endif
+ };
+ 
+@@ -106,18 +130,38 @@
+ 
+ typedef struct
+ {
++	unsigned int interval;
++}TCmdSetInterval;
++
++typedef struct
++{
++	unsigned int dwell_time;
++}TCmdSetDwellTime;
++
++typedef struct
++{
++    char channel_list[MAX_CHANNEL_LIST_SIZE];
++}TCmdSetChannels;
++
++typedef struct
++{
++    char ssid_list[MAX_SSID_LIST_SIZE];
++}TCmdSetSsid;
++
++typedef struct
++{
+     char address[MAX_ADDRESS_SIZE];
+ }TCmdSta;
+ 
+ 
+ typedef struct
+ {
+-    char uuid[MAX_UUID_SIZE];
+-    unsigned short uuidLen;
+-    char pin[MAX_PIN_SIZE];
+-    unsigned short pinLen;
+-}TCmdWPSPin;
++  char uuid[MAX_UUID_SIZE];
++  unsigned short uuidLen;
++  char pin[MAX_PIN_SIZE];
++  unsigned short pinLen;
+ 
++}TCmdWPSPin;
+ 
+ typedef struct
+ {
+@@ -125,9 +169,13 @@
+ 
+     union
+     {
+-		TCmdStart   tCmdStart;
+-        TCmdSta     tCmdSta;
+-        TCmdWPSPin  tCmdWPSPin;
++		TCmdStart   		tCmdStart;
++        TCmdSta     		tCmdSta;
++        TCmdWPSPin  		tCmdWPSPin;
++		TCmdSetSsid 		tCmdSetSsid;
++		TCmdSetChannels 	tCmdSetChannels;
++		TCmdSetInterval 	tCmdSetInterval;
++		TCmdSetDwellTime	tCmdSetDwellTime; 
+     } u;
+ } THostapdCLICmd;
+ 
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/hostapd.conf hostapd_new/hostapd/hostapd.conf
+--- hostapd_original/hostapd/hostapd.conf	2011-03-27 16:18:38.640403000 +0200
++++ hostapd_new/hostapd/hostapd.conf	2011-03-27 16:18:46.258760000 +0200
+@@ -3,7 +3,7 @@
+ 
+ # AP netdevice name (without 'ap' postfix, i.e., wlan0 uses wlan0ap for
+ # management frames); ath0 for madwifi
+-interface=wlan0
++interface=tiap0
+ 
+ # In case of madwifi and nl80211 driver interfaces, an additional configuration
+ # parameter, bridge, must be used to notify hostapd if the interface is
+@@ -14,7 +14,7 @@
+ # default: hostap). nl80211 is used with all Linux mac80211 drivers.
+ # Use driver=none if building hostapd as a standalone RADIUS server that does
+ # not control any wireless/wired driver.
+-# driver=hostap
++driver=wilink
+ 
+ # hostapd event logger configuration
+ #
+@@ -54,7 +54,8 @@
+ # than one interface is used.
+ # /var/run/hostapd is the recommended directory for sockets and by default,
+ # hostapd_cli will use it when trying to connect with hostapd.
+-ctrl_interface=/var/run/hostapd
++ctrl_interface=/dev/socket
++
+ 
+ # Access control for the control interface can be configured by setting the
+ # directory to allow only members of a group to use sockets. This way, it is
+@@ -75,7 +76,7 @@
+ ##### IEEE 802.11 related configuration #######################################
+ 
+ # SSID to be used in IEEE 802.11 management frames
+-ssid=test
++ssid=ap_test
+ 
+ # Country code (ISO/IEC 3166-1). Used to set regulatory domain.
+ # Set as needed to indicate country in which device is operating.
+@@ -91,14 +92,14 @@
+ 
+ # Operation mode (a = IEEE 802.11a, b = IEEE 802.11b, g = IEEE 802.11g,
+ # Default: IEEE 802.11b
+-hw_mode=a
++hw_mode=g
+ 
+ # Channel number (IEEE 802.11)
+ # (default: 0, i.e., not set)
+ # Please note that some drivers (e.g., madwifi) do not use this value from
+ # hostapd and the channel will need to be configuration separately with
+ # iwconfig.
+-channel=60
++channel=11
+ 
+ # Beacon interval in kus (1.024 ms) (default: 100; range 15..65535)
+ beacon_int=100
+@@ -112,18 +113,11 @@
+ # rejected after the station table is full. IEEE 802.11 has a limit of 2007
+ # different association IDs, so this number should not be larger than that.
+ # (default: 2007)
+-max_num_sta=255
++max_num_sta=8
++
++# RTS/CTS threshold is set via tiwlan.ini file
+ 
+-# RTS/CTS threshold; 2347 = disabled (default); range 0..2347
+-# If this field is not included in hostapd.conf, hostapd will not control
+-# RTS threshold and 'iwconfig wlan# rts <val>' can be used to set it.
+-rts_threshold=2347
+-
+-# Fragmentation threshold; 2346 = disabled (default); range 256..2346
+-# If this field is not included in hostapd.conf, hostapd will not control
+-# fragmentation threshold and 'iwconfig wlan# frag <val>' can be used to set
+-# it.
+-fragm_threshold=2346
++# Fragmentation threshold is not supported
+ 
+ # Rate configuration
+ # Default is to enable all rates supported by the hardware. This configuration
+@@ -136,14 +130,14 @@
+ # default: use the most common supported rate setting for the selected
+ # hw_mode (i.e., this line can be removed from configuration file in most
+ # cases)
+-#supported_rates=10 20 55 110 60 90 120 180 240 360 480 540
++supported_rates=60 90 120 180 240 360 480 540
+ 
+ # Basic rate set configuration
+ # List of rates (in 100 kbps) that are included in the basic rate set.
+ # If this item is not included, usually reasonable default set is used.
+ #basic_rates=10 20
+ #basic_rates=10 20 55 110
+-#basic_rates=60 120 240
++basic_rates=60 120 240
+ 
+ # Short Preamble
+ # This parameter can be used to enable optional use of short preamble for
+@@ -154,7 +148,7 @@
+ # disabled (and enabled when such STAs disassociate) dynamically.
+ # 0 = do not allow use of short preamble (default)
+ # 1 = allow use of short preamble
+-#preamble=1
++preamble=1
+ 
+ # Station MAC address -based authentication
+ # Please note that this kind of access control requires a driver that uses
+@@ -177,7 +171,7 @@
+ # Bit fields of allowed authentication algorithms:
+ # bit 0 = Open System Authentication
+ # bit 1 = Shared Key Authentication (requires WEP)
+-auth_algs=3
++auth_algs=1
+ 
+ # Send empty SSID in beacons and ignore probe request frames that do not
+ # specify full SSID, i.e., require stations to know SSID.
+@@ -189,123 +183,9 @@
+ #     requests for broadcast SSID
+ ignore_broadcast_ssid=0
+ 
+-# TX queue parameters (EDCF / bursting)
+-# default for all these fields: not set, use hardware defaults
+-# tx_queue_<queue name>_<param>
+-# queues: data0, data1, data2, data3, after_beacon, beacon
+-#		(data0 is the highest priority queue)
+-# parameters:
+-#   aifs: AIFS (default 2)
+-#   cwmin: cwMin (1, 3, 7, 15, 31, 63, 127, 255, 511, 1023)
+-#   cwmax: cwMax (1, 3, 7, 15, 31, 63, 127, 255, 511, 1023); cwMax >= cwMin
+-#   burst: maximum length (in milliseconds with precision of up to 0.1 ms) for
+-#          bursting
+-#
+-# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e):
+-# These parameters are used by the access point when transmitting frames
+-# to the clients.
+-#
+-# Low priority / AC_BK = background
+-#tx_queue_data3_aifs=7
+-#tx_queue_data3_cwmin=15
+-#tx_queue_data3_cwmax=1023
+-#tx_queue_data3_burst=0
+-# Note: for IEEE 802.11b mode: cWmin=31 cWmax=1023 burst=0
+-#
+-# Normal priority / AC_BE = best effort
+-#tx_queue_data2_aifs=3
+-#tx_queue_data2_cwmin=15
+-#tx_queue_data2_cwmax=63
+-#tx_queue_data2_burst=0
+-# Note: for IEEE 802.11b mode: cWmin=31 cWmax=127 burst=0
+-#
+-# High priority / AC_VI = video
+-#tx_queue_data1_aifs=1
+-#tx_queue_data1_cwmin=7
+-#tx_queue_data1_cwmax=15
+-#tx_queue_data1_burst=3.0
+-# Note: for IEEE 802.11b mode: cWmin=15 cWmax=31 burst=6.0
+-#
+-# Highest priority / AC_VO = voice
+-#tx_queue_data0_aifs=1
+-#tx_queue_data0_cwmin=3
+-#tx_queue_data0_cwmax=7
+-#tx_queue_data0_burst=1.5
+-# Note: for IEEE 802.11b mode: cWmin=7 cWmax=15 burst=3.3
+-#
+-# Special queues; normally not user configurable
+-#
+-#tx_queue_after_beacon_aifs=2
+-#tx_queue_after_beacon_cwmin=15
+-#tx_queue_after_beacon_cwmax=1023
+-#tx_queue_after_beacon_burst=0
+-#
+-#tx_queue_beacon_aifs=2
+-#tx_queue_beacon_cwmin=3
+-#tx_queue_beacon_cwmax=7
+-#tx_queue_beacon_burst=1.5
+-
+-# 802.1D Tag (= UP) to AC mappings
+-# WMM specifies following mapping of data frames to different ACs. This mapping
+-# can be configured using Linux QoS/tc and sch_pktpri.o module.
+-# 802.1D Tag	802.1D Designation	Access Category	WMM Designation
+-# 1		BK			AC_BK		Background
+-# 2		-			AC_BK		Background
+-# 0		BE			AC_BE		Best Effort
+-# 3		EE			AC_BE		Best Effort
+-# 4		CL			AC_VI		Video
+-# 5		VI			AC_VI		Video
+-# 6		VO			AC_VO		Voice
+-# 7		NC			AC_VO		Voice
+-# Data frames with no priority information: AC_BE
+-# Management frames: AC_VO
+-# PS-Poll frames: AC_BE
+-
+-# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e):
+-# for 802.11a or 802.11g networks
+-# These parameters are sent to WMM clients when they associate.
+-# The parameters will be used by WMM clients for frames transmitted to the
+-# access point.
+-#
+-# note - txop_limit is in units of 32microseconds
+-# note - acm is admission control mandatory flag. 0 = admission control not
+-# required, 1 = mandatory
+-# note - here cwMin and cmMax are in exponent form. the actual cw value used
+-# will be (2^n)-1 where n is the value given here
+-#
+-wme_enabled=1
+-#
+-# Low priority / AC_BK = background
+-wme_ac_bk_cwmin=4
+-wme_ac_bk_cwmax=10
+-wme_ac_bk_aifs=7
+-wme_ac_bk_txop_limit=0
+-wme_ac_bk_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=5 cWmax=10
+-#
+-# Normal priority / AC_BE = best effort
+-wme_ac_be_aifs=3
+-wme_ac_be_cwmin=4
+-wme_ac_be_cwmax=10
+-wme_ac_be_txop_limit=0
+-wme_ac_be_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=5 cWmax=7
+-#
+-# High priority / AC_VI = video
+-wme_ac_vi_aifs=2
+-wme_ac_vi_cwmin=3
+-wme_ac_vi_cwmax=4
+-wme_ac_vi_txop_limit=94
+-wme_ac_vi_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=4 cWmax=5 txop_limit=188
+-#
+-# Highest priority / AC_VO = voice
+-wme_ac_vo_aifs=2
+-wme_ac_vo_cwmin=2
+-wme_ac_vo_cwmax=3
+-wme_ac_vo_txop_limit=47
+-wme_ac_vo_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=3 cWmax=4 burst=102
++
++# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e)
++wme_enabled=0
+ 
+ # Static WEP key configuration
+ #
+@@ -370,86 +250,10 @@
+ # remain asleep). Default: 65535 (no limit apart from field size)
+ #max_listen_interval=100
+ 
+-##### IEEE 802.11n related configuration ######################################
+-
+-# ieee80211n: Whether IEEE 802.11n (HT) is enabled
+-# 0 = disabled (default)
+-# 1 = enabled
+-#ieee80211n=1
+-
+-# ht_capab: HT capabilities (list of flags)
+-# LDPC coding capability: [LDPC] = supported
+-# Supported channel width set: [HT40-] = both 20 MHz and 40 MHz with secondary
+-#	channel below the primary channel; [HT40+] = both 20 MHz and 40 MHz
+-#	with secondary channel below the primary channel
+-#	(20 MHz only if neither is set)
+-#	Note: There are limits on which channels can be used with HT40- and
+-#	HT40+. Following table shows the channels that may be available for
+-#	HT40- and HT40+ use per IEEE 802.11n Annex J:
+-#	freq		HT40-		HT40+
+-#	2.4 GHz		5-13		1-7 (1-9 in Europe/Japan)
+-#	5 GHz		40,48,56,64	36,44,52,60
+-#	(depending on the location, not all of these channels may be available
+-#	for use)
+-# Spatial Multiplexing (SM) Power Save: [SMPS-STATIC] or [SMPS-DYNAMIC]
+-#	(SMPS disabled if neither is set)
+-# HT-greenfield: [GF] (disabled if not set)
+-# Short GI for 20 MHz: [SHORT-GI-20] (disabled if not set)
+-# Short GI for 40 MHz: [SHORT-GI-40] (disabled if not set)
+-# Tx STBC: [TX-STBC] (disabled if not set)
+-# Rx STBC: [RX-STBC1] (one spatial stream), [RX-STBC12] (one or two spatial
+-#	streams), or [RX-STBC123] (one, two, or three spatial streams); Rx STBC
+-#	disabled if none of these set
+-# HT-delayed Block Ack: [DELAYED-BA] (disabled if not set)
+-# Maximum A-MSDU length: [MAX-AMSDU-7935] for 7935 octets (3839 octets if not
+-#	set)
+-# DSSS/CCK Mode in 40 MHz: [DSSS_CCK-40] = allowed (not allowed if not set)
+-# PSMP support: [PSMP] (disabled if not set)
+-# L-SIG TXOP protection support: [LSIG-TXOP-PROT] (disabled if not set)
+-#ht_capab=[HT40-][SHORT-GI-20][SHORT-GI-40]
+-
+ ##### IEEE 802.1X-2004 related configuration ##################################
+ 
+-# Require IEEE 802.1X authorization
+-#ieee8021x=1
+-
+-# IEEE 802.1X/EAPOL version
+-# hostapd is implemented based on IEEE Std 802.1X-2004 which defines EAPOL
+-# version 2. However, there are many client implementations that do not handle
+-# the new version number correctly (they seem to drop the frames completely).
+-# In order to make hostapd interoperate with these clients, the version number
+-# can be set to the older version (1) with this configuration value.
+-#eapol_version=2
+-
+-# Optional displayable message sent with EAP Request-Identity. The first \0
+-# in this string will be converted to ASCII-0 (nul). This can be used to
+-# separate network info (comma separated list of attribute=value pairs); see,
+-# e.g., RFC 4284.
+-#eap_message=hello
+-#eap_message=hello\0networkid=netw,nasid=foo,portid=0,NAIRealms=example.com
+-
+-# WEP rekeying (disabled if key lengths are not set or are set to 0)
+-# Key lengths for default/broadcast and individual/unicast keys:
+-# 5 = 40-bit WEP (also known as 64-bit WEP with 40 secret bits)
+-# 13 = 104-bit WEP (also known as 128-bit WEP with 104 secret bits)
+-#wep_key_len_broadcast=5
+-#wep_key_len_unicast=5
+ # Rekeying period in seconds. 0 = do not rekey (i.e., set keys only once)
+-#wep_rekey_period=300
+-
+-# EAPOL-Key index workaround (set bit7) for WinXP Supplicant (needed only if
+-# only broadcast keys are used)
+-eapol_key_index_workaround=0
+-
+-# EAP reauthentication period in seconds (default: 3600 seconds; 0 = disable
+-# reauthentication).
+-#eap_reauth_period=3600
+-
+-# Use PAE group address (01:80:c2:00:00:03) instead of individual target
+-# address when sending EAPOL frames with driver=wired. This is the most common
+-# mechanism used in wired authentication, but it also requires that the port
+-# is only used by one station.
+-#use_pae_group_addr=1
++wep_rekey_period=0
+ 
+ ##### Integrated EAP server ###################################################
+ 
+@@ -463,107 +267,6 @@
+ # authentication server.
+ eap_server=0
+ 
+-# Path for EAP server user database
+-#eap_user_file=/etc/hostapd.eap_user
+-
+-# CA certificate (PEM or DER file) for EAP-TLS/PEAP/TTLS
+-#ca_cert=/etc/hostapd.ca.pem
+-
+-# Server certificate (PEM or DER file) for EAP-TLS/PEAP/TTLS
+-#server_cert=/etc/hostapd.server.pem
+-
+-# Private key matching with the server certificate for EAP-TLS/PEAP/TTLS
+-# This may point to the same file as server_cert if both certificate and key
+-# are included in a single file. PKCS#12 (PFX) file (.p12/.pfx) can also be
+-# used by commenting out server_cert and specifying the PFX file as the
+-# private_key.
+-#private_key=/etc/hostapd.server.prv
+-
+-# Passphrase for private key
+-#private_key_passwd=secret passphrase
+-
+-# Enable CRL verification.
+-# Note: hostapd does not yet support CRL downloading based on CDP. Thus, a
+-# valid CRL signed by the CA is required to be included in the ca_cert file.
+-# This can be done by using PEM format for CA certificate and CRL and
+-# concatenating these into one file. Whenever CRL changes, hostapd needs to be
+-# restarted to take the new CRL into use.
+-# 0 = do not verify CRLs (default)
+-# 1 = check the CRL of the user certificate
+-# 2 = check all CRLs in the certificate path
+-#check_crl=1
+-
+-# dh_file: File path to DH/DSA parameters file (in PEM format)
+-# This is an optional configuration file for setting parameters for an
+-# ephemeral DH key exchange. In most cases, the default RSA authentication does
+-# not use this configuration. However, it is possible setup RSA to use
+-# ephemeral DH key exchange. In addition, ciphers with DSA keys always use
+-# ephemeral DH keys. This can be used to achieve forward secrecy. If the file
+-# is in DSA parameters format, it will be automatically converted into DH
+-# params. This parameter is required if anonymous EAP-FAST is used.
+-# You can generate DH parameters file with OpenSSL, e.g.,
+-# "openssl dhparam -out /etc/hostapd.dh.pem 1024"
+-#dh_file=/etc/hostapd.dh.pem
+-
+-# Configuration data for EAP-SIM database/authentication gateway interface.
+-# This is a text string in implementation specific format. The example
+-# implementation in eap_sim_db.c uses this as the UNIX domain socket name for
+-# the HLR/AuC gateway (e.g., hlr_auc_gw). In this case, the path uses "unix:"
+-# prefix.
+-#eap_sim_db=unix:/tmp/hlr_auc_gw.sock
+-
+-# Encryption key for EAP-FAST PAC-Opaque values. This key must be a secret,
+-# random value. It is configured as a 16-octet value in hex format. It can be
+-# generated, e.g., with the following command:
+-# od -tx1 -v -N16 /dev/random | colrm 1 8 | tr -d ' '
+-#pac_opaque_encr_key=000102030405060708090a0b0c0d0e0f
+-
+-# EAP-FAST authority identity (A-ID)
+-# A-ID indicates the identity of the authority that issues PACs. The A-ID
+-# should be unique across all issuing servers. In theory, this is a variable
+-# length field, but due to some existing implementations required A-ID to be
+-# 16 octets in length, it is strongly recommended to use that length for the
+-# field to provided interoperability with deployed peer implementation. This
+-# field is configured in hex format.
+-#eap_fast_a_id=101112131415161718191a1b1c1d1e1f
+-
+-# EAP-FAST authority identifier information (A-ID-Info)
+-# This is a user-friendly name for the A-ID. For example, the enterprise name
+-# and server name in a human-readable format. This field is encoded as UTF-8.
+-#eap_fast_a_id_info=test server
+-
+-# Enable/disable different EAP-FAST provisioning modes:
+-#0 = provisioning disabled
+-#1 = only anonymous provisioning allowed
+-#2 = only authenticated provisioning allowed
+-#3 = both provisioning modes allowed (default)
+-#eap_fast_prov=3
+-
+-# EAP-FAST PAC-Key lifetime in seconds (hard limit)
+-#pac_key_lifetime=604800
+-
+-# EAP-FAST PAC-Key refresh time in seconds (soft limit on remaining hard
+-# limit). The server will generate a new PAC-Key when this number of seconds
+-# (or fewer) of the lifetime remains.
+-#pac_key_refresh_time=86400
+-
+-# EAP-SIM and EAP-AKA protected success/failure indication using AT_RESULT_IND
+-# (default: 0 = disabled).
+-#eap_sim_aka_result_ind=1
+-
+-# Trusted Network Connect (TNC)
+-# If enabled, TNC validation will be required before the peer is allowed to
+-# connect. Note: This is only used with EAP-TTLS and EAP-FAST. If any other
+-# EAP method is enabled, the peer will be allowed to connect without TNC.
+-#tnc=1
+-
+-
+-##### IEEE 802.11f - Inter-Access Point Protocol (IAPP) #######################
+-
+-# Interface to be used for IAPP broadcast packets
+-#iapp_interface=eth0
+-
+-
+ ##### RADIUS client configuration #############################################
+ # for IEEE 802.1X with external Authentication Server, IEEE 802.11
+ # authentication with external ACL for MAC addresses, and accounting
+@@ -571,97 +274,6 @@
+ # The own IP address of the access point (used as NAS-IP-Address)
+ own_ip_addr=127.0.0.1
+ 
+-# Optional NAS-Identifier string for RADIUS messages. When used, this should be
+-# a unique to the NAS within the scope of the RADIUS server. For example, a
+-# fully qualified domain name can be used here.
+-# When using IEEE 802.11r, nas_identifier must be set and must be between 1 and
+-# 48 octets long.
+-#nas_identifier=ap.example.com
+-
+-# RADIUS authentication server
+-#auth_server_addr=127.0.0.1
+-#auth_server_port=1812
+-#auth_server_shared_secret=secret
+-
+-# RADIUS accounting server
+-#acct_server_addr=127.0.0.1
+-#acct_server_port=1813
+-#acct_server_shared_secret=secret
+-
+-# Secondary RADIUS servers; to be used if primary one does not reply to
+-# RADIUS packets. These are optional and there can be more than one secondary
+-# server listed.
+-#auth_server_addr=127.0.0.2
+-#auth_server_port=1812
+-#auth_server_shared_secret=secret2
+-#
+-#acct_server_addr=127.0.0.2
+-#acct_server_port=1813
+-#acct_server_shared_secret=secret2
+-
+-# Retry interval for trying to return to the primary RADIUS server (in
+-# seconds). RADIUS client code will automatically try to use the next server
+-# when the current server is not replying to requests. If this interval is set,
+-# primary server will be retried after configured amount of time even if the
+-# currently used secondary server is still working.
+-#radius_retry_primary_interval=600
+-
+-
+-# Interim accounting update interval
+-# If this is set (larger than 0) and acct_server is configured, hostapd will
+-# send interim accounting updates every N seconds. Note: if set, this overrides
+-# possible Acct-Interim-Interval attribute in Access-Accept message. Thus, this
+-# value should not be configured in hostapd.conf, if RADIUS server is used to
+-# control the interim interval.
+-# This value should not be less 600 (10 minutes) and must not be less than
+-# 60 (1 minute).
+-#radius_acct_interim_interval=600
+-
+-# Dynamic VLAN mode; allow RADIUS authentication server to decide which VLAN
+-# is used for the stations. This information is parsed from following RADIUS
+-# attributes based on RFC 3580 and RFC 2868: Tunnel-Type (value 13 = VLAN),
+-# Tunnel-Medium-Type (value 6 = IEEE 802), Tunnel-Private-Group-ID (value
+-# VLANID as a string). vlan_file option below must be configured if dynamic
+-# VLANs are used. Optionally, the local MAC ACL list (accept_mac_file) can be
+-# used to set static client MAC address to VLAN ID mapping.
+-# 0 = disabled (default)
+-# 1 = option; use default interface if RADIUS server does not include VLAN ID
+-# 2 = required; reject authentication if RADIUS server does not include VLAN ID
+-#dynamic_vlan=0
+-
+-# VLAN interface list for dynamic VLAN mode is read from a separate text file.
+-# This list is used to map VLAN ID from the RADIUS server to a network
+-# interface. Each station is bound to one interface in the same way as with
+-# multiple BSSIDs or SSIDs. Each line in this text file is defining a new
+-# interface and the line must include VLAN ID and interface name separated by
+-# white space (space or tab).
+-#vlan_file=/etc/hostapd.vlan
+-
+-# Interface where 802.1q tagged packets should appear when a RADIUS server is
+-# used to determine which VLAN a station is on.  hostapd creates a bridge for
+-# each VLAN.  Then hostapd adds a VLAN interface (associated with the interface
+-# indicated by 'vlan_tagged_interface') and the appropriate wireless interface
+-# to the bridge.
+-#vlan_tagged_interface=eth0
+-
+-
+-##### RADIUS authentication server configuration ##############################
+-
+-# hostapd can be used as a RADIUS authentication server for other hosts. This
+-# requires that the integrated EAP server is also enabled and both
+-# authentication services are sharing the same configuration.
+-
+-# File name of the RADIUS clients configuration for the RADIUS server. If this
+-# commented out, RADIUS server is disabled.
+-#radius_server_clients=/etc/hostapd.radius_clients
+-
+-# The UDP port number for the RADIUS authentication server
+-#radius_server_auth_port=1812
+-
+-# Use IPv6 with RADIUS server (IPv4 will also be supported using IPv6 API)
+-#radius_server_ipv6=1
+-
+-
+ ##### WPA/IEEE 802.11i configuration ##########################################
+ 
+ # Enable WPA. Setting this variable configures the AP to require WPA (either
+@@ -713,7 +325,7 @@
+ 
+ # Time interval for rekeying GTK (broadcast/multicast encryption keys) in
+ # seconds. (dot11RSNAConfigGroupRekeyTime)
+-#wpa_group_rekey=600
++wpa_group_rekey=0
+ 
+ # Rekey GTK when any STA that possesses the current GTK is leaving the BSS.
+ # (dot11RSNAConfigGroupRekeyStrict)
+@@ -721,129 +333,21 @@
+ 
+ # Time interval for rekeying GMK (master key used internally to generate GTKs
+ # (in seconds).
+-#wpa_gmk_rekey=86400
++wpa_gmk_rekey=0
+ 
+ # Maximum lifetime for PTK in seconds. This can be used to enforce rekeying of
+ # PTK to mitigate some attacks against TKIP deficiencies.
+-#wpa_ptk_rekey=600
+-
+-# Enable IEEE 802.11i/RSN/WPA2 pre-authentication. This is used to speed up
+-# roaming be pre-authenticating IEEE 802.1X/EAP part of the full RSN
+-# authentication and key handshake before actually associating with a new AP.
+-# (dot11RSNAPreauthenticationEnabled)
+-#rsn_preauth=1
+-#
+-# Space separated list of interfaces from which pre-authentication frames are
+-# accepted (e.g., 'eth0' or 'eth0 wlan0wds0'. This list should include all
+-# interface that are used for connections to other APs. This could include
+-# wired interfaces and WDS links. The normal wireless data interface towards
+-# associated stations (e.g., wlan0) should not be added, since
+-# pre-authentication is only used with APs other than the currently associated
+-# one.
+-#rsn_preauth_interfaces=eth0
+-
+-# peerkey: Whether PeerKey negotiation for direct links (IEEE 802.11e) is
+-# allowed. This is only used with RSN/WPA2.
+-# 0 = disabled (default)
+-# 1 = enabled
+-#peerkey=1
+-
+-# ieee80211w: Whether management frame protection (MFP) is enabled
+-# 0 = disabled (default)
+-# 1 = optional
+-# 2 = required
+-#ieee80211w=0
+-
+-# Association SA Query maximum timeout (in TU = 1.024 ms; for MFP)
+-# (maximum time to wait for a SA Query response)
+-# dot11AssociationSAQueryMaximumTimeout, 1...4294967295
+-#assoc_sa_query_max_timeout=1000
+-
+-# Association SA Query retry timeout (in TU = 1.024 ms; for MFP)
+-# (time between two subsequent SA Query requests)
+-# dot11AssociationSAQueryRetryTimeout, 1...4294967295
+-#assoc_sa_query_retry_timeout=201
+-
+-
+-# okc: Opportunistic Key Caching (aka Proactive Key Caching)
+-# Allow PMK cache to be shared opportunistically among configured interfaces
+-# and BSSes (i.e., all configurations within a single hostapd process).
+-# 0 = disabled (default)
+-# 1 = enabled
+-#okc=1
+-
+-
+-##### IEEE 802.11r configuration ##############################################
+-
+-# Mobility Domain identifier (dot11FTMobilityDomainID, MDID)
+-# MDID is used to indicate a group of APs (within an ESS, i.e., sharing the
+-# same SSID) between which a STA can use Fast BSS Transition.
+-# 2-octet identifier as a hex string.
+-#mobility_domain=a1b2
+-
+-# PMK-R0 Key Holder identifier (dot11FTR0KeyHolderID)
+-# 1 to 48 octet identifier.
+-# This is configured with nas_identifier (see RADIUS client section above).
+-
+-# Default lifetime of the PMK-RO in minutes; range 1..65535
+-# (dot11FTR0KeyLifetime)
+-#r0_key_lifetime=10000
+-
+-# PMK-R1 Key Holder identifier (dot11FTR1KeyHolderID)
+-# 6-octet identifier as a hex string.
+-#r1_key_holder=000102030405
+-
+-# Reassociation deadline in time units (TUs / 1.024 ms; range 1000..65535)
+-# (dot11FTReassociationDeadline)
+-#reassociation_deadline=1000
+-
+-# List of R0KHs in the same Mobility Domain
+-# format: <MAC address> <NAS Identifier> <128-bit key as hex string>
+-# This list is used to map R0KH-ID (NAS Identifier) to a destination MAC
+-# address when requesting PMK-R1 key from the R0KH that the STA used during the
+-# Initial Mobility Domain Association.
+-#r0kh=02:01:02:03:04:05 r0kh-1.example.com 000102030405060708090a0b0c0d0e0f
+-#r0kh=02:01:02:03:04:06 r0kh-2.example.com 00112233445566778899aabbccddeeff
+-# And so on.. One line per R0KH.
+-
+-# List of R1KHs in the same Mobility Domain
+-# format: <MAC address> <R0KH-ID> <128-bit key as hex string>
+-# This list is used to map R1KH-ID to a destination MAC address when sending
+-# PMK-R1 key from the R0KH. This is also the list of authorized R1KHs in the MD
+-# that can request PMK-R1 keys.
+-#r1kh=02:01:02:03:04:05 02:11:22:33:44:55 000102030405060708090a0b0c0d0e0f
+-#r1kh=02:01:02:03:04:06 02:11:22:33:44:66 00112233445566778899aabbccddeeff
+-# And so on.. One line per R1KH.
+-
+-# Whether PMK-R1 push is enabled at R0KH
+-# 0 = do not push PMK-R1 to all configured R1KHs (default)
+-# 1 = push PMK-R1 to all configured R1KHs whenever a new PMK-R0 is derived
+-#pmk_r1_push=1
+-
+-##### Passive scanning ########################################################
+-# Scan different channels every N seconds. 0 = disable passive scanning.
+-#passive_scan_interval=60
+-
+-# Listen N usecs on each channel when doing passive scanning.
+-# This value plus the time needed for changing channels should be less than
+-# 32 milliseconds (i.e. 32000 usec) to avoid interruptions to normal
+-# operations. Time needed for channel changing varies based on the used wlan
+-# hardware.
+-# default: disabled (0)
+-#passive_scan_listen=10000
++wpa_ptk_rekey=0
+ 
+-# Passive scanning mode:
+-# 0 = scan all supported modes (802.11a/b/g/Turbo) (default)
+-# 1 = scan only the mode that is currently used for normal operations
+-#passive_scan_mode=1
+ 
+-# Maximum number of entries kept in AP table (either for passive scanning or
+-# for detecting Overlapping Legacy BSS Condition). The oldest entry will be
++##### Neighbor table ##########################################################
++# Maximum number of entries kept in AP table (either for neigbor table or for
++# detecting Overlapping Legacy BSS Condition). The oldest entry will be
+ # removed when adding a new entry that would make the list grow over this
+-# limit. Note! Wi-Fi certification for IEEE 802.11g requires that OLBC is
++# limit. Note! WFA certification for IEEE 802.11g requires that OLBC is
+ # enabled, so this field should not be set to 0 when using IEEE 802.11g.
+ # default: 255
+-#ap_table_max_size=255
++ap_table_max_size=255
+ 
+ # Number of seconds of no frames received after which entries may be deleted
+ # from the AP table. Since passive scanning is not usually performed frequently
+@@ -851,7 +355,7 @@
+ # guarantee that every scan cycle will receive beacon frames from the
+ # neighboring APs.
+ # default: 60
+-#ap_table_expiration_time=3600
++ap_table_expiration_time=60
+ 
+ 
+ ##### Wi-Fi Protected Setup (WPS) #############################################
+@@ -992,33 +496,28 @@
+ # 12-digit, all-numeric code that identifies the consumer package.
+ #upc=123456789012
+ 
+-##### Multiple BSSID support ##################################################
+-#
+-# Above configuration is using the default interface (wlan#, or multi-SSID VLAN
+-# interfaces). Other BSSIDs can be added by using separator 'bss' with
+-# default interface name to be allocated for the data packets of the new BSS.
+-#
+-# hostapd will generate BSSID mask based on the BSSIDs that are
+-# configured. hostapd will verify that dev_addr & MASK == dev_addr. If this is
+-# not the case, the MAC address of the radio must be changed before starting
+-# hostapd (ifconfig wlan0 hw ether <MAC addr>).
+-#
+-# BSSIDs are assigned in order to each BSS, unless an explicit BSSID is
+-# specified using the 'bssid' parameter.
+-# If an explicit BSSID is specified, it must be chosen such that it:
+-# - results in a valid MASK that covers it and the dev_addr
+-# - is not the same as the MAC address of the radio
+-# - is not the same as any other explicitly specified BSSID
+-#
+-# Please note that hostapd uses some of the values configured for the first BSS
+-# as the defaults for the following BSSes. However, it is recommended that all
+-# BSSes include explicit configuration of all relevant configuration items.
+-#
+-#bss=wlan0_0
+-#ssid=test2
+-# most of the above items can be used here (apart from radio interface specific
+-# items, like channel)
+-
+-#bss=wlan0_1
+-#bssid=00:13:10:95:fe:0b
+-# ...
++###################### enterprise environment detection parameters #######################
++# Enable/disable:
++# Enable or Disable enterprise environment detection
++# 1 => Enable ; 0 => Disable ; default 0
++discover_enabled=1
++
++# list of SSIDs
++# List of SSIDs for detection
++# each SSID is max 32 chars
++# Max 8 hidden SSIDs
++# Format: ssid1 type1 ssid2 type2
++# type: h=>Hidden ; b=>Broadcast
++ssid_list=ap1 h ap2 p ap3 p
++
++# list of channels 
++# Channels to scan, 2.4G channels between 1-14
++channels_list=1 6 11
++
++# scan period
++# Interval (in Msec) between two sequential scan cycles
++interval=30000
++
++# Dwell time (in Msec) before tunning to next channel
++dwell_time=15
++
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/hostapd.h hostapd_new/hostapd/hostapd.h
+--- hostapd_original/hostapd/hostapd.h	2011-03-27 16:18:38.277408000 +0200
++++ hostapd_new/hostapd/hostapd.h	2011-03-27 16:18:46.279732000 +0200
+@@ -236,8 +236,23 @@
+ int hostapd_reload_config(struct hostapd_iface *iface);
+ void hostapd_wpa_auth_disconnect(void *ctx, const u8 *addr, u16 reason);
+ int hostapd_reset_iface(struct hostapd_iface *iface, const char *config_fname, int deauth_stas);
++int hostapd_set_ssids_iface(struct hostapd_iface *iface, const char *ssid_params);
++int hostapd_set_channels_iface(struct hostapd_iface *iface, const char *channels);
++int hostapd_set_interval_iface(struct hostapd_iface *iface, const char *interval);
++int hostapd_set_dwell_time(struct hostapd_iface *iface, const char *dwell_time);
++int hostapd_enable_discovery(struct hostapd_iface *iface);
++int hostapd_disable_discovery(struct hostapd_iface *iface);
++void hostapd_get_ap_table(struct hostapd_iface *iface, char *reply);
++int hostapd_compare_ap_tables(struct ap_info *s, void *data);
+ int hostapd_reconfig_iface(struct hostapd_iface *iface);
++int hostapd_parse_channel_list(const char* value,struct hostapd_bss_config *bss);
++int hostapd_parse_interval(const char* value,struct hostapd_bss_config *bss);
++int hostapd_parse_dwell_time(const char* value,struct hostapd_bss_config *bss);
+ int hostapd_stop_iface_driver(struct hostapd_iface *iface);
+ int hostapd_start_iface(struct hostapd_iface *iface, const char *config_file);
++int hostapd_parse_ssid_list(struct hostapd_bss_config *bss, int line,const char* value);
++int hostapd_call_commit_discovery_config(struct hostapd_data *hapd);
++int hostapd_call_start_enterprise_discovery(struct hostapd_data *hapd);
++int hostapd_call_stop_enterprise_discovery(struct hostapd_data *hapd);
+ 
+ #endif /* HOSTAPD_H */
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/ieee802_11.c hostapd_new/hostapd/ieee802_11.c
+--- hostapd_original/hostapd/ieee802_11.c	2011-03-27 16:18:38.367399000 +0200
++++ hostapd_new/hostapd/ieee802_11.c	2011-03-27 16:18:46.363746000 +0200
+@@ -480,6 +480,8 @@
+ 	hostapd_logger(hapd, dst, HOSTAPD_MODULE_IEEE80211,
+ 		       HOSTAPD_LEVEL_DEBUG, "authentication OK (FT)");
+ 	sta->flags |= WLAN_STA_AUTH;
++    if (hostapd_sta_set_flags(hapd, sta->addr, sta->flags, WLAN_STA_AUTH, ~0) < 0)
++		perror("sta_set_flags");
+ 	mlme_authenticate_indication(hapd, sta);
+ }
+ #endif /* CONFIG_IEEE80211R */
+@@ -660,6 +662,12 @@
+ 	}
+ 
+  fail:
++    if ( sta && (sta->flags & WLAN_STA_AUTH))
++	{
++		/* If Auth success - set connection phase indication*/
++		if (hostapd_sta_set_flags(hapd, sta->addr, sta->flags, WLAN_STA_AUTH, ~0) < 0)
++			perror("sta_set_flags");
++	}
+ 	send_auth_reply(hapd, mgmt->sa, mgmt->bssid, auth_alg,
+ 			auth_transaction + 1, resp, resp_ies, resp_ies_len);
+ }
+@@ -1419,7 +1427,9 @@
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) buf;
+ 	int broadcast;
+ 
+-	if (stype == WLAN_FC_STYPE_BEACON) {
++
++	if (stype == WLAN_FC_STYPE_BEACON || stype == WLAN_FC_STYPE_PROBE_RESP) {
++
+ 		handle_beacon(hapd, mgmt, len, fi);
+ 		return;
+ 	}
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/Makefile hostapd_new/hostapd/Makefile
+--- hostapd_original/hostapd/Makefile	2011-03-27 16:18:38.393405000 +0200
++++ hostapd_new/hostapd/Makefile	2011-03-27 16:18:45.907756000 +0200
+@@ -1,9 +1,7 @@
+-
+-CROSS_COMPILE=arm-none-linux-gnueabi-
+-CC=$(CROSS_COMPILE)gcc
++CC=$(CROSS_COMPILE)gcc -L. 
+ 
+ HOSTAPD_LIB_CC=$(CROSS_COMPILE)ar
+-HOSTAPD_LIB_PATH=libhostapd.a
++HOSTAPD_LIB_PATH=../../output/libhostapd.a
+ 
+ TI_HOSTAPD_LIB ?= y
+ 
+@@ -26,19 +24,19 @@
+ 
+ -include .config
+ 
+-ifndef CONFIG_OS
+-ifdef CONFIG_NATIVE_WINDOWS
+-CONFIG_OS=win32
++ifndef AP_CONFIG_OS
++ifdef AP_CONFIG_NATIVE_WINDOWS
++AP_CONFIG_OS=win32
+ else
+-CONFIG_OS=unix
++AP_CONFIG_OS=unix
+ endif
+ endif
+ 
+-ifeq ($(CONFIG_OS), internal)
++ifeq ($(AP_CONFIG_OS), internal)
+ CFLAGS += -DOS_NO_C_LIB_DEFINES
+ endif
+ 
+-ifdef CONFIG_NATIVE_WINDOWS
++ifdef AP_CONFIG_NATIVE_WINDOWS
+ CFLAGS += -DCONFIG_NATIVE_WINDOWS
+ LIBS += -lws2_32
+ endif
+@@ -54,7 +52,7 @@
+ OBJS += ../src/utils/common.o
+ OBJS += ../src/utils/wpa_debug.o
+ OBJS += ../src/utils/wpabuf.o
+-OBJS += ../src/utils/os_$(CONFIG_OS).o
++OBJS += ../src/utils/os_$(AP_CONFIG_OS).o
+ OBJS += ../src/utils/ip_addr.o
+ 
+ OBJS += ../src/common/ieee802_11_common.o
+@@ -71,109 +69,112 @@
+ OBJS += ../src/crypto/aes_wrap.o
+ OBJS += ../src/crypto/aes.o
+ 
+-HOBJS=../src/hlr_auc_gw/hlr_auc_gw.o ../src/utils/common.o ../src/utils/wpa_debug.o ../src/utils/os_$(CONFIG_OS).o ../src/hlr_auc_gw/milenage.o ../src/crypto/aes_wrap.o ../src/crypto/aes.o
++HOBJS=../src/hlr_auc_gw/hlr_auc_gw.o ../src/utils/common.o ../src/utils/wpa_debug.o ../src/utils/os_$(AP_CONFIG_OS).o ../src/hlr_auc_gw/milenage.o ../src/crypto/aes_wrap.o ../src/crypto/aes.o
+ 
+ CFLAGS += -DCONFIG_CTRL_IFACE -DCONFIG_CTRL_IFACE_UNIX
+ 
+-ifdef CONFIG_IAPP
++ifdef AP_CONFIG_IAPP
+ CFLAGS += -DCONFIG_IAPP
+ OBJS += iapp.o
+ endif
+ 
+-ifdef CONFIG_RSN_PREAUTH
++ifdef AP_CONFIG_RSN_PREAUTH
+ CFLAGS += -DCONFIG_RSN_PREAUTH
+-CONFIG_L2_PACKET=y
++AP_CONFIG_L2_PACKET=y
+ endif
+ 
+-ifdef CONFIG_PEERKEY
++ifdef AP_CONFIG_PEERKEY
+ CFLAGS += -DCONFIG_PEERKEY
+ OBJS += peerkey.o
+ endif
+ 
+-ifdef CONFIG_IEEE80211W
++ifdef AP_CONFIG_IEEE80211W
+ CFLAGS += -DCONFIG_IEEE80211W
+ NEED_SHA256=y
+ endif
+ 
+-ifdef CONFIG_IEEE80211R
++ifdef AP_CONFIG_IEEE80211R
+ CFLAGS += -DCONFIG_IEEE80211R
+ OBJS += wpa_ft.o
+ NEED_SHA256=y
+ endif
+ 
+-ifdef CONFIG_IEEE80211N
++ifdef AP_CONFIG_IEEE80211N
+ CFLAGS += -DCONFIG_IEEE80211N
+ endif
+ 
+-ifdef CONFIG_DRIVER_HOSTAP
++ifdef AP_CONFIG_DRIVER_HOSTAP
+ CFLAGS += -DCONFIG_DRIVER_HOSTAP
+ OBJS += driver_hostap.o
+ endif
+ 
+-ifdef CONFIG_DRIVER_WILINK
++ifdef AP_CONFIG_DRIVER_WILINK
+ CFLAGS += -DCONFIG_DRIVER_WILINK \
+-	-I /home/vishal/TI/pub_eclair/system/wlan/ti/wilink_6_2/stad/Export_Inc \
+-	-I /home/vishal/TI/pub_eclair/system/wlan/ti/wilink_6_2/utils \
+-	-I /home/vishal/TI/pub_eclair/system/wlan/ti/wilink_6_2/platforms/os/linux/inc
++	-I ../../../stad/Export_Inc \
++	-I ../../../utils \
++	-I ../../../platforms/os/linux/inc \
++	-I ../../../WiLink/stad/Export_Inc \
++	-I ../../../WiLink/utils \
++	-I ../../../WiLink/platforms/os/linux/inc
+ 
+-CONFIG_L2_PACKET=y
++AP_CONFIG_L2_PACKET=y
+ OBJS += regulatory.o
+ OBJS += driver_wilink.o 
+ endif
+ 
+-ifdef CONFIG_DRIVER_WIRED
++ifdef AP_CONFIG_DRIVER_WIRED
+ CFLAGS += -DCONFIG_DRIVER_WIRED
+ OBJS += driver_wired.o
+ endif
+ 
+-ifdef CONFIG_DRIVER_MADWIFI
++ifdef AP_CONFIG_DRIVER_MADWIFI
+ CFLAGS += -DCONFIG_DRIVER_MADWIFI
+ OBJS += driver_madwifi.o
+-CONFIG_L2_PACKET=y
++AP_CONFIG_L2_PACKET=y
+ endif
+ 
+-ifdef CONFIG_DRIVER_ATHEROS
++ifdef AP_CONFIG_DRIVER_ATHEROS
+ CFLAGS += -DCONFIG_DRIVER_ATHEROS
+ OBJS += driver_atheros.o
+-CONFIG_L2_PACKET=y
++AP_CONFIG_L2_PACKET=y
+ endif
+ 
+-ifdef CONFIG_DRIVER_PRISM54
++ifdef AP_CONFIG_DRIVER_PRISM54
+ CFLAGS += -DCONFIG_DRIVER_PRISM54
+ OBJS += driver_prism54.o
+ endif
+ 
+-ifdef CONFIG_DRIVER_NL80211
++ifdef AP_CONFIG_DRIVER_NL80211
+ CFLAGS += -DCONFIG_DRIVER_NL80211
+ OBJS += driver_nl80211.o radiotap.o
+ LIBS += -lnl
+-ifdef CONFIG_LIBNL20
++ifdef AP_CONFIG_LIBNL20
+ LIBS += -lnl-genl
+ CFLAGS += -DCONFIG_LIBNL20
+ endif
+ endif
+ 
+-ifdef CONFIG_DRIVER_BSD
++ifdef AP_CONFIG_DRIVER_BSD
+ CFLAGS += -DCONFIG_DRIVER_BSD
+ OBJS += driver_bsd.o
+-CONFIG_L2_PACKET=y
+-CONFIG_DNET_PCAP=y
+-CONFIG_L2_FREEBSD=y
++AP_CONFIG_L2_PACKET=y
++AP_CONFIG_DNET_PCAP=y
++AP_CONFIG_L2_FREEBSD=y
+ endif
+ 
+-ifdef CONFIG_DRIVER_TEST
++ifdef AP_CONFIG_DRIVER_TEST
+ CFLAGS += -DCONFIG_DRIVER_TEST
+ OBJS += driver_test.o
+ endif
+ 
+-ifdef CONFIG_DRIVER_NONE
++ifdef AP_CONFIG_DRIVER_NONE
+ CFLAGS += -DCONFIG_DRIVER_NONE
+ OBJS += driver_none.o
+ endif
+ 
+-ifdef CONFIG_L2_PACKET
+-ifdef CONFIG_DNET_PCAP
+-ifdef CONFIG_L2_FREEBSD
++ifdef AP_CONFIG_L2_PACKET
++ifdef AP_CONFIG_DNET_PCAP
++ifdef AP_CONFIG_L2_FREEBSD
+ LIBS += -lpcap
+ OBJS += ../src/l2_packet/l2_packet_freebsd.o
+ else
+@@ -188,61 +189,61 @@
+ endif
+ 
+ 
+-ifdef CONFIG_EAP_MD5
++ifdef AP_CONFIG_EAP_MD5
+ CFLAGS += -DEAP_MD5
+ OBJS += ../src/eap_server/eap_md5.o
+ CHAP=y
+ endif
+ 
+-ifdef CONFIG_EAP_TLS
++ifdef AP_CONFIG_EAP_TLS
+ CFLAGS += -DEAP_TLS
+ OBJS += ../src/eap_server/eap_tls.o
+ TLS_FUNCS=y
+ endif
+ 
+-ifdef CONFIG_EAP_PEAP
++ifdef AP_CONFIG_EAP_PEAP
+ CFLAGS += -DEAP_PEAP
+ OBJS += ../src/eap_server/eap_peap.o
+ OBJS += ../src/eap_common/eap_peap_common.o
+ TLS_FUNCS=y
+-CONFIG_EAP_MSCHAPV2=y
++AP_CONFIG_EAP_MSCHAPV2=y
+ endif
+ 
+-ifdef CONFIG_EAP_TTLS
++ifdef AP_CONFIG_EAP_TTLS
+ CFLAGS += -DEAP_TTLS
+ OBJS += ../src/eap_server/eap_ttls.o
+ TLS_FUNCS=y
+ CHAP=y
+ endif
+ 
+-ifdef CONFIG_EAP_MSCHAPV2
++ifdef AP_CONFIG_EAP_MSCHAPV2
+ CFLAGS += -DEAP_MSCHAPv2
+ OBJS += ../src/eap_server/eap_mschapv2.o
+ MS_FUNCS=y
+ endif
+ 
+-ifdef CONFIG_EAP_GTC
++ifdef AP_CONFIG_EAP_GTC
+ CFLAGS += -DEAP_GTC
+ OBJS += ../src/eap_server/eap_gtc.o
+ endif
+ 
+-ifdef CONFIG_EAP_SIM
++ifdef AP_CONFIG_EAP_SIM
+ CFLAGS += -DEAP_SIM
+ OBJS += ../src/eap_server/eap_sim.o
+-CONFIG_EAP_SIM_COMMON=y
++AP_CONFIG_EAP_SIM_COMMON=y
+ endif
+ 
+-ifdef CONFIG_EAP_AKA
++ifdef AP_CONFIG_EAP_AKA
+ CFLAGS += -DEAP_AKA
+ OBJS += ../src/eap_server/eap_aka.o
+-CONFIG_EAP_SIM_COMMON=y
++AP_CONFIG_EAP_SIM_COMMON=y
+ endif
+ 
+-ifdef CONFIG_EAP_AKA_PRIME
++ifdef AP_CONFIG_EAP_AKA_PRIME
+ CFLAGS += -DEAP_AKA_PRIME
+ endif
+ 
+-ifdef CONFIG_EAP_SIM_COMMON
++ifdef AP_CONFIG_EAP_SIM_COMMON
+ OBJS += ../src/eap_common/eap_sim_common.o
+ # Example EAP-SIM/AKA interface for GSM/UMTS authentication. This can be
+ # replaced with another file implementating the interface specified in
+@@ -251,36 +252,36 @@
+ NEED_FIPS186_2_PRF=y
+ endif
+ 
+-ifdef CONFIG_EAP_PAX
++ifdef AP_CONFIG_EAP_PAX
+ CFLAGS += -DEAP_PAX
+ OBJS += ../src/eap_server/eap_pax.o ../src/eap_common/eap_pax_common.o
+ endif
+ 
+-ifdef CONFIG_EAP_PSK
++ifdef AP_CONFIG_EAP_PSK
+ CFLAGS += -DEAP_PSK
+ OBJS += ../src/eap_server/eap_psk.o ../src/eap_common/eap_psk_common.o
+ endif
+ 
+-ifdef CONFIG_EAP_SAKE
++ifdef AP_CONFIG_EAP_SAKE
+ CFLAGS += -DEAP_SAKE
+ OBJS += ../src/eap_server/eap_sake.o ../src/eap_common/eap_sake_common.o
+ endif
+ 
+-ifdef CONFIG_EAP_GPSK
++ifdef AP_CONFIG_EAP_GPSK
+ CFLAGS += -DEAP_GPSK
+ OBJS += ../src/eap_server/eap_gpsk.o ../src/eap_common/eap_gpsk_common.o
+-ifdef CONFIG_EAP_GPSK_SHA256
++ifdef AP_CONFIG_EAP_GPSK_SHA256
+ CFLAGS += -DEAP_GPSK_SHA256
+ endif
+ NEED_SHA256=y
+ endif
+ 
+-ifdef CONFIG_EAP_VENDOR_TEST
++ifdef AP_CONFIG_EAP_VENDOR_TEST
+ CFLAGS += -DEAP_VENDOR_TEST
+ OBJS += ../src/eap_server/eap_vendor_test.o
+ endif
+ 
+-ifdef CONFIG_EAP_FAST
++ifdef AP_CONFIG_EAP_FAST
+ CFLAGS += -DEAP_FAST
+ OBJS += ../src/eap_server/eap_fast.o
+ OBJS += ../src/eap_common/eap_fast_common.o
+@@ -288,7 +289,7 @@
+ NEED_T_PRF=y
+ endif
+ 
+-ifdef CONFIG_WPS
++ifdef AP_CONFIG_WPS
+ CFLAGS += -DCONFIG_WPS -DEAP_WSC
+ OBJS += ../src/utils/uuid.o
+ OBJS += wps_hostapd.o
+@@ -306,7 +307,7 @@
+ NEED_CRYPTO=y
+ NEED_BASE64=y
+ 
+-ifdef CONFIG_WPS_UPNP
++ifdef AP_CONFIG_WPS_UPNP
+ CFLAGS += -DCONFIG_WPS_UPNP
+ OBJS += ../src/wps/wps_upnp.o
+ OBJS += ../src/wps/wps_upnp_ssdp.o
+@@ -317,19 +318,19 @@
+ 
+ endif
+ 
+-ifdef CONFIG_EAP_IKEV2
++ifdef AP_CONFIG_EAP_IKEV2
+ CFLAGS += -DEAP_IKEV2
+ OBJS += ../src/eap_server/eap_ikev2.o ../src/eap_server/ikev2.o
+ OBJS += ../src/eap_common/eap_ikev2_common.o ../src/eap_common/ikev2_common.o
+ NEED_DH_GROUPS=y
+ endif
+ 
+-ifdef CONFIG_EAP_TNC
++ifdef AP_CONFIG_EAP_TNC
+ CFLAGS += -DEAP_TNC
+ OBJS += ../src/eap_server/eap_tnc.o
+ OBJS += ../src/eap_server/tncs.o
+ NEED_BASE64=y
+-ifndef CONFIG_DRIVER_BSD
++ifndef AP_CONFIG_DRIVER_BSD
+ LIBS += -ldl
+ endif
+ endif
+@@ -340,23 +341,23 @@
+ OBJS += ../src/eap_server/eap_methods.o
+ OBJS += ../src/eap_server/eap_identity.o
+ 
+-ifdef CONFIG_EAP
++ifdef AP_CONFIG_EAP
+ CFLAGS += -DEAP_SERVER
+ endif
+ 
+-ifndef CONFIG_TLS
+-CONFIG_TLS=openssl
++ifndef AP_CONFIG_TLS
++AP_CONFIG_TLS=openssl
+ endif
+ 
+-ifeq ($(CONFIG_TLS), internal)
+-ifndef CONFIG_CRYPTO
+-CONFIG_CRYPTO=internal
++ifeq ($(AP_CONFIG_TLS), internal)
++ifndef AP_CONFIG_CRYPTO
++AP_CONFIG_CRYPTO=internal
+ endif
+ endif
+-ifeq ($(CONFIG_CRYPTO), libtomcrypt)
++ifeq ($(AP_CONFIG_CRYPTO), libtomcrypt)
+ CFLAGS += -DCONFIG_INTERNAL_X509
+ endif
+-ifeq ($(CONFIG_CRYPTO), internal)
++ifeq ($(AP_CONFIG_CRYPTO), internal)
+ CFLAGS += -DCONFIG_INTERNAL_X509
+ endif
+ 
+@@ -366,23 +367,23 @@
+ CFLAGS += -DEAP_TLS_FUNCS
+ OBJS += ../src/eap_server/eap_tls_common.o
+ NEED_TLS_PRF=y
+-ifeq ($(CONFIG_TLS), openssl)
++ifeq ($(AP_CONFIG_TLS), openssl)
+ OBJS += ../src/crypto/tls_openssl.o
+ LIBS += -lssl -lcrypto
+ LIBS_p += -lcrypto
+ LIBS_h += -lcrypto
+ endif
+-ifeq ($(CONFIG_TLS), gnutls)
++ifeq ($(AP_CONFIG_TLS), gnutls)
+ OBJS += ../src/crypto/tls_gnutls.o
+ LIBS += -lgnutls -lgcrypt -lgpg-error
+ LIBS_p += -lgcrypt
+ LIBS_h += -lgcrypt
+ endif
+-ifdef CONFIG_GNUTLS_EXTRA
++ifdef AP_CONFIG_GNUTLS_EXTRA
+ CFLAGS += -DCONFIG_GNUTLS_EXTRA
+ LIBS += -lgnutls-extra
+ endif
+-ifeq ($(CONFIG_TLS), internal)
++ifeq ($(AP_CONFIG_TLS), internal)
+ OBJS += ../src/crypto/tls_internal.o
+ OBJS += ../src/tls/tlsv1_common.o ../src/tls/tlsv1_record.o
+ OBJS += ../src/tls/tlsv1_cred.o ../src/tls/tlsv1_server.o
+@@ -393,15 +394,15 @@
+ NEED_BASE64=y
+ CFLAGS += -DCONFIG_TLS_INTERNAL
+ CFLAGS += -DCONFIG_TLS_INTERNAL_SERVER
+-ifeq ($(CONFIG_CRYPTO), internal)
+-ifdef CONFIG_INTERNAL_LIBTOMMATH
++ifeq ($(AP_CONFIG_CRYPTO), internal)
++ifdef AP_CONFIG_INTERNAL_LIBTOMMATH
+ CFLAGS += -DCONFIG_INTERNAL_LIBTOMMATH
+ else
+ LIBS += -ltommath
+ LIBS_p += -ltommath
+ endif
+ endif
+-ifeq ($(CONFIG_CRYPTO), libtomcrypt)
++ifeq ($(AP_CONFIG_CRYPTO), libtomcrypt)
+ LIBS += -ltomcrypt -ltfm
+ LIBS_p += -ltomcrypt -ltfm
+ endif
+@@ -411,7 +412,7 @@
+ OBJS += ../src/crypto/tls_none.o
+ endif
+ 
+-ifdef CONFIG_PKCS12
++ifdef AP_CONFIG_PKCS12
+ CFLAGS += -DPKCS12_FUNCS
+ endif
+ 
+@@ -426,76 +427,76 @@
+ 
+ ifdef NEED_CRYPTO
+ ifndef TLS_FUNCS
+-ifeq ($(CONFIG_TLS), openssl)
++ifeq ($(AP_CONFIG_TLS), openssl)
+ LIBS += -lcrypto
+ LIBS_p += -lcrypto
+ LIBS_h += -lcrypto
+ endif
+-ifeq ($(CONFIG_TLS), gnutls)
++ifeq ($(AP_CONFIG_TLS), gnutls)
+ LIBS += -lgcrypt
+ LIBS_p += -lgcrypt
+ LIBS_h += -lgcrypt
+ endif
+-ifeq ($(CONFIG_TLS), internal)
+-ifeq ($(CONFIG_CRYPTO), libtomcrypt)
++ifeq ($(AP_CONFIG_TLS), internal)
++ifeq ($(AP_CONFIG_CRYPTO), libtomcrypt)
+ LIBS += -ltomcrypt -ltfm
+ LIBS_p += -ltomcrypt -ltfm
+ endif
+ endif
+ endif
+-ifeq ($(CONFIG_TLS), openssl)
++ifeq ($(AP_CONFIG_TLS), openssl)
+ OBJS += ../src/crypto/crypto_openssl.o
+ OBJS_p += ../src/crypto/crypto_openssl.o
+ HOBJS += ../src/crypto/crypto_openssl.o
+-CONFIG_INTERNAL_SHA256=y
++AP_CONFIG_INTERNAL_SHA256=y
+ endif
+-ifeq ($(CONFIG_TLS), gnutls)
++ifeq ($(AP_CONFIG_TLS), gnutls)
+ OBJS += ../src/crypto/crypto_gnutls.o
+ OBJS_p += ../src/crypto/crypto_gnutls.o
+ HOBJS += ../src/crypto/crypto_gnutls.o
+-CONFIG_INTERNAL_SHA256=y
++AP_CONFIG_INTERNAL_SHA256=y
+ endif
+-ifeq ($(CONFIG_TLS), internal)
+-ifeq ($(CONFIG_CRYPTO), libtomcrypt)
++ifeq ($(AP_CONFIG_TLS), internal)
++ifeq ($(AP_CONFIG_CRYPTO), libtomcrypt)
+ OBJS += ../src/crypto/crypto_libtomcrypt.o
+ OBJS_p += ../src/crypto/crypto_libtomcrypt.o
+-CONFIG_INTERNAL_SHA256=y
++AP_CONFIG_INTERNAL_SHA256=y
+ endif
+-ifeq ($(CONFIG_CRYPTO), internal)
++ifeq ($(AP_CONFIG_CRYPTO), internal)
+ OBJS += ../src/crypto/crypto_internal.o ../src/tls/rsa.o ../src/tls/bignum.o
+ OBJS_p += ../src/crypto/crypto_internal.o ../src/tls/rsa.o ../src/tls/bignum.o
+ CFLAGS += -DCONFIG_CRYPTO_INTERNAL
+-CONFIG_INTERNAL_AES=y
+-CONFIG_INTERNAL_DES=y
+-CONFIG_INTERNAL_SHA1=y
+-CONFIG_INTERNAL_MD4=y
+-CONFIG_INTERNAL_MD5=y
+-CONFIG_INTERNAL_SHA256=y
++AP_CONFIG_INTERNAL_AES=y
++AP_CONFIG_INTERNAL_DES=y
++AP_CONFIG_INTERNAL_SHA1=y
++AP_CONFIG_INTERNAL_MD4=y
++AP_CONFIG_INTERNAL_MD5=y
++AP_CONFIG_INTERNAL_SHA256=y
+ endif
+ endif
+ else
+-CONFIG_INTERNAL_AES=y
+-CONFIG_INTERNAL_SHA1=y
+-CONFIG_INTERNAL_MD5=y
+-CONFIG_INTERNAL_SHA256=y
++AP_CONFIG_INTERNAL_AES=y
++AP_CONFIG_INTERNAL_SHA1=y
++AP_CONFIG_INTERNAL_MD5=y
++AP_CONFIG_INTERNAL_SHA256=y
+ endif
+ 
+-ifdef CONFIG_INTERNAL_AES
++ifdef AP_CONFIG_INTERNAL_AES
+ CFLAGS += -DINTERNAL_AES
+ endif
+-ifdef CONFIG_INTERNAL_SHA1
++ifdef AP_CONFIG_INTERNAL_SHA1
+ CFLAGS += -DINTERNAL_SHA1
+ endif
+-ifdef CONFIG_INTERNAL_SHA256
++ifdef AP_CONFIG_INTERNAL_SHA256
+ CFLAGS += -DINTERNAL_SHA256
+ endif
+-ifdef CONFIG_INTERNAL_MD5
++ifdef AP_CONFIG_INTERNAL_MD5
+ CFLAGS += -DINTERNAL_MD5
+ endif
+-ifdef CONFIG_INTERNAL_MD4
++ifdef AP_CONFIG_INTERNAL_MD4
+ CFLAGS += -DINTERNAL_MD4
+ endif
+-ifdef CONFIG_INTERNAL_DES
++ifdef AP_CONFIG_INTERNAL_DES
+ CFLAGS += -DINTERNAL_DES
+ endif
+ 
+@@ -519,21 +520,21 @@
+ CFLAGS += -DCONFIG_NO_TLS_PRF
+ endif
+ 
+-ifdef CONFIG_RADIUS_SERVER
++ifdef AP_CONFIG_RADIUS_SERVER
+ CFLAGS += -DRADIUS_SERVER
+ OBJS += ../src/radius/radius_server.o
+ endif
+ 
+-ifdef CONFIG_IPV6
++ifdef AP_CONFIG_IPV6
+ CFLAGS += -DCONFIG_IPV6
+ endif
+ 
+-ifdef CONFIG_DRIVER_RADIUS_ACL
++ifdef AP_CONFIG_DRIVER_RADIUS_ACL
+ CFLAGS += -DCONFIG_DRIVER_RADIUS_ACL
+ endif
+ 
+-ifdef CONFIG_FULL_DYNAMIC_VLAN
+-# define CONFIG_FULL_DYNAMIC_VLAN to have hostapd manipulate bridges
++ifdef AP_CONFIG_FULL_DYNAMIC_VLAN
++# define AP_CONFIG_FULL_DYNAMIC_VLAN to have hostapd manipulate bridges
+ # and vlan interfaces for the vlan feature.
+ CFLAGS += -DCONFIG_FULL_DYNAMIC_VLAN
+ endif
+@@ -542,11 +543,11 @@
+ OBJS += ../src/utils/base64.o
+ endif
+ 
+-ifdef CONFIG_NO_STDOUT_DEBUG
++ifdef AP_CONFIG_NO_STDOUT_DEBUG
+ CFLAGS += -DCONFIG_NO_STDOUT_DEBUG
+ endif
+ 
+-ifdef CONFIG_NO_AES_EXTRAS
++ifdef AP_CONFIG_NO_AES_EXTRAS
+ CFLAGS += -DCONFIG_NO_AES_UNWRAP
+ CFLAGS += -DCONFIG_NO_AES_CTR -DCONFIG_NO_AES_OMAC1
+ CFLAGS += -DCONFIG_NO_AES_EAX -DCONFIG_NO_AES_CBC
+@@ -580,7 +581,7 @@
+ hostapd: $(OBJS)
+ 	$(CC) -o hostapd $(OBJS) --static $(LIBS)
+ 
+-OBJS_c = hostapd_cli.o ../src/common/wpa_ctrl.o ../src/utils/os_$(CONFIG_OS).o
++OBJS_c = hostapd_cli.o ../src/common/wpa_ctrl.o ../src/utils/os_$(AP_CONFIG_OS).o
+ hostapd_cli: $(OBJS_c)
+ 	$(CC) -o hostapd_cli --static $(OBJS_c)
+ 
+@@ -589,7 +590,7 @@
+ 
+ 
+ NOBJS = nt_password_hash.o ../src/crypto/ms_funcs.o ../src/crypto/sha1.o ../src/crypto/rc4.o ../src/crypto/md5.o
+-NOBJS += ../src/crypto/crypto_openssl.o ../src/utils/os_$(CONFIG_OS).o
++NOBJS += ../src/crypto/crypto_openssl.o ../src/utils/os_$(AP_CONFIG_OS).o
+ ifdef TLS_FUNCS
+ LIBS_n += -lcrypto
+ endif
+@@ -626,7 +627,7 @@
+ 	rm -rf doc/latex doc/html
+ 	rm -f doc/hostapd.{eps,png} hostapd-devel.pdf
+ 
+-TEST_SRC_MILENAGE = ../src/hlr_auc_gw/milenage.c ../src/crypto/aes_wrap.c ../src/crypto/aes.c ../src/utils/common.c ../src/utils/wpa_debug.o ../src/utils/os_$(CONFIG_OS).c
++TEST_SRC_MILENAGE = ../src/hlr_auc_gw/milenage.c ../src/crypto/aes_wrap.c ../src/crypto/aes.c ../src/utils/common.c ../src/utils/wpa_debug.o ../src/utils/os_$(AP_CONFIG_OS).c
+ test-milenage: $(TEST_SRC_MILENAGE)
+ 	$(CC) -o test-milenage -Wall -Werror $(TEST_SRC_MILENAGE) \
+ 		-DTEST_MAIN_MILENAGE -I. -DINTERNAL_AES \
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/regulatory.c hostapd_new/hostapd/regulatory.c
+--- hostapd_original/hostapd/regulatory.c	2011-03-27 16:18:38.352409000 +0200
++++ hostapd_new/hostapd/regulatory.c	2011-03-27 16:18:46.778668000 +0200
+@@ -1,5 +1,5 @@
+ /*
+- * hostapd / Module short description
++ * hostapd / Regulatory domain
+  * Copyright (c) 2010, Texas Instruments, Inc. - http://www.ti.com/
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -7,9 +7,7 @@
+  * published by the Free Software Foundation.
+  *
+  * Alternatively, this software may be distributed under the terms of BSD
+- * license.
+- *
+- * For more details please review the below BSD terms:
++ * license below:
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+@@ -39,11 +37,6 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-/** \file regulatory.c
+- *  \brief Regulatory domain implementation
+- *
+- *  \see regulatory.h
+- */
+ #include "includes.h"
+ #include "hostapd.h"
+ #include "driver.h"
+@@ -146,8 +139,8 @@
+                                   {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+                                   {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}},
+                                   {{""},
+-                                  {{100,100,11,13,2407,{1,2,3,4,5,6,7,8,9,10,11,0,0,0,0}},
+-                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {{100,100,11,20,2407,{1,2,3,4,5,6,7,8,9,10,11,0,0,0,0}},
++                                  {101,101,4,23,5000,{52,56,60,64,0,0,0,0,0,0,0,0,0,0,0}},
+                                   {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+                                   {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+                                   {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
+@@ -160,7 +153,7 @@
+ 
+ 
+ /********************************************************************************/
+-/*		Internal functions prototypes.					*/
++/*						Internal functions prototypes.							*/
+ /********************************************************************************/
+ 
+ static int  regulatory_FillChanByCountry(TApChanData  *pChanInfo, char *channelString,int country,int numOfchan,int BaseFreq,int MaxTxPower);
+@@ -172,7 +165,8 @@
+  *                        regulatory_create				*
+  ************************************************************************
+ DESCRIPTION: create reg domain handle
+-INPUT:
++				                                                                                                   
++INPUT:      
+ ************************************************************************/
+ RegDomainStruct_t *regulatory_create(void)
+ {
+@@ -197,10 +191,12 @@
+ }
+ 
+ /************************************************************************
+- *			regulatory_build_hw_capability			*
++ *                        regulatory_build_hw_capability				*
+  ************************************************************************
+-DESCRIPTION: builds regulatory domain table
+-INPUT:      pChanStruct - pointer to channel info structure
++DESCRIPTION: builds regulatory domain table 
++				                                                                                                   
++INPUT:      pChanStruct - pointer to channel info structure		
++
+ ************************************************************************/
+ void regulatory_build_hw_capability(RegDomainStruct_t *pRegHandle ,TApChanHwInfo *pChanStruct,char current_channel,hostapd_hw_mode hostapd_mode)
+ {
+@@ -223,13 +219,14 @@
+   if (!strncmp(pChanStruct->cCountry,"TI",2))
+      country  = REG_TI_INDEX;
+   else
+-   if (!strncmp(pChanStruct->cCountry,"",2))
++   if (!strncmp(pChanStruct->cCountry,"  ",2))
+      country  = REG_ALL_INDEX;
+   else
+     country  = REG_EUROPE_INDEX;
+ 
+- wpa_printf(MSG_DEBUG, "%s: Country=%c%c indx=%d", __func__, pChanStruct->cCountry[0], pChanStruct->cCountry[1], country );
++ wpa_printf(MSG_DEBUG, "%s: Country=%c%c indx=%d mode=%d", __func__, pChanStruct->cCountry[0], pChanStruct->cCountry[1], country, pChanStruct->mode);
+ 
++ 
+  switch (pChanStruct->mode)
+  {
+  case DOT11_A_MODE:
+@@ -266,7 +263,7 @@
+            else
+            if (current_channel == 14)/*the rates on channel 14 is B rates only*/
+            {
+-             regulatory_build_mode_B_hw_capability(pRegHandle,pChanInfo,index,0);
++             regulatory_build_mode_B_hw_capability(pRegHandle,pChanInfo,index,0); 
+              pRegHandle->modes[0].mode = HOSTAPD_MODE_IEEE80211G;
+            }
+            else
+@@ -283,7 +280,7 @@
+           }
+           index = regulatory_FillChanByCountry(pChanInfo,pChanStruct->Chan24str,country,pChanStruct->numOfGChan,DEFAULT_24_FREQ,MaxTxPower);
+            if (current_channel == 14)/*the rates on channel 14 is B rates only*/
+-             regulatory_build_mode_B_hw_capability(pRegHandle,pChanInfo,index,0);
++             regulatory_build_mode_B_hw_capability(pRegHandle,pChanInfo,index,0);   
+            else
+              regulatory_build_mode_G_hw_capability(pRegHandle,pChanInfo,index,0);
+ 
+@@ -297,7 +294,7 @@
+           index = regulatory_FillChanByCountry(pChanInfo,pChanStruct->Chan5str,country,pChanStruct->numOfAChan,DEFAULT_5_FREQ,MaxTxPower);
+           regulatory_build_mode_A_hw_capability(pRegHandle,pChanInfo,index,1);
+           free(pChanInfo);
+-
++     
+       break;
+ 
+  default:
+@@ -307,11 +304,14 @@
+ 
+ 
+ /************************************************************************
+- *			regulatory_FillChanByCountry			*
++ *                        regulatory_FillChanByCountry									*
+  ************************************************************************
+ DESCRIPTION: finds and returns channel index by country code
++				                                                                                                   
+ INPUT:      pointer to channel table
++
+ RETURN:     channel index
++
+ ************************************************************************/
+ static int regulatory_FillChanByCountry(TApChanData  *pChanInfo, char *channelString,int country,int numOfchan,int BaseFreq,int MaxTxPower)
+ {
+@@ -332,7 +332,7 @@
+      }
+      else
+      {
+-       for (classId = 0;(classId < MAX_CLASS_NUM && !found);classId++)
++       for (classId = 0;(classId < MAX_CLASS_NUM && !found);classId++) 
+        {
+         for (chan = 0;chan<MAX_CHAN_NUM;chan++)
+         {
+@@ -347,16 +347,21 @@
+         }
+        }
+      }
++    
+   }
++  
+   return index;
+ }
+ 
+ /************************************************************************
+- *		regulatory_build_mode_A_hw_capability			*
++ *                        regulatory_build_mode_A_hw_capability									*
+  ************************************************************************
+-DESCRIPTION: build mode A hw capability
+-INPUT:      support channel list
+-RETURN:
++DESCRIPTION: build mode A hw capability 
++				                                                                                                   
++INPUT:      support channel list    
++
++RETURN:     
++
+ ************************************************************************/
+ static void regulatory_build_mode_A_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData *pChanInfo,int NumOfChan,int IfaceIdx )
+ {
+@@ -386,16 +391,19 @@
+     for (i=0;i<NumOfARate;i++)
+     {
+      pRegHandle->modes[IfaceIdx].rates[i].rate = RateATbl[i];
+-     pRegHandle->modes[IfaceIdx].rates[i].flags = HOSTAPD_RATE_BASIC | HOSTAPD_RATE_SUPPORTED |HOSTAPD_RATE_MANDATORY;
++   	 pRegHandle->modes[IfaceIdx].rates[i].flags = HOSTAPD_RATE_BASIC | HOSTAPD_RATE_SUPPORTED |HOSTAPD_RATE_MANDATORY;
+     }
+ }
+ 
+ /************************************************************************
+- *		regulatory_build_mode_G_hw_capability			*
++ *                        regulatory_build_mode_G_hw_capability									*
+  ************************************************************************
+-DESCRIPTION: build mode A hw capability
+-INPUT:      support channel list
+-RETURN:
++DESCRIPTION: build mode A hw capability 
++				                                                                                                   
++INPUT:      support channel list    
++
++RETURN:     
++
+ ************************************************************************/
+ static void regulatory_build_mode_G_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx)
+ {
+@@ -429,11 +437,14 @@
+ }
+ 
+ /************************************************************************
+- *		regulatory_build_mode_B_hw_capability			*
++ *                        regulatory_build_mode_B_hw_capability									*
+  ************************************************************************
+-DESCRIPTION: build mode B hw capability
+-INPUT:      support channel list
+-RETURN:
++DESCRIPTION: build mode B hw capability 
++				                                                                                                   
++INPUT:      support channel list    
++
++RETURN:     
++
+ ************************************************************************/
+ static void regulatory_build_mode_B_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx)
+ {
+@@ -471,7 +482,7 @@
+ void regulatory_destroy (RegDomainStruct_t *pRegHandle)
+ {
+  int i;
+-
++ 
+  if (pRegHandle)
+  {
+ 	 free(pRegHandle);
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/regulatory.h hostapd_new/hostapd/regulatory.h
+--- hostapd_original/hostapd/regulatory.h	2011-03-27 16:18:38.270406000 +0200
++++ hostapd_new/hostapd/regulatory.h	2011-03-27 16:18:46.791682000 +0200
+@@ -1,5 +1,5 @@
+ /*
+- * hostapd / Module short description
++ * hostapd / Regulatory domain interface definition
+  * Copyright (c) 2010, Texas Instruments, Inc. - http://www.ti.com/
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -7,9 +7,7 @@
+  * published by the Free Software Foundation.
+  *
+  * Alternatively, this software may be distributed under the terms of BSD
+- * license.
+- *
+- * For more details please review the below BSD terms:
++ * license below:
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+@@ -39,11 +37,6 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+-/** \file regulatory.h
+- *  \brief regulatory interface 
+- *
+- */
+-
+ #include "hw_features.h"
+ 
+ typedef struct 
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/hostapd/wps_hostapd.c hostapd_new/hostapd/wps_hostapd.c
+--- hostapd_original/hostapd/wps_hostapd.c	2011-03-27 16:18:38.885319000 +0200
++++ hostapd_new/hostapd/wps_hostapd.c	2011-03-27 16:18:46.710739000 +0200
+@@ -696,8 +696,8 @@
+ int hostapd_wps_button_pushed(struct hostapd_data *hapd)
+ {
+ 	if (hapd->wps == NULL)
+-		return -1;
+-	return wps_registrar_button_pushed(hapd->wps->registrar);
++    	return -1;
++   	return wps_registrar_button_pushed(hapd->wps->registrar);
+ }
+ 
+ 
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/src/common/wireless_copy.h hostapd_new/src/common/wireless_copy.h
+--- hostapd_original/src/common/wireless_copy.h	2011-03-27 16:18:39.994236000 +0200
++++ hostapd_new/src/common/wireless_copy.h	2011-03-27 16:18:47.295662000 +0200
+@@ -86,11 +86,17 @@
+ #else
+ #include <sys/types.h>
+ #include <net/if.h>
++
++
++#ifndef ANDROID
+ typedef __uint32_t __u32;
+ typedef __int32_t __s32;
+ typedef __uint16_t __u16;
+ typedef __int16_t __s16;
+ typedef __uint8_t __u8;
++#endif
++
++
+ #ifndef __user
+ #define __user
+ #endif /* __user */
+diff -Naur --exclude='*.a' --exclude='*.o' --exclude='*.keep' --exclude='*.gitignore' hostapd_original/src/common/wpa_ctrl.c hostapd_new/src/common/wpa_ctrl.c
+--- hostapd_original/src/common/wpa_ctrl.c	2011-03-27 16:18:39.979231000 +0200
++++ hostapd_new/src/common/wpa_ctrl.c	2011-03-27 16:18:47.318653000 +0200
+@@ -23,10 +23,6 @@
+ #include "wpa_ctrl.h"
+ #include "common.h"
+ 
+-#ifdef ANDROID
+-static const char *local_socket_dir = "/data/misc/wifi/sockets";
+-static const char *local_socket_prefix = "wpa_ctrl_";
+-#endif /* ANDROID */
+ 
+ #if defined(CONFIG_CTRL_IFACE_UNIX) || defined(CONFIG_CTRL_IFACE_UDP)
+ #define CTRL_IFACE_SOCKET
+@@ -85,12 +81,7 @@
+ 	counter++;
+ try_again:
+ 	ret = os_snprintf(ctrl->local.sun_path, sizeof(ctrl->local.sun_path),
+-#ifdef ANDROID
+-			  "%s/%s%d-%d", local_socket_dir, local_socket_prefix,
+-				getpid(), counter);
+-#else
+ 			  "/tmp/wpa_ctrl_%d-%d", getpid(), counter);
+-#endif
+ 	if (ret < 0 || (size_t) ret >= sizeof(ctrl->local.sun_path)) {
+ 		close(ctrl->s);
+ 		os_free(ctrl);

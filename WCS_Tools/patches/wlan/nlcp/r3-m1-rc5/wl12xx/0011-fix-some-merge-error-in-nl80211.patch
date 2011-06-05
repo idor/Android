@@ -1,0 +1,33 @@
+From 38708debf356f932c8db4d54df4cfffbe9c280fb Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Sun, 22 May 2011 20:07:30 +0300
+Subject: [PATCH 11/24] (fix some merge error in nl80211)
+
+---
+ include/linux/nl80211.h |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index c7ccaae..4c80e6b 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1184,7 +1184,6 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
+ 
+ 	NL80211_ATTR_SUPPORT_MESH_AUTH,
+-	NL80211_ATTR_STA_PLINK_STATE,
+ 
+ 	NL80211_ATTR_WOWLAN_TRIGGERS,
+ 	NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED,
+@@ -1194,6 +1193,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_INTERFACE_COMBINATIONS,
+ 	NL80211_ATTR_SOFTWARE_IFTYPES,
+ 
++	NL80211_ATTR_STA_PLINK_STATE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+-- 
+1.7.1
+

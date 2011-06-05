@@ -1,0 +1,104 @@
+From 6f6222c9d4dcc6fb6af4762b11a11c76eeb9be8c Mon Sep 17 00:00:00 2001
+From: Ido Yariv <ido@wizery.com>
+Date: Tue, 17 May 2011 14:57:47 +0300
+Subject: [PATCH 21/24] wl12xx: Check for FW quirks as soon as the FW boots
+
+The initialization process might depend on the FW revision, so check for
+any FW quirks before initialization the FW.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/boot.c |   21 +++++++++++++++++++++
+ drivers/net/wireless/wl12xx/main.c |   23 -----------------------
+ 2 files changed, 21 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 7ccec07..17a6ece 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -102,6 +102,24 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
+ 	wl1271_write32(wl, ACX_REG_ECPU_CONTROL, cpu_ctrl);
+ }
+ 
++static unsigned int wl1271_get_fw_ver_quirks(struct wl1271 *wl)
++{
++	unsigned int quirks = 0;
++	unsigned int *fw_ver = wl->chip.fw_ver;
++
++	/* Only for wl127x */
++	if ((fw_ver[FW_VER_CHIP] == FW_VER_CHIP_WL127X) &&
++	    /* Check STA version */
++	    (((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
++	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_STA_MIN)) ||
++	     /* Check AP version */
++	     ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP) &&
++	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_AP_MIN))))
++		quirks |= WL12XX_QUIRK_USE_2_SPARE_BLOCKS;
++
++	return quirks;
++}
++
+ static void wl1271_parse_fw_ver(struct wl1271 *wl)
+ {
+ 	int ret;
+@@ -116,6 +134,9 @@ static void wl1271_parse_fw_ver(struct wl1271 *wl)
+ 		memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
+ 		return;
+ 	}
++
++	/* Check if any quirks are needed with older fw versions */
++	wl->quirks |= wl1271_get_fw_ver_quirks(wl);
+ }
+ 
+ static void wl1271_boot_fw_version(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 1180f0c..2d4d883 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1238,24 +1238,6 @@ out:
+ 	return ret;
+ }
+ 
+-static unsigned int wl1271_get_fw_ver_quirks(struct wl1271 *wl)
+-{
+-	unsigned int quirks = 0;
+-	unsigned int *fw_ver = wl->chip.fw_ver;
+-
+-	/* Only for wl127x */
+-	if ((fw_ver[FW_VER_CHIP] == FW_VER_CHIP_WL127X) &&
+-	    /* Check STA version */
+-	    (((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
+-	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_STA_MIN)) ||
+-	     /* Check AP version */
+-	     ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP) &&
+-	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_AP_MIN))))
+-		quirks |= WL12XX_QUIRK_USE_2_SPARE_BLOCKS;
+-
+-	return quirks;
+-}
+-
+ int wl1271_plt_start(struct wl1271 *wl)
+ {
+ 	int retries = WL1271_BOOT_RETRIES;
+@@ -1292,8 +1274,6 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 		wl1271_notice("firmware booted in PLT mode (%s)",
+ 			      wl->chip.fw_ver_str);
+ 
+-		/* Check if any quirks are needed with older fw versions */
+-		wl->quirks |= wl1271_get_fw_ver_quirks(wl);
+ 		goto out;
+ 
+ irq_disable:
+@@ -1779,9 +1759,6 @@ power_off:
+ 	strncpy(wiphy->fw_version, wl->chip.fw_ver_str,
+ 		sizeof(wiphy->fw_version));
+ 
+-	/* Check if any quirks are needed with older fw versions */
+-	wl->quirks |= wl1271_get_fw_ver_quirks(wl);
+-
+ 	/*
+ 	 * Now we know if 11a is supported (info from the NVS), so disable
+ 	 * 11a channels if not supported
+-- 
+1.7.1
+

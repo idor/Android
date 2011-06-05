@@ -1,0 +1,19 @@
+diff --git a/Android.mk b/Android.mk
+index 37ee1e4..dff6346 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -18,7 +18,7 @@ ifndef HOSTAPD_VERSION
+ HOSTAPD_VERSION := VER_0_6_X
+ endif
+ 
+-ifeq ($(HOSTAPD_VERSION),VER_0_6_X)
++ifneq ($(BOARD_SOFTAP_DEVICE),wl12xx_mac80211)
+ 
+ LOCAL_PATH := $(call my-dir)
+ 
+@@ -629,4 +629,4 @@ endif
+ 
+ ########################
+ 
+-endif # VER_0_6_X
++endif # wl12xx_mac80211

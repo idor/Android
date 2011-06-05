@@ -1,0 +1,153 @@
+From 8dd88bbd3f16bd5a11ea8d3f0bca3f8df4d525c8 Mon Sep 17 00:00:00 2001
+From: Ido Yariv <ido@wizery.com>
+Date: Mon, 23 May 2011 11:18:15 +0300
+Subject: [PATCH 17/24] wl12xx: Handle QOS prioritization only in the FW *EXPERIMENTAL*
+
+The FW is capable of prioritizing TX packets. Having additional
+prioritization functionality in the driver might be sub-optimal;
+Statically prioritizing the queues does not take into account QOS
+parameters (CWmin, CWmax & AIFS), and might also starve lower priority
+queues.
+
+Fix this by transferring packets to the FW from all available queues in
+round-robin order, and letting the FW decide which packets should be
+transmitted at any given time.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |    9 +++++--
+ drivers/net/wireless/wl12xx/tx.c     |   40 +++++++++++++++------------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    3 ++
+ 3 files changed, 27 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index b4351f7..7d7c512 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4099,9 +4099,11 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	for (i = 0; i < NUM_TX_QUEUES; i++)
+ 		skb_queue_head_init(&wl->tx_queue[i]);
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		for (j = 0; j < AP_MAX_LINKS; j++)
+-			skb_queue_head_init(&wl->links[j].tx_queue[i]);
++	for (i = 0; i < AP_MAX_LINKS; i++) {
++		for (j = 0; j < NUM_TX_QUEUES; j++)
++			skb_queue_head_init(&wl->links[i].tx_queue[j]);
++		wl->links[i].tx_next_queue = 0;
++	}
+ 
+ 	skb_queue_head_init(&wl->deferred_rx_queue);
+ 	skb_queue_head_init(&wl->deferred_tx_queue);
+@@ -4144,6 +4146,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->sched_scanning = false;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+ 		    (unsigned long) wl);
++	wl->tx_next_queue = 0;
+ 
+ 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 6603e60..77108c6 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -457,17 +457,14 @@ static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
++	int i;
+ 
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VO]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VI]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BE]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BK]);
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		skb = skb_dequeue(&wl->tx_queue[wl->tx_next_queue]);
++		wl->tx_next_queue = (wl->tx_next_queue + 1) % NUM_TX_QUEUES;
++		if (skb)
++			goto out;
++	}
+ 
+ out:
+ 	if (skb) {
+@@ -484,6 +481,8 @@ static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
+ 	int i, h, start_hlid;
++	int q;
++	int j;
+ 
+ 	/* start from the link after the last one */
+ 	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
+@@ -492,18 +491,13 @@ static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
+ 	for (i = 0; i < AP_MAX_LINKS; i++) {
+ 		h = (start_hlid + i) % AP_MAX_LINKS;
+ 
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
+-		if (skb)
+-			goto out;
++		for (j = 0; j < NUM_TX_QUEUES; j++) {
++			q = wl->links[h].tx_next_queue;
++			skb = skb_dequeue(&wl->links[h].tx_queue[q]);
++			wl->links[h].tx_next_queue = (q + 1) % NUM_TX_QUEUES;
++			if (skb)
++				goto out;
++		}
+ 	}
+ 
+ out:
+@@ -807,6 +801,7 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 			wl1271_tx_reset_link_queues(wl, i);
+ 			wl->links[i].allocated_blks = 0;
+ 			wl->links[i].prev_freed_blks = 0;
++			wl->links[i].tx_next_queue = 0;
+ 		}
+ 
+ 		wl->last_tx_hlid = 0;
+@@ -827,6 +822,7 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 	}
+ 
+ 	wl->tx_queue_count = 0;
++	wl->tx_next_queue = 0;
+ 
+ 	/*
+ 	 * Make sure the driver is at a consistent state, in case this
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 9c7edad..da06a48 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -371,6 +371,8 @@ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+ 
++	int tx_next_queue;
++
+ 	/* accounting for allocated / available TX blocks in FW */
+ 	u8 allocated_blks;
+ 	u8 prev_freed_blks;
+@@ -441,6 +443,7 @@ struct wl1271 {
+ 	/* Frames scheduled for transmission, not handled yet */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+ 	int tx_queue_count;
++	int tx_next_queue;
+ 
+ 	/* Frames received, not handled yet by mac80211 */
+ 	struct sk_buff_head deferred_rx_queue;
+-- 
+1.7.1
+

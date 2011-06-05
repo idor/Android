@@ -1,0 +1,28 @@
+From 8c91a3dde2186ab22c4779ab4fd2101187c87a83 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 21 Feb 2011 14:25:40 +0200
+Subject: [PATCH 1/2] prelink-linux-arm: add libnl to prelink map
+
+libnl is a supporting library for the hostap and netd packages, used by
+the wl12xx driver
+
+Change-Id: I93b40093bcde82510f77b00de8413fa888634a3e
+---
+ core/prelink-linux-arm.map |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/core/prelink-linux-arm.map b/core/prelink-linux-arm.map
+index 7daaf98..9a0a48b 100644
+--- a/core/prelink-linux-arm.map
++++ b/core/prelink-linux-arm.map
+@@ -186,6 +186,7 @@ libwbxml.so             0x9EF00000 # [???]
+ libwbxml_jni.so         0x9EE00000 # [~1M]
+ libxml2wbxml.so         0x9EB00000 # [~1M]
+ libdrm1.so              0x9EA00000 # [~1M]
++libnl.so		0x9E920000 # [???]
+ libdrm1_jni.so          0x9E900000 # [<64K]
+ libwapcore.so           0x9E800000 # [???]
+ libstreetview.so        0x9E700000 # [???]
+-- 
+1.7.1
+
