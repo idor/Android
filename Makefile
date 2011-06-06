@@ -87,14 +87,34 @@ install-only:
 	$(MAKE) wlan-sta-install
 	$(MAKE) wlan-softap-install
 
-	@cd $(OUTPUT_PATH_SD) ; $(TAR) cf $(OUTPUT_PATH_SD)/$(VERSION).sd.tar *
-	
+	@cd $(OUTPUT_PATH_SD) ; $(TAR) cf $(OUTPUT_PATH_SD)/$(VERSION).sd.tar *	
 	@$(call print, "INSTALL DONE")
 	
-$(OUTPUT_PATH_SD)/$(VERSION).sd.tar: install
+$(OUTPUT_PATH_SD)/$(VERSION).sd.tar:
+	$(MAKE) install
 	
 create-images: $(OUTPUT_PATH_SD)/$(VERSION).sd.tar
+	@if [ -d $(EMMC_PATH) ] ; then $(DEL) -rf $(EMMC_PATH) ; fi
+	$(MKDIR) -p $(EMMC_PATH)
+	$(COPY) -f $(MYDROID)/out/host/linux-x86/bin/fastboot $(EMMC_PATH)
+	$(COPY) -f $(MYDROID)/out/host/linux-x86/bin/mkbootimg $(EMMC_PATH)
+	$(COPY) -f $(BOOT_PATH)/u-boot.bin $(EMMC_PATH)
+	$(COPY) -f $(BOOT_PATH)/MLO* $(EMMC_PATH)
+	$(COPY) -f $(KERNEL_DIR)/arch/arm/boot/zImage $(EMMC_PATH)
+#	$(FIND) $(OUTPUT_IMG_DIR) -name *.img | xargs rm
+	$(FIND) $(OUTPUT_IMG_DIR) -name *.img -exec rm -f {} \;
+	# echo instead of just copy since there are ommited directories (which causes errors)
+	$(ECHO) `$(COPY) $(MYFS_PATH)/* $(OUTPUT_IMG_DIR)/root`
+	$(COPY) -rf $(MYFS_PATH)/system/* $(OUTPUT_IMG_DIR)/system
+	$(COPY) -rf $(MYFS_PATH)/data/* $(OUTPUT_IMG_DIR)/data	
+	$(MAKE) mydroid-make
+	$(COPY) -f $(OUTPUT_IMG_DIR)/*.img $(EMMC_PATH)	
+	cd $(EMMC_PATH) ; ./mkbootimg --kernel zImage --ramdisk ramdisk.img --base 0x80000000 --cmdline "console=ttyO2,115200n8 rootdelay=2 mem=456M@0x80000000 mem=512M@0xA0000000 init=/init vram=10M omapfb.vram=0:4M androidboot.console=ttyO2" --board omap4 -o boot.img
+	cd $(EMMC_PATH) ; dd if=/dev/zero of=./cache.img bs=1048510 count=128
+	cd $(EMMC_PATH) ; $(MKFS_EXT4) -F cache.img -L cache
 	
+	@$(call print, "eMMC IMAGES CREATION DONE")
+	@$(call print, "creation of images took $$(( $(call GET_TIME)-$(MAKE_START_TIME) )) seconds")	
 
 clean: bringup
 	@if [ -d $(OUTPUT_PATH) ] ; then $(ECHO) removing $(OUTPUT_PATH) directory ; $(DEL) -rf $(OUTPUT_PATH) ; fi

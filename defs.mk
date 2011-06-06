@@ -106,6 +106,8 @@ KERNEL_PLATFORM_CONFIG:=android_4430_defconfig
 # output paths
 ################################################################################
 
+OUTPUT_IMG_DIR=$(MYDROID)/out/target/product/blaze
+
 OUTPUT_PATH:=$(YOUR_PATH)/output
 OUTPUT_PATH_SD:=$(OUTPUT_PATH)/sd
 MYFS_PATH:=$(OUTPUT_PATH_SD)/rootfs
