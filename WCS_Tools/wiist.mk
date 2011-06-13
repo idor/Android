@@ -505,8 +505,8 @@ nlcp-distclean:
 	@$(MAKE) bt-test-config
 ifeq ($(CONFIG_BT), y)
 	@$(MAKE) nlcp-distclean-private
-	@if [ -f $(PROGRESS_BRINGUP_BT) ] ; then $(DEL) $(PROGRESS_BRINGUP_BT) ; fi
-	@$(call print, "bt distclean done")
+	@if [ -f $(PROGRESS_BRINGUP_NLCP) ] ; then $(DEL) $(PROGRESS_BRINGUP_NLCP) ; fi
+	@$(call print, "nlcp distclean done")
 else
-	@$(call print, "bt distclean excluded")
+	@$(call print, "nlcp distclean excluded")
 endif

@@ -148,8 +148,9 @@ mydroid-install:
 	@$(ECHO) extract prebuilt binaries...
 	$(MAKE) binaries-install
 	
-	@$(ECHO) copy init.rc to myfs folder...
-	@$(COPY) -rfv $(INITRC_PATH)/* $(MYFS_PATH)/
+	@$(ECHO) copy init.rc scripts to myfs folder...
+	@$(COPY) -rfv $(INITRC_PATH)/init.rc $(MYFS_PATH)/
+	@$(COPY) -rfv $(INITRC_PATH)/init.omap4430.rc $(MYFS_PATH)/
 	
 	@$(call print, "mydroid install done")
 

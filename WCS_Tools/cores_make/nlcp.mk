@@ -191,14 +191,14 @@ nlcp-make-private:
 	
 nlcp-install-private:
 	@$(ECHO) "nlcp install..."
-#	$(MKDIR) -p $(MYFS_PATH)/system/lib/modules
-#	@$(ECHO) "copy modules from compat-wireless"
-#	$(FIND) $(COMPAT_WIRELESS_DIR) -name "*.ko" -exec cp -f {}  $(MYFS_PATH)/system/lib/modules/ \;
-#	@$(ECHO) "copy modules from kernel"
-#	$(FIND) $(KERNEL_DIR)/drivers/staging -name "*.ko" -exec cp -v {} $(MYFS_PATH) \;
-#	@$(ECHO) "copy TQS_D_1.7.ini"
-#	$(MKDIR) -p $(MYFS_PATH)/data
-#	$(COPY) $(NLCP_PATCHES_PATH)/TQS_D_1.7.ini $(MYFS_PATH)/data
+	$(MKDIR) -p $(MYFS_PATH)/system/lib/modules
+	@$(ECHO) "copy modules from compat-wireless"
+	$(FIND) $(COMPAT_WIRELESS_DIR) -name "*.ko" -exec cp -f {}  $(MYFS_PATH)/system/lib/modules/ \;
+	@$(ECHO) "copy modules from kernel"
+	$(FIND) $(KERNEL_DIR)/drivers/staging -name "*.ko" -exec cp -v {} $(MYFS_PATH) \;
+	@$(ECHO) "copy TQS_D_1.7.ini"
+	$(MKDIR) -p $(MYFS_PATH)/data
+	$(COPY) $(NLCP_PATCHES_PATH)/TQS_D_1.7.ini $(MYFS_PATH)/data
 	@$(ECHO) "patching init.omap4430.rc"
 	cd $(MYFS_PATH) ; $(PATCH) -p1 --dry-run < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch
 	cd $(MYFS_PATH) ; $(PATCH) -p1 < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch

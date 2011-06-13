@@ -1,5 +1,5 @@
---- a/init.omap4430.rc	2011-05-30 13:37:37.000000000 +0300
-+++ b/init.omap4430.rc	2011-05-31 13:59:18.000000000 +0300
+--- a/init.omap4430.rc	2011-06-05 16:01:03.000000000 +0300
++++ b/init.omap4430.rc	2011-06-13 16:37:52.000000000 +0300
 @@ -24,12 +24,37 @@
      setprop status.battery.level_scale 9
  
@@ -68,11 +68,24 @@
  
  # HotSpot Related services
  service wlan_ap_loader /system/bin/tiap_loader \
-@@ -254,6 +280,21 @@
+@@ -250,10 +276,33 @@
+     disabled
+     oneshot
+ 
+-service ifcfg_softap /system/bin/ifconfig tiap0 up
++########################## wl12xx addition - start
++
++service ifcfg_softap /system/bin/ifconfig wlan1 1.2.3.4 netmask 255.255.255.0 up
++    disabled
++    oneshot
++    
++service dhcpd_softap /data/busybox/udhcpd -f /data/misc/wifi/udhcpd.wlan1.conf
      disabled
      oneshot
  
 -service hostapd /system/bin/hostap -dd /data/misc/wifi/hostapd.conf
++########################## wl12xx addition - end
++
 +service hostapd_bin /system/bin/logwrapper /system/bin/hostapd_bin -dd /data/misc/wifi/hostapd.conf
      disabled
      oneshot

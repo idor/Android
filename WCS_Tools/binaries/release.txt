@@ -1,1 +1,0 @@
-VERSION:=L27.INC1.12.1 OMAP4 GingerBread ES2

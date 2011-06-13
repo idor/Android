@@ -28,6 +28,7 @@ ECHO=/bin/echo
 TAR=/bin/tar
 FIND=/usr/bin/find
 SED=/bin/sed
+MKFS_EXT4=/sbin/mkfs.ext4
 
 
 # ------------------------------------------------------------------------------
