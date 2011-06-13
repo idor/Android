@@ -123,18 +123,49 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): $(PROGRESS_BRINGUP_MYDROID)
 	cd $(MYDROID)/external/wpa_supplicant_6 ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.wpa_supplicant_6/*
 	cd $(MYDROID)/frameworks/base ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/frameworks.base/0001*
 	cd $(MYDROID)/frameworks/base ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/frameworks.base/0002*
-# TODO: one more patch is needed - vishal email (?!)
-	cd $(MYDROID)/hardware/libhardware_legacy ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/*
+## TODO: one more patch is needed - vishal email (?!)
+	cd $(MYDROID)/hardware/libhardware_legacy ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/0001-Revert*
 	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0001*
 	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0002*
 	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0003-revert-android-dhcp-service-name-device-name-usage.patch
 	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0001*
 	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0002*
 	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0003*
+	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0004*
 	@$(ECHO) "...done"
+	
 	@$(ECHO) "copying additional packages to mydroid directory..."
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/* $(MYDROID)/external/
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/* $(MYDROID)/hardware/		
+	if [ -d $(MYDROID)/external/crda ] ; then $(MOVE) $(MYDROID)/external/crda.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/crda $(MYDROID)/external/crda
+	
+	if [ -d $(MYDROID)/external/hostap ] ; then $(MOVE) $(MYDROID)/external/hostap.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/hostap $(MYDROID)/external/hostap
+
+	if [ -d $(MYDROID)/external/iw ] ; then $(MOVE) $(MYDROID)/external/iw.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/iw $(MYDROID)/external/iw
+	
+	if [ -d $(MYDROID)/external/libnl ] ; then $(MOVE) $(MYDROID)/external/libnl.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/libnl $(MYDROID)/external/libnl
+	
+	if [ -d $(MYDROID)/external/ti-utils ] ; then $(MOVE) $(MYDROID)/external/ti-utils.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/ti-utils $(MYDROID)/external/ti-utils
+	
+	$(MKDIR) -p $(MYDROID)/hardware/wlan
+	if [ -f $(MYDROID)/hardware/wlan/Android.mk ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk
+	
+	if [ -d $(MYDROID)/hardware/wlan/fw ] ; then $(MOVE) $(MYDROID)/hardware/wlan/fw $(MYDROID)/hardware/wlan/fw.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/fw $(MYDROID)/hardware/wlan/fw
+	
+	if [ -d $(MYDROID)/hardware/wlan/initial_regdom ] ; then $(MOVE) $(MYDROID)/hardware/wlan/initial_regdom $(MYDROID)/hardware/wlan/initial_regdom.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/initial_regdom $(MYDROID)/hardware/wlan/initial_regdom
+	
+	if [ -d $(MYDROID)/hardware/wlan/wifi_conf ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wifi_conf $(MYDROID)/hardware/wlan/wifi_conf.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/wifi_conf $(MYDROID)/hardware/wlan/wifi_conf
+	
+	if [ -d $(MYDROID)/hardware/wlan/wpa_supplicant_lib ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wpa_supplicant_lib $(MYDROID)/hardware/wlan/wpa_supplicant_lib.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/wpa_supplicant_lib $(MYDROID)/hardware/wlan/wpa_supplicant_lib
+	
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_MYDROID_PATCHES))
 	@$(call print, "android patches and packages done")
@@ -160,14 +191,14 @@ nlcp-make-private:
 	
 nlcp-install-private:
 	@$(ECHO) "nlcp install..."
-	$(MKDIR) -p $(MYFS_PATH)/system/lib/modules
-	@$(ECHO) "copy modules from compat-wireless"
-	$(FIND) $(COMPAT_WIRELESS_DIR) -name "*.ko" -exec cp -f {}  $(MYFS_PATH)/system/lib/modules/ \;
-	@$(ECHO) "copy modules from kernel"
-	$(FIND) $(KERNEL_DIR)/drivers/staging -name "*.ko" -exec cp -v {} $(MYFS_PATH) \;
-	@$(ECHO) "copy TQS_D_1.7.ini"
-	$(MKDIR) -p $(MYFS_PATH)/data
-	$(COPY) $(NLCP_PATCHES_PATH)/TQS_D_1.7.ini $(MYFS_PATH)/data
+#	$(MKDIR) -p $(MYFS_PATH)/system/lib/modules
+#	@$(ECHO) "copy modules from compat-wireless"
+#	$(FIND) $(COMPAT_WIRELESS_DIR) -name "*.ko" -exec cp -f {}  $(MYFS_PATH)/system/lib/modules/ \;
+#	@$(ECHO) "copy modules from kernel"
+#	$(FIND) $(KERNEL_DIR)/drivers/staging -name "*.ko" -exec cp -v {} $(MYFS_PATH) \;
+#	@$(ECHO) "copy TQS_D_1.7.ini"
+#	$(MKDIR) -p $(MYFS_PATH)/data
+#	$(COPY) $(NLCP_PATCHES_PATH)/TQS_D_1.7.ini $(MYFS_PATH)/data
 	@$(ECHO) "patching init.omap4430.rc"
 	cd $(MYFS_PATH) ; $(PATCH) -p1 --dry-run < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch
 	cd $(MYFS_PATH) ; $(PATCH) -p1 < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch
@@ -178,6 +209,73 @@ nlcp-clean-private:
 
 nlcp-distclean-private:
 	@$(ECHO) "nlcp distclean..."
+	$(MAKE) $(PROGRESS_NLCP_MYDROID_PATCHES)-distclean
+	$(MAKE) $(PROGRESS_NLCP_KERNEL_PATCHES)-distclean
+#	@$(ECHO) "removing wl12xx..."
+#	$(DEL) -rf $(WL12xx_DIR) $(PROGRESS_NLCP_FETCH_WL12xx) $(PROGRESS_NLCP_BRINGUP_WL12xx)
+#	@$(ECHO) "...done"	
+#	@$(ECHO) "removing compat..."
+#	$(DEL) -rf $(COMPAT_DIR) $(PROGRESS_NLCP_FETCH_COMPAT) $(PROGRESS_NLCP_BRINGUP_COMPAT)
+#	@$(ECHO) "...done"	
+#	@$(ECHO) "removing compat wireless..."
+#	$(DEL) -rf $(COMPAT_WIRELESS_DIR) $(PROGRESS_NLCP_FETCH_COMPAT_WIRELESS) $(PROGRESS_NLCP_BRINGUP_COMPAT_WIRELESS)
+#	@$(ECHO) "...done"
+	@$(call print, "nlcp removed from workspace")
+
+$(PROGRESS_NLCP_KERNEL_PATCHES)-distclean: $(PROGRESS_NLCP_KERNEL_PATCHES)
+	@$(ECHO) "removing nlcp support from kernel..."
+	cd $(KERNEL_DIR) ; $(REM_PATCH) -p1 < $(NLCP_KERNEL_PATCHES)/L27.INC1.13.1.kernel-config.nlcp-r3-rc5.patch
+	cd $(KERNEL_DIR) ; $(REM_PATCH) -p1 < $(NLCP_KERNEL_PATCHES)/L27.INC1.13.1.kernel.nlcp-r3-rc5.patch
+	@$(ECHO) "...done"
+	@$(DEL) $(PROGRESS_NLCP_KERNEL_PATCHES)
+	@$(call print, "nlcp kernel patches removed")
+
+$(PROGRESS_NLCP_MYDROID_PATCHES)-distclean: $(PROGRESS_NLCP_MYDROID_PATCHES)
+	@$(ECHO) "removing nlcp support from android..."
+	cd $(MYDROID)/system/netd ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0004*
+	cd $(MYDROID)/system/netd ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0003*
+	cd $(MYDROID)/system/netd ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0002*
+	cd $(MYDROID)/system/netd ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0001*
+	cd $(MYDROID)/system/core ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0003-revert-android-dhcp-service-name-device-name-usage.patch
+	cd $(MYDROID)/system/core ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0002*
+	cd $(MYDROID)/system/core ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0001*
+	cd $(MYDROID)/hardware/libhardware_legacy ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/0001-Revert*
+## TODO: one more patch is needed - vishal email (?!)
+	cd $(MYDROID)/frameworks/base ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/frameworks.base/0002*
+	cd $(MYDROID)/frameworks/base ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/frameworks.base/0001*
+	cd $(MYDROID)/external/wpa_supplicant_6 ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.wpa_supplicant_6/*
+	cd $(MYDROID)/external/openssl ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.openssl/*
+	cd $(MYDROID)/external/hostapd ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.hostapd/*
+	cd $(MYDROID)/device/ti/blaze ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/device.ti.blaze/*
+	cd $(MYDROID)/build ; $(REM_PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/build/*	
+	@$(ECHO) "...done"	
+	@$(ECHO) "removing additional packages from mydroid directory..."
+	$(DEL) -rf $(MYDROID)/external/crda
+	if [ -d $(MYDROID)/external/crda.org ] ; then $(MOVE) $(MYDROID)/external/crda.org $(MYDROID)/external/crda ; fi	
+	$(DEL) -rf $(MYDROID)/external/hostap
+	if [ -d $(MYDROID)/external/hostap.org ] ; then $(MOVE) $(MYDROID)/external/hostap.org $(MYDROID)/external/hostap ; fi
+	$(DEL) -rf $(MYDROID)/external/iw
+	if [ -d $(MYDROID)/external/iw.org ] ; then $(MOVE) $(MYDROID)/external/iw.org $(MYDROID)/external/iw ; fi	
+	$(DEL) -rf $(MYDROID)/external/libnl
+	if [ -d $(MYDROID)/external/libnl.org ] ; then $(MOVE) $(MYDROID)/external/libnl.org $(MYDROID)/external/libnl ; fi
+	$(DEL) -rf $(MYDROID)/external/ti-utils
+	if [ -d $(MYDROID)/external/ti-utils.org ] ; then $(MOVE) $(MYDROID)/external/ti-utils.org $(MYDROID)/external/ti-utils ; fi
+	$(MKDIR) -p $(MYDROID)/hardware/wlan
+	$(DEL) -rf $(MYDROID)/hardware/wlan/Android.mk
+	if [ -f $(MYDROID)/hardware/wlan/Android.mk.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk.org $(MYDROID)/hardware/wlan/Android.mk ; fi
+	$(DEL) -rf $(MYDROID)/hardware/wlan/fw
+	if [ -d $(MYDROID)/hardware/wlan/fw.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/fw.org $(MYDROID)/hardware/wlan/fw ; fi
+	$(DEL) -rf $(MYDROID)/hardware/wlan/initial_regdom
+	if [ -d $(MYDROID)/hardware/wlan/initial_regdom.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/initial_regdom.org $(MYDROID)/hardware/wlan/initial_regdom ; fi
+	$(DEL) -rf $(MYDROID)/hardware/wlan/wifi_conf
+	if [ -d $(MYDROID)/hardware/wlan/wifi_conf.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wifi_conf.org $(MYDROID)/hardware/wlan/wifi_conf ; fi
+	$(DEL) -rf $(MYDROID)/hardware/wlan/wpa_supplicant_lib
+	if [ -d $(MYDROID)/hardware/wlan/wpa_supplicant_lib.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wpa_supplicant_lib.org $(MYDROID)/hardware/wlan/wpa_supplicant_lib ; fi
+	@$(ECHO) "...done"
+	@$(DEL) $(PROGRESS_NLCP_MYDROID_PATCHES)
+	@$(call print, "android patches and packages removed")
+
+
 
 
 
