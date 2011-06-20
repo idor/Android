@@ -217,7 +217,7 @@ endif
 .PHONY += wlan-sta-pre-bringup-validation
 
 wlan-sta-test-config:
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@if [ ! -f $(PROGRESS_BRINGUP_WLAN_STA) ] ; then $(MAKE) wlan-sta-err-bringup ; fi
 else
 	@if [ -f $(PROGRESS_BRINGUP_WLAN_STA) ] ; then $(MAKE) wlan-sta-err-config ; fi
@@ -230,7 +230,7 @@ wlan-sta-err-config:
 	$(error "wlan station not configured, but bringup was performed")
 	
 $(PROGRESS_BRINGUP_WLAN_STA):
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(MAKE) wlan-sta-bringup-private
 	@$(call echo-to-file, "INCLUDED", $(PROGRESS_BRINGUP_WLAN_STA))
 	@$(call print, "wlan station bringup done")
@@ -239,7 +239,7 @@ else
 endif
 
 wlan-sta-pre-bringup-validation:
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(MAKE) wlan-sta-private-pre-bringup-validation
 endif
 
@@ -248,7 +248,7 @@ wlan-sta-bringup: wlan-sta-pre-bringup-validation
 
 wlan-sta-make: $(PROGRESS_BRINGUP_WLAN_STA)
 	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(MAKE) wlan-sta-make-private
 	@$(call print, "wlan station make done")
 else
@@ -257,7 +257,7 @@ endif
 
 wlan-sta-install: $(PROGRESS_BRINGUP_WLAN_STA)
 	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(MAKE) wlan-sta-install-private
 	@$(call print, "wlan station install done")
 else
@@ -266,7 +266,7 @@ endif
 
 wlan-sta-clean: $(PROGRESS_BRINGUP_WLAN_STA)
 	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(MAKE) wlan-sta-clean-private
 	@$(call print, "wlan station clean done")
 else
@@ -275,7 +275,7 @@ endif
 
 wlan-sta-distclean:
 #	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_WLAN_STA), y)
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(MAKE) wlan-sta-distclean-private
 	@if [ -f $(PROGRESS_BRINGUP_WLAN_STA) ] ; then $(DEL) $(PROGRESS_BRINGUP_WLAN_STA) ; fi
 	@$(call print, "wlan station distclean done")
@@ -293,7 +293,7 @@ endif
 .PHONY += wlan-softap-pre-bringup-validation
 
 wlan-softap-test-config:
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@if [ ! -f $(PROGRESS_BRINGUP_WLAN_SOFTAP) ] ; then $(MAKE) wlan-softap-err-bringup ; fi
 else
 	@if [ -f $(PROGRESS_BRINGUP_WLAN_SOFTAP) ] ; then $(MAKE) wlan-softap-err-config ; fi
@@ -306,7 +306,7 @@ wlan-softap-err-config:
 	$(error "wlan softap not configured, but bringup was performed")
 	
 $(PROGRESS_BRINGUP_WLAN_SOFTAP):
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@$(MAKE) wlan-softap-bringup-private
 	@$(call echo-to-file, "INCLUDED", $(PROGRESS_BRINGUP_WLAN_SOFTAP))
 	@$(call print, "wlan softap bringup done")
@@ -315,7 +315,7 @@ else
 endif
 
 wlan-softap-pre-bringup-validation:
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@$(MAKE) wlan-softap-private-pre-bringup-validation
 endif
 
@@ -324,7 +324,7 @@ wlan-softap-bringup: wlan-softap-pre-bringup-validation
 
 wlan-softap-make: $(PROGRESS_BRINGUP_WLAN_SOFTAP)
 	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@$(MAKE) wlan-softap-make-private
 	@$(call print, "wlan softap make done")
 else
@@ -333,7 +333,7 @@ endif
 
 wlan-softap-install: $(PROGRESS_BRINGUP_WLAN_SOFTAP)
 	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@$(MAKE) wlan-softap-install-private
 	@$(call print, "wlan softap install done")
 else
@@ -342,7 +342,7 @@ endif
 
 wlan-softap-clean: $(PROGRESS_BRINGUP_WLAN_SOFTAP)
 	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@$(MAKE) wlan-softap-clean-private
 	@$(call print, "wlan softap clean done")
 else
@@ -351,7 +351,7 @@ endif
 
 wlan-softap-distclean:
 	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
 	@$(MAKE) wlan-softap-distclean-private
 	@if [ -f $(PROGRESS_BRINGUP_WLAN_SOFTAP) ] ; then $(DEL) $(PROGRESS_BRINGUP_WLAN_SOFTAP) ; fi
 	@$(call print, "wlan softap distclean done")

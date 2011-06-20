@@ -37,7 +37,7 @@ else
 $(PROGRESS_FETCH_MYDROID): $(PROGRESS_FETCH_MANIFEST)
 	@$(MKDIR) -p $(MYDROID)
 #	cd $(MYDROID) ; repo init -u $(MANIFEST) ; repo sync
-	cd $(MYDROID) ; repo init -u git://git.omapzoom.org/platform/omapmanifest.git -b 27.x -m RLS27.13.1_Gingerbread.xml ; repo sync
+	cd $(MYDROID) ; repo init -u $(OMAPMANIFEST_REPO) -b 27.x -m $(OMAPMANIFEST_TAG) ; repo sync
 	@$(call echo-to-file, "DONE", $(PROGRESS_FETCH_MYDROID))
 	@$(call print, "android filesystem retrieved")
 endif
@@ -157,21 +157,36 @@ mydroid-install:
 
 binaries-install:
 	@$(MKDIR) -p $(BINARIES_PATH)
-	@$(ECHO) "VERSION: $(VERSION)" >$(BINARIES_PATH)/version_ti.txt
-ifeq ($(CONFIG_WLAN_STA), y)
+	@$(ECHO) "OMAP's RELEASE: $(VERSION)" >$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "http://omapedia.org/wiki/L27.INC1.13.1_OMAP4430_GingerBread_ES2.2_Release_Notes" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
+ifeq ($(CONFIG_MCP_WLAN_STA), y)
 	@$(ECHO) "WLAN Station version : MCP2.6.XX" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "WLAN Station project name: $(WLAN_PROJ_NAME)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "HOST PLATFORM: $(HOST_PLATFORM)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 endif
-ifeq ($(CONFIG_WLAN_SOFTAP), y)
+ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
+	@$(ECHO) "WLAN AP project name: $(WLAN_PROJ_NAME)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "WLAN AP version : AP.2.0.9.XX" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "HOST PLATFORM: $(HOST_PLATFORM)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 endif
 ifeq ($(CONFIG_BTIPS), y)
 	@$(ECHO) "BTIPS version : 2.24.03" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 endif
 ifeq ($(CONFIG_GPS), y)
 	@$(ECHO) "GPS version : NaviLink_MCP2.6_RC1.5" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 endif
-	@$(ECHO) "WLAN project name: $(WLAN_PROJ_NAME)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "HOST PLATFORM: $(HOST_PLATFORM)" >>$(BINARIES_PATH)/version_ti.txt
+ifeq ($(CONFIG_NLCP), y)
+	@$(ECHO) "NLCP version : $(NLCP_RELEASE_VERSION)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "wl12xx commit id : $(WL12xx_HASH)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "compat commit id : $(COMPAT_HASH)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "compat-wireless-2.6 commit id : $(COMPAT_WIRELESS_HASH)" >>$(BINARIES_PATH)/version_ti.txt
+endif
+	@$(ECHO) "Built by :" `whoami` "@ " `date` ", on machine:" `hostname`>>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "CROSS COMPILE: $(CROSS_COMPILE)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "JAVA HOME: $(JAVA_HOME)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
@@ -185,8 +200,9 @@ endif
 	@$(ECHO) "CONFIG_GPS: $(CONFIG_GPS)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "CONFIG_BT: $(CONFIG_BT)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "CONFIG_FM: $(CONFIG_FM)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "CONFIG_WLAN_STA: $(CONFIG_WLAN_STA)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "CONFIG_WLAN_SOFTAP: $(CONFIG_WLAN_STA)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "CONFIG_NLCP: $(CONFIG_NLCP)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "CONFIG_MCP_WLAN_STA: $(CONFIG_MCP_WLAN_STA)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "CONFIG_MCP_WLAN_SOFTAP: $(CONFIG_MCP_WLAN_SOFTAP)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 	@$(COPY) -rf $(BINARIES_PATH)/* $(MYFS_PATH)
@@ -222,3 +238,4 @@ mydroid-clean: 		$(PROGRESS_BRINGUP_MYDROID)
 
 mydroid-distclean:
 	$(MAKE) mydroid-clean
+	

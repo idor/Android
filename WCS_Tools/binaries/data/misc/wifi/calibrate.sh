@@ -1,4 +1,4 @@
-#!/system/bin/sh
+#!/data/busybox/sh
 
 export NEW_MAC_ADDRESS=$1
 
