@@ -71,7 +71,6 @@ $(PROGRESS_NLCP_BRINGUP_WL12xx): $(PROGRESS_NLCP_FETCH_WL12xx)
 	cd $(WL12xx_DIR) ; git reset --hard $(WL12xx_HASH)
 	cd $(WL12xx_DIR) ; git branch "Vanilla" ; git checkout Vanilla
 	cd $(WL12xx_DIR) ; git am $(NLCP_WL12xx_PATCHES_DIR)/*patch
-	cd $(WL12xx_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_WL12xx))
 	@$(call print, "wl12xx bringup done")
