@@ -1,0 +1,37 @@
+From dacd6362ac24b754cde986d53e4280576e9524f0 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 1 May 2011 12:48:22 +0300
+Subject: [PATCH 40/75] mac80211: reestablish mis-configured Rx BA sessions on existing tids
+
+When forming a Rx BA session, sometimes the ADDBA response gets lost.
+This leads to a situation where the session is configured locally, but
+doesn't exist on the remote side. Subsequent ADDBA requests are declined
+by mac80211.
+
+Fix this by assuming the session state of the initiator is the correct
+one. When receiving an unexpected ADDBA request on an existing TID,
+delete the existing session and establish a new one.
+---
+ net/mac80211/agg-rx.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 9c0d76c..158b40f 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -247,7 +247,11 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 				"%pM on tid %u\n",
+ 				mgmt->sa, tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+-		goto end;
++
++		/* delete existing Rx BA session on the same tid */
++		___ieee80211_stop_rx_ba_session(sta, tid, 0,
++						WLAN_STATUS_UNSPECIFIED_QOS,
++						false);
+ 	}
+ 
+ 	/* prepare A-MPDU MLME for Rx aggregation */
+-- 
+1.7.0.4
+

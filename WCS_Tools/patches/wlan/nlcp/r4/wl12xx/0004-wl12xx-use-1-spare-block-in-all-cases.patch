@@ -1,0 +1,81 @@
+From ca17e87fb946e58d8d9ff2c86839ebb8605d3456 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sat, 2 Apr 2011 16:44:15 +0300
+Subject: [PATCH 04/75] wl12xx: use 1 spare block in all cases
+
+Remove support for firmwares that require 2 spare blocks for packet TX.
+---
+ drivers/net/wireless/wl12xx/main.c |   23 -----------------------
+ drivers/net/wireless/wl12xx/tx.c   |    7 ++-----
+ 2 files changed, 2 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f623886..03dde4d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1216,24 +1216,6 @@ out:
+ 	return ret;
+ }
+ 
+-static unsigned int wl1271_get_fw_ver_quirks(struct wl1271 *wl)
+-{
+-	unsigned int quirks = 0;
+-	unsigned int *fw_ver = wl->chip.fw_ver;
+-
+-	/* Only for wl127x */
+-	if ((fw_ver[FW_VER_CHIP] == FW_VER_CHIP_WL127X) &&
+-	    /* Check STA version */
+-	    (((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
+-	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_STA_MIN)) ||
+-	     /* Check AP version */
+-	     ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP) &&
+-	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_AP_MIN))))
+-		quirks |= WL12XX_QUIRK_USE_2_SPARE_BLOCKS;
+-
+-	return quirks;
+-}
+-
+ int wl1271_plt_start(struct wl1271 *wl)
+ {
+ 	int retries = WL1271_BOOT_RETRIES;
+@@ -1270,8 +1252,6 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 		wl1271_notice("firmware booted in PLT mode (%s)",
+ 			      wl->chip.fw_ver_str);
+ 
+-		/* Check if any quirks are needed with older fw versions */
+-		wl->quirks |= wl1271_get_fw_ver_quirks(wl);
+ 		goto out;
+ 
+ irq_disable:
+@@ -1723,9 +1703,6 @@ power_off:
+ 	strncpy(wiphy->fw_version, wl->chip.fw_ver_str,
+ 		sizeof(wiphy->fw_version));
+ 
+-	/* Check if any quirks are needed with older fw versions */
+-	wl->quirks |= wl1271_get_fw_ver_quirks(wl);
+-
+ 	/*
+ 	 * Now we know if 11a is supported (info from the NVS), so disable
+ 	 * 11a channels if not supported
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 6603e60..f4f868a 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -169,12 +169,9 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 	u32 len;
+ 	u32 total_blocks;
+ 	int id, ret = -EBUSY;
+-	u32 spare_blocks;
+ 
+-	if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
+-		spare_blocks = 2;
+-	else
+-		spare_blocks = 1;
++	/* we use 1 spare block */
++	u32 spare_blocks = 1;
+ 
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+ 		return -EAGAIN;
+-- 
+1.7.0.4
+

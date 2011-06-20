@@ -1,0 +1,70 @@
+From aeaf31664fda4cc4ffdad6cd07599988fd2c100f Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Thu, 5 May 2011 13:31:18 +0300
+Subject: [PATCH 43/75] wl12xx: add hlid param to wl1271_cmd_set_peer_state()
+
+Instead of using wl->sta_hlid (as this command is going to
+be used in AP mode as well)
+---
+ drivers/net/wireless/wl12xx/cmd.c  |    6 +++---
+ drivers/net/wireless/wl12xx/cmd.h  |    2 +-
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index c85f12b..7bc2d3d 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -1362,12 +1362,12 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1271_cmd_set_peer_state(struct wl1271 *wl)
++int wl1271_cmd_set_peer_state(struct wl1271 *wl, u8 hlid)
+ {
+ 	struct wl1271_cmd_set_peer_state *cmd;
+ 	int ret = 0;
+ 
+-	wl1271_debug(DEBUG_CMD, "cmd set sta state (hlid=%d)", wl->sta_hlid);
++	wl1271_debug(DEBUG_CMD, "cmd set sta state (hlid=%d)", hlid);
+ 
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	if (!cmd) {
+@@ -1375,7 +1375,7 @@ int wl1271_cmd_set_peer_state(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
+-	cmd->hlid = wl->sta_hlid;
++	cmd->hlid = hlid;
+ 	cmd->state = WL1271_CMD_STA_STATE_CONNECTED;
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_SET_PEER_STATE, cmd, sizeof(*cmd), 0);
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 0f5e6be..04e466b 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -72,7 +72,7 @@ int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+ int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+ 			  u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
+ 			  u16 tx_seq_16);
+-int wl1271_cmd_set_peer_state(struct wl1271 *wl);
++int wl1271_cmd_set_peer_state(struct wl1271 *wl, u8 hlid);
+ int wl1271_roc(struct wl1271 *wl);
+ int wl1271_croc(struct wl1271 *wl);
+ int wl1271_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 5d4ba5c..8445afa 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -421,7 +421,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 
+ 	if ((dev->operstate == IF_OPER_UP) &&
+ 	    !test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags)) {
+-		wl1271_cmd_set_peer_state(wl);
++		wl1271_cmd_set_peer_state(wl, wl->sta_hlid);
+ 		wl1271_croc(wl);
+ 		wl1271_info("Association completed.");
+ 	}
+-- 
+1.7.0.4
+

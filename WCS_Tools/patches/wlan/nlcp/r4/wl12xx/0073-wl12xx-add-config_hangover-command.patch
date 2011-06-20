@@ -1,0 +1,196 @@
+From 88d52885c93038bf6d06f455319ae174c40fcbba Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Wed, 15 Jun 2011 11:52:14 +0300
+Subject: [PATCH 73/75] wl12xx: add config_hangover command
+
+add wl1271_acx_config_hangover() and respective conf values.
+---
+ drivers/net/wireless/wl12xx/acx.c  |   40 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h  |   18 ++++++++++++++++
+ drivers/net/wireless/wl12xx/conf.h |   23 +++++++++++++-------
+ drivers/net/wireless/wl12xx/init.c |    5 ++++
+ drivers/net/wireless/wl12xx/main.c |   14 +++++++++++-
+ 5 files changed, 91 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 70ad4fd..0f03d15 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1709,3 +1709,43 @@ out:
+ 	kfree(acx);
+ 	return ret;
+ }
++
++int wl1271_acx_config_hangover(struct wl1271 *wl)
++{
++	struct wl1271_acx_config_hangover *acx;
++	struct conf_hangover_settings *conf = &wl->conf.hangover;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx config hangover");
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->recover_time = cpu_to_le32(conf->recover_time);
++	acx->hangover_period = conf->hangover_period;
++	acx->dynamic_mode = conf->dynamic_mode;
++	acx->early_termination_mode = conf->early_termination_mode;
++	acx->max_period = conf->max_period;
++	acx->min_period = conf->min_period;
++	acx->increase_delta = conf->increase_delta;
++	acx->decrease_delta = conf->decrease_delta;
++	acx->quiet_time = conf->quiet_time;
++	acx->increase_delta= conf->increase_time;
++	acx->window_size = acx->window_size;
++
++	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
++				   sizeof(*acx));
++
++	if (ret < 0) {
++		wl1271_warning("acx config hangover failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++
++}
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 2d4d973..182ddde 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1189,6 +1189,23 @@ struct wl1271_acx_disable_broadcasts {
+ 	u8 padding1[3];
+ } __packed;
+ 
++struct wl1271_acx_config_hangover {
++	struct acx_header header;
++
++	__le32 recover_time;
++	u8 hangover_period;
++	u8 dynamic_mode;
++	u8 early_termination_mode;
++	u8 max_period;
++	u8 min_period;
++	u8 increase_delta;
++	u8 decrease_delta;
++	u8 quiet_time;
++	u8 increase_time;
++	u8 window_size;
++	u8 padding[2];
++}__packed;
++
+ enum {
+ 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
+ 	ACX_MEM_CFG                 = 0x0003,
+@@ -1328,5 +1345,6 @@ int wl1271_acx_config_ps(struct wl1271 *wl);
+ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
+ int wl1271_acx_fm_coex(struct wl1271 *wl);
+ int wl1271_acx_set_rate_mgmt_params(struct wl1271 *wl);
++int wl1271_acx_config_hangover(struct wl1271 *wl);
+ 
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index f5ea38a..9cec3f7 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -915,14 +915,6 @@ struct conf_conn_settings {
+ 	u8 psm_entry_nullfunc_retries;
+ 
+ 	/*
+-	 * Specifies the time to linger in active mode after successfully
+-	 * transmitting the PSM entry null-func frame.
+-	 *
+-	 * Range 0 - 255 TU's
+-	 */
+-	u8 psm_entry_hangover_period;
+-
+-	/*
+ 	 *
+ 	 * Specifies the interval of the connection keep-alive null-func
+ 	 * frame in ms.
+@@ -1207,6 +1199,20 @@ struct conf_rate_policy_settings {
+ 	u8 rate_retry_policy[CONF_RATE_RETRY_POLICY_LEN];
+ };
+ 
++struct conf_hangover_settings {
++	u32 recover_time;
++	u8 hangover_period;
++	u8 dynamic_mode;
++	u8 early_termination_mode;
++	u8 max_period;
++	u8 min_period;
++	u8 increase_delta;
++	u8 decrease_delta;
++	u8 quiet_time;
++	u8 increase_time;
++	u8 window_size;
++};
++
+ struct conf_drv_settings {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+@@ -1225,6 +1231,7 @@ struct conf_drv_settings {
+ 	struct conf_rx_streaming_settings rx_streaming;
+ 	u8 hci_io_ds;
+ 	struct conf_rate_policy_settings rate;
++	struct conf_hangover_settings hangover;
+ };
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 0a5796d..6a8064b 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -689,6 +689,11 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
++	/* configure hangover */
++	ret = wl1271_acx_config_hangover(wl);
++	if (ret < 0)
++		goto out_free_memmap;
++
+ 	return 0;
+ 
+  out_free_memmap:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index db2f29a..6eef613 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -237,7 +237,6 @@ static struct conf_drv_settings default_conf = {
+ 		.psm_entry_retries           = 5,
+ 		.psm_exit_retries            = 16,
+ 		.psm_entry_nullfunc_retries  = 3,
+-		.psm_entry_hangover_period   = 1,
+ 		.keep_alive_interval         = 55000,
+ 		.max_listen_interval         = 20,
+ 	},
+@@ -347,6 +346,19 @@ static struct conf_drv_settings default_conf = {
+ 			0x00, 0x00, 0x00,
+ 		},
+ 	},
++	.hangover = {
++		.recover_time               = 0,
++		.hangover_period            = 20,
++		.dynamic_mode               = 1,
++		.early_termination_mode     = 1,
++		.max_period                 = 20,
++		.min_period                 = 1,
++		.increase_delta             = 1,
++		.decrease_delta             = 2,
++		.quiet_time                 = 4,
++		.increase_time              = 1,
++		.window_size                = 16,
++	},
+ };
+ 
+ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+-- 
+1.7.0.4
+

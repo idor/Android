@@ -1,0 +1,104 @@
+From aadac08b00cb1645d45f0aad782f36a9945397d6 Mon Sep 17 00:00:00 2001
+From: Madhusudhan Chikkature <madhu.cr@ti.com>
+Date: Thu, 3 Feb 2011 18:07:28 -0600
+Subject: [PATCH 01/75] OMAP4:Fix HSMMC 3/4/5 master clock
+
+On OMAP4 HSMMC 3/4/5 master clock is 48MHz.The divisor should
+be calculated based on this to run at 48MHz.
+
+Change-Id: I53faf488903aa30d9b07de676573d0e43dbf92d6
+Signed-off-by: Madhusudhan Chikkature <madhu.cr@ti.com>
+---
+ arch/arm/mach-omap2/hsmmc.c           |    7 +++++++
+ arch/arm/plat-omap/include/plat/mmc.h |    5 +++--
+ drivers/mmc/host/omap_hsmmc.c         |   13 +++++++++----
+ 3 files changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/hsmmc.c b/arch/arm/mach-omap2/hsmmc.c
+index b2f30be..56733eb 100644
+--- a/arch/arm/mach-omap2/hsmmc.c
++++ b/arch/arm/mach-omap2/hsmmc.c
+@@ -334,6 +334,13 @@ static int __init omap_hsmmc_pdata_init(struct omap2_hsmmc_info *c,
+ 	if (c->vcc_aux_disable_is_sleep)
+ 		mmc->slots[0].vcc_aux_disable_is_sleep = 1;
+ 
++	if (cpu_is_omap44xx()) {
++		if (omap_rev() > OMAP4430_REV_ES1_0)
++			mmc->slots[0].features |= HSMMC_HAS_UPDATED_RESET;
++		if (c->mmc >= 3 && c->mmc <= 5)
++			mmc->slots[0].features |= HSMMC_HAS_48MHZ_MASTER_CLK;
++	}
++
+ 	/*
+ 	 * NOTE:  MMC slots should have a Vcc regulator set up.
+ 	 * This may be from a TWL4030-family chip, another
+diff --git a/arch/arm/plat-omap/include/plat/mmc.h b/arch/arm/plat-omap/include/plat/mmc.h
+index f38fef9..bd71808 100644
+--- a/arch/arm/plat-omap/include/plat/mmc.h
++++ b/arch/arm/plat-omap/include/plat/mmc.h
+@@ -105,8 +105,9 @@ struct omap_mmc_platform_data {
+ 		unsigned vcc_aux_disable_is_sleep:1;
+ 
+ 		/* we can put the features above into this variable */
+-#define HSMMC_HAS_PBIAS		(1 << 0)
+-#define HSMMC_HAS_UPDATED_RESET	(1 << 1)
++#define HSMMC_HAS_PBIAS			(1 << 0)
++#define HSMMC_HAS_UPDATED_RESET		(1 << 1)
++#define HSMMC_HAS_48MHZ_MASTER_CLK	(1 << 2)
+ 		unsigned features;
+ 
+ 		int switch_pin;			/* gpio (card detect) */
+diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
+index 259ece0..740eb0d 100644
+--- a/drivers/mmc/host/omap_hsmmc.c
++++ b/drivers/mmc/host/omap_hsmmc.c
+@@ -166,6 +166,7 @@ struct omap_hsmmc_host {
+ 	unsigned int		id;
+ 	unsigned int		dma_len;
+ 	unsigned int		dma_sg_idx;
++	unsigned int		master_clock;
+ 	unsigned char		bus_mode;
+ 	unsigned char		power_mode;
+ 	u32			*buffer;
+@@ -674,11 +675,11 @@ static int omap_hsmmc_context_restore(struct omap_hsmmc_host *host)
+ 	}
+ 
+ 	if (ios->clock) {
+-		dsor = OMAP_MMC_MASTER_CLOCK / ios->clock;
++		dsor = host->master_clock / ios->clock;
+ 		if (dsor < 1)
+ 			dsor = 1;
+ 
+-		if (OMAP_MMC_MASTER_CLOCK / dsor > ios->clock)
++		if (host->master_clock / dsor > ios->clock)
+ 			dsor++;
+ 
+ 		if (dsor > 250)
+@@ -1590,11 +1591,11 @@ static void omap_hsmmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
+ 	}
+ 
+ 	if (ios->clock) {
+-		dsor = OMAP_MMC_MASTER_CLOCK / ios->clock;
++		dsor = host->master_clock / ios->clock;
+ 		if (dsor < 1)
+ 			dsor = 1;
+ 
+-		if (OMAP_MMC_MASTER_CLOCK / dsor > ios->clock)
++		if (host->master_clock / dsor > ios->clock)
+ 			dsor++;
+ 
+ 		if (dsor > 250)
+@@ -2075,6 +2076,10 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
+ 	host->base	= ioremap(host->mapbase, SZ_4K);
+ 	host->power_mode = MMC_POWER_OFF;
+ 
++	host->master_clock = OMAP_MMC_MASTER_CLOCK;
++	if (mmc_slot(host).features & HSMMC_HAS_48MHZ_MASTER_CLK)
++		host->master_clock = OMAP_MMC_MASTER_CLOCK / 2;
++
+ 	platform_set_drvdata(pdev, host);
+ 	INIT_WORK(&host->mmc_carddetect_work, omap_hsmmc_detect);
+ 
+-- 
+1.7.0.4
+

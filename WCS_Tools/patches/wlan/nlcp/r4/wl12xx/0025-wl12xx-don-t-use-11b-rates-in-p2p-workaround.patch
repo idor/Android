@@ -1,0 +1,41 @@
+From d6089aa11afd309a2e64af78b6abbf2c12b8f955 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Mon, 4 Apr 2011 17:55:33 +0300
+Subject: [PATCH 25/75] wl12xx: don't use 11b rates in p2p (workaround)
+
+When configuring basic rate set in p2p, filter out 11b rates.
+
+11b rates shouldn't be used in p2p interfaces. otoh, they are
+mandatory rates for 2GHZ band (which means we must be able to
+receive packets in this frame, but shouldn't use it for tx).
+
+Thus, we need to filter out the 11b rates for our rate policy
+(used for tx only).
+---
+ drivers/net/wireless/wl12xx/main.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index e5649d3..3ae2358 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2889,6 +2889,16 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 		u32 rates = bss_conf->basic_rates;
+ 
+ 		wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates);
++		/*
++		 * TODO: this is a temporary workaround. we should implement
++		 * some set_bitrate_mask() callback instead.
++		 */
++		if (wl->p2p)
++			wl->basic_rate_set &= ~(CONF_HW_BIT_RATE_1MBPS |
++						CONF_HW_BIT_RATE_2MBPS |
++						CONF_HW_BIT_RATE_5_5MBPS |
++						CONF_HW_BIT_RATE_11MBPS);
++
+ 		wl->basic_rate = wl1271_tx_min_rate_get(wl);
+ 
+ 		ret = wl1271_init_ap_rates(wl);
+-- 
+1.7.0.4
+

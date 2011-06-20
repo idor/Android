@@ -1,0 +1,66 @@
+From e36dff25563d2c360d10acb315e32a2799739474 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Tue, 12 Apr 2011 20:09:05 +0300
+Subject: [PATCH 39/75] fix session_counter
+
+using non-zero session_counter in ap mode fucked it up
+---
+ drivers/net/wireless/wl12xx/cmd.c    |    5 +++--
+ drivers/net/wireless/wl12xx/main.c   |    4 ++--
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 -
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 9e953be..52cd5c3 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -458,9 +458,10 @@ void wl1271_free_link(struct wl1271 *wl, u8 *hlid)
+ 
+ int wl1271_get_new_session_id(struct wl1271 *wl)
+ {
++	if (wl->session_counter >= SESSION_COUNTER_MAX)
++		wl->session_counter = 0;
++
+ 	wl->session_counter++;
+-	if (wl->session_counter > SESSION_COUNTER_MAX)
+-		wl->session_counter = SESSION_COUNTER_MIN;
+ 
+ 	return wl->session_counter;
+ }
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 1a28d9b..22f2637 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1827,7 +1827,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	wl->tx_security_last_seq = 0;
+ 	wl->tx_security_seq = 0;
+ 	wl->time_offset = 0;
+-	wl->session_counter = SESSION_COUNTER_MIN;
++	wl->session_counter = 0;
+ 	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
+ 	wl->vif = NULL;
+ 	wl->filters = 0;
+@@ -4125,7 +4125,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->sta_hlid = WL1271_INVALID_LINK_ID;
+ 	wl->dev_role_id = WL1271_INVALID_ROLE_ID;
+ 	wl->dev_hlid = WL1271_INVALID_LINK_ID;
+-	wl->session_counter = SESSION_COUNTER_MIN;
++	wl->session_counter = 0;
+ 	wl->ap_bcast_hlid = WL1271_INVALID_LINK_ID;
+ 	wl->ap_global_hlid = WL1271_INVALID_LINK_ID;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 5d644de..c7084d8 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -622,7 +622,6 @@ int wl1271_recalc_rx_streaming(struct wl1271 *wl);
+ #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
+ 
+ #define SESSION_COUNTER_MAX 7 /* maximum value for the session counter */
+-#define SESSION_COUNTER_MIN 1
+ 
+ #define WL1271_DEFAULT_POWER_LEVEL 0
+ 
+-- 
+1.7.0.4
+

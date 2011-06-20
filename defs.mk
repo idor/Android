@@ -67,34 +67,6 @@ NTHREADS:=8
 endif
 
 ################################################################################
-# repository configuration
-################################################################################
-
-# git protocol:
-# git repositories can be fatched in several protocols
-# according to this article: http://progit.org/book/ch4-1.html
-# use of local mounted repository can realy speed things up while tring to
-# close a repository. since at TI we are mirroring the OMAP's repositories,
-# we can use this feature to make everything faster. default usage within TI
-# UNIX network is 'local', for everybody else is 'remote' 
-
-GIT_PROTOCOL_USE ?= local
-#GIT_PROTOCOL_USE ?= remote
-#GIT_PROTOCOL_USE ?= opbu
-
-ifndef GIT_PROTOCOL_USE
-error GIT_PROTOCOL_USE is not defined
-endif
-
-ifeq ($(GIT_PROTOCOL_USE), local)
-GIT_PROTOCOL_PREFIX := /data/git/repositories/
-else
-ifeq ($(GIT_PROTOCOL_USE), remote)
-GIT_PROTOCOL_PREFIX := git://
-endif
-endif
-
-################################################################################
 # platform configuration
 ################################################################################
 

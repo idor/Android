@@ -111,7 +111,7 @@ ln -sf /system/bin/busybox ifplugd
 ln -sf /system/bin/busybox ifup
 ln -sf /system/bin/busybox inetd
 ln -sf /system/bin/busybox init
-ln -sf /system/bin/busybox insmod
+#ln -sf /system/bin/busybox insmod
 ln -sf /system/bin/busybox install
 ln -sf /system/bin/busybox ionice
 ln -sf /system/bin/busybox ip
@@ -206,14 +206,14 @@ ln -sf /system/bin/busybox readahead
 ln -sf /system/bin/busybox readlink
 ln -sf /system/bin/busybox readprofile
 ln -sf /system/bin/busybox realpath
-ln -sf /system/bin/busybox reboot
+#ln -sf /system/bin/busybox reboot
 ln -sf /system/bin/busybox reformime
 ln -sf /system/bin/busybox renice
 ln -sf /system/bin/busybox reset
 ln -sf /system/bin/busybox resize
 ln -sf /system/bin/busybox rm
 ln -sf /system/bin/busybox rmdir
-ln -sf /system/bin/busybox rmmod
+#ln -sf /system/bin/busybox rmmod
 ln -sf /system/bin/busybox route
 ln -sf /system/bin/busybox rtcwake
 ln -sf /system/bin/busybox run-parts

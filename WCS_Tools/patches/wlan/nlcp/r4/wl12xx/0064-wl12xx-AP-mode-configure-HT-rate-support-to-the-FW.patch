@@ -1,0 +1,49 @@
+From 699c767c04f10a8472866b8713b512f197713d39 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 25 May 2011 10:29:03 +0300
+Subject: [PATCH 64/75] wl12xx: AP-mode - configure HT rate support to the FW
+
+Unconditionally configure HT rate support to the FW on all ACs
+when starting the AP.
+
+When 11n support is disabled by usermode (hostapd), each STA joining
+the AP will appear as a non-HT STA. This will stop us from accidentally
+transmitting using MCS rates.
+---
+ drivers/net/wireless/wl12xx/conf.h |    5 +++++
+ drivers/net/wireless/wl12xx/init.c |    3 +++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index ff3918e..f5ea38a 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -448,6 +448,11 @@ struct conf_rx_settings {
+ 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
+ 	CONF_HW_BIT_RATE_54MBPS)
+ 
++#define CONF_TX_MCS_RATES (CONF_HW_BIT_RATE_MCS_0 |              \
++	CONF_HW_BIT_RATE_MCS_1 | CONF_HW_BIT_RATE_MCS_2 |        \
++	CONF_HW_BIT_RATE_MCS_3 | CONF_HW_BIT_RATE_MCS_4 |        \
++	CONF_HW_BIT_RATE_MCS_5 | CONF_HW_BIT_RATE_MCS_6 |        \
++	CONF_HW_BIT_RATE_MCS_7)
+ 
+ /*
+  * Default rates for management traffic when operating in AP mode. This
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index c4c0dfe..0a5796d 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -494,6 +494,9 @@ int wl1271_init_ap_rates(struct wl1271 *wl)
+ 	else
+ 		supported_rates = CONF_TX_AP_ENABLED_RATES;
+ 
++	/* unconditionally enable HT rates */
++	supported_rates |= CONF_TX_MCS_RATES;
++
+ 	/* configure unicast TX rate classes */
+ 	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
+ 		rc.enabled_rates = supported_rates;
+-- 
+1.7.0.4
+

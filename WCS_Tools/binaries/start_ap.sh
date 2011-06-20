@@ -1,3 +1,1 @@
-#!/system/bin/sh
-
-setprop ctl.start hostapd_bin
+/data/misc/wifi/ap/start_ap.sh

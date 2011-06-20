@@ -1,0 +1,740 @@
+From e92c8045f58b56c056a53e6f8d3cae63cefe070e Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Thu, 7 Apr 2011 18:39:58 +0300
+Subject: [PATCH 29/75] wl12xx: update BT coex configuration params
+
+The BT coex params api have been changed.
+Update it, and init coex for both sta and ap.
+---
+ drivers/net/wireless/wl12xx/acx.c  |   40 +----
+ drivers/net/wireless/wl12xx/acx.h  |   16 +--
+ drivers/net/wireless/wl12xx/conf.h |  312 ++++++++++++------------------------
+ drivers/net/wireless/wl12xx/init.c |   10 +-
+ drivers/net/wireless/wl12xx/main.c |  163 +++++++------------
+ 5 files changed, 171 insertions(+), 370 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index aa7c3bb..d96748b 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -528,13 +528,13 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1271_acx_sta_sg_cfg(struct wl1271 *wl)
++int wl1271_acx_sg_cfg(struct wl1271 *wl)
+ {
+-	struct acx_sta_bt_wlan_coex_param *param;
++	struct acx_bt_wlan_coex_param *param;
+ 	struct conf_sg_settings *c = &wl->conf.sg;
+ 	int i, ret;
+ 
+-	wl1271_debug(DEBUG_ACX, "acx sg sta cfg");
++	wl1271_debug(DEBUG_ACX, "acx sg cfg");
+ 
+ 	param = kzalloc(sizeof(*param), GFP_KERNEL);
+ 	if (!param) {
+@@ -543,38 +543,8 @@ int wl1271_acx_sta_sg_cfg(struct wl1271 *wl)
+ 	}
+ 
+ 	/* BT-WLAN coext parameters */
+-	for (i = 0; i < CONF_SG_STA_PARAMS_MAX; i++)
+-		param->params[i] = cpu_to_le32(c->sta_params[i]);
+-	param->param_idx = CONF_SG_PARAMS_ALL;
+-
+-	ret = wl1271_cmd_configure(wl, ACX_SG_CFG, param, sizeof(*param));
+-	if (ret < 0) {
+-		wl1271_warning("failed to set sg config: %d", ret);
+-		goto out;
+-	}
+-
+-out:
+-	kfree(param);
+-	return ret;
+-}
+-
+-int wl1271_acx_ap_sg_cfg(struct wl1271 *wl)
+-{
+-	struct acx_ap_bt_wlan_coex_param *param;
+-	struct conf_sg_settings *c = &wl->conf.sg;
+-	int i, ret;
+-
+-	wl1271_debug(DEBUG_ACX, "acx sg ap cfg");
+-
+-	param = kzalloc(sizeof(*param), GFP_KERNEL);
+-	if (!param) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	/* BT-WLAN coext parameters */
+-	for (i = 0; i < CONF_SG_AP_PARAMS_MAX; i++)
+-		param->params[i] = cpu_to_le32(c->ap_params[i]);
++	for (i = 0; i < CONF_SG_PARAMS_MAX; i++)
++		param->params[i] = cpu_to_le32(c->params[i]);
+ 	param->param_idx = CONF_SG_PARAMS_ALL;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_SG_CFG, param, sizeof(*param));
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index ca07d37..41c89ef 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -300,23 +300,14 @@ struct acx_bt_wlan_coex {
+ 	u8 pad[3];
+ } __packed;
+ 
+-struct acx_sta_bt_wlan_coex_param {
++struct acx_bt_wlan_coex_param {
+ 	struct acx_header header;
+ 
+-	__le32 params[CONF_SG_STA_PARAMS_MAX];
++	__le32 params[CONF_SG_PARAMS_MAX];
+ 	u8 param_idx;
+ 	u8 padding[3];
+ } __packed;
+ 
+-struct acx_ap_bt_wlan_coex_param {
+-	struct acx_header header;
+-
+-	__le32 params[CONF_SG_AP_PARAMS_MAX];
+-	u8 param_idx;
+-	u8 padding[3];
+-} __packed;
+-
+-
+ struct acx_dco_itrim_params {
+ 	struct acx_header header;
+ 
+@@ -1304,8 +1295,7 @@ int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter);
+ int wl1271_acx_beacon_filter_table(struct wl1271 *wl);
+ int wl1271_acx_conn_monit_params(struct wl1271 *wl, bool enable);
+ int wl1271_acx_sg_enable(struct wl1271 *wl, bool enable);
+-int wl1271_acx_sta_sg_cfg(struct wl1271 *wl);
+-int wl1271_acx_ap_sg_cfg(struct wl1271 *wl);
++int wl1271_acx_sg_cfg(struct wl1271 *wl);
+ int wl1271_acx_cca_threshold(struct wl1271 *wl);
+ int wl1271_acx_bcn_dtim_options(struct wl1271 *wl);
+ int wl1271_acx_aid(struct wl1271 *wl, u16 aid);
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 2a903e2..b641178 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -99,40 +99,75 @@ enum {
+ 
+ enum {
+ 	/*
+-	 * PER threshold in PPM of the BT voice
++	 * Configure the min and max time BT gains the antenna
++	 * in WLAN / BT master basic rate
+ 	 *
+-	 * Range: 0 - 10000000
++	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_BT_PER_THRESHOLD = 0,
++	CONF_SG_ACL_BT_MASTER_MIN_BR = 0,
++	CONF_SG_ACL_BT_MASTER_MAX_BR,
+ 
+ 	/*
+-	 * Number of consequent RX_ACTIVE activities to override BT voice
+-	 * frames to ensure WLAN connection
++	 * Configure the min and max time BT gains the antenna
++	 * in WLAN / BT slave basic rate
+ 	 *
+-	 * Range: 0 - 100
++	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_HV3_MAX_OVERRIDE,
++	CONF_SG_ACL_BT_SLAVE_MIN_BR,
++	CONF_SG_ACL_BT_SLAVE_MAX_BR,
+ 
+ 	/*
+-	 * Defines the PER threshold of the BT voice
++	 * Configure the min and max time BT gains the antenna
++	 * in WLAN / BT master EDR
+ 	 *
+-	 * Range: 0 - 65000
++	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_BT_NFS_SAMPLE_INTERVAL,
++	CONF_SG_ACL_BT_MASTER_MIN_EDR,
++	CONF_SG_ACL_BT_MASTER_MAX_EDR,
+ 
+ 	/*
+-	 * Defines the load ratio of BT
++	 * Configure the min and max time BT gains the antenna
++	 * in WLAN / BT slave EDR
+ 	 *
+-	 * Range: 0 - 100 (%)
++	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_BT_LOAD_RATIO,
++	CONF_SG_ACL_BT_SLAVE_MIN_EDR,
++	CONF_SG_ACL_BT_SLAVE_MAX_EDR,
+ 
+ 	/*
+-	 * Defines whether the SG will force WLAN host to enter/exit PSM
++	 * The maximum time WLAN can gain the antenna for
++	 * in WLAN PSM / BT master/slave BR
+ 	 *
+-	 * Range: 1 - SG can force, 0 - host handles PSM
++	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_AUTO_PS_MODE,
++	CONF_SG_ACL_WLAN_PS_MASTER_BR,
++	CONF_SG_ACL_WLAN_PS_SLAVE_BR,
++
++	/*
++	 * The maximum time WLAN can gain the antenna for
++	 * in WLAN PSM / BT master/slave EDR
++	 *
++	 * Range: 0 - 255 (ms)
++	 */
++	CONF_SG_ACL_WLAN_PS_MASTER_EDR,
++	CONF_SG_ACL_WLAN_PS_SLAVE_EDR,
++
++	/* ??? */
++	CONF_SG_ACL_WLAN_ACTIVE_MASTER_MIN_BR,
++	CONF_SG_ACL_WLAN_ACTIVE_MASTER_MAX_BR,
++	CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MIN_BR,
++	CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MAX_BR,
++	CONF_SG_ACL_WLAN_ACTIVE_MASTER_MIN_EDR,
++	CONF_SG_ACL_WLAN_ACTIVE_MASTER_MAX_EDR,
++	CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MIN_EDR,
++	CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MAX_EDR,
++
++	CONF_SG_ACL_ACTIVE_SCAN_WLAN_BR,
++	CONF_SG_ACL_ACTIVE_SCAN_WLAN_EDR,
++	CONF_SG_ACL_PASSIVE_SCAN_BT_BR,
++	CONF_SG_ACL_PASSIVE_SCAN_WLAN_BR,
++	CONF_SG_ACL_PASSIVE_SCAN_BT_EDR,
++	CONF_SG_ACL_PASSIVE_SCAN_WLAN_EDR,
+ 
+ 	/*
+ 	 * Compensation percentage of probe requests when scan initiated
+@@ -151,102 +186,70 @@ enum {
+ 	CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3,
+ 
+ 	/*
+-	 * Defines antenna configuration (single/dual antenna)
+-	 *
+-	 * Range: 0 - single antenna, 1 - dual antenna
+-	 */
+-	CONF_SG_ANTENNA_CONFIGURATION,
+-
+-	/*
+-	 * The threshold (percent) of max consequtive beacon misses before
+-	 * increasing priority of beacon reception.
+-	 *
+-	 * Range: 0 - 100 (%)
+-	 */
+-	CONF_SG_BEACON_MISS_PERCENT,
+-
+-	/*
+-	 * The rate threshold below which receiving a data frame from the AP
+-	 * will increase the priority of the data frame above BT traffic.
+-	 *
+-	 * Range: 0,2, 5(=5.5), 6, 9, 11, 12, 18, 24, 36, 48, 54
+-	 */
+-	CONF_SG_RATE_ADAPT_THRESH,
+-
+-	/*
+-	 * Not used currently.
++	 * Compensation percentage of WLAN active scan window if initiated
++	 * during BT A2DP
+ 	 *
+-	 * Range: 0
++	 * Range: 0 - 1000 (%)
+ 	 */
+-	CONF_SG_RATE_ADAPT_SNR,
++	CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP,
+ 
+ 	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN PSM / BT master basic rate
++	 * Compensation percentage of WLAN passive scan window if initiated
++	 * during BT A2DP BR
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - 1000 (%)
+ 	 */
+-	CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_BR,
+-	CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_BR,
++	CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP_BR,
+ 
+ 	/*
+-	 * The time after it expires no new WLAN trigger frame is trasmitted
+-	 * in WLAN PSM / BT master basic rate
++	 * Compensation percentage of WLAN passive scan window if initiated
++	 * during BT A2DP EDR
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - 1000 (%)
+ 	 */
+-	CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_BR,
++	CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP_EDR,
+ 
+ 	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN PSM / BT slave basic rate
++	 * Compensation percentage of WLAN passive scan window if initiated
++	 * during BT voice
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - 1000 (%)
+ 	 */
+-	CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_BR,
+-	CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_BR,
++	CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3,
+ 
+-	/*
+-	 * The time after it expires no new WLAN trigger frame is trasmitted
+-	 * in WLAN PSM / BT slave basic rate
+-	 *
+-	 * Range: 0 - 255 (ms)
+-	 */
+-	CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_BR,
++	/* ??? */
++	CONF_SG_CONSECUTIVE_HV3_IN_PASSIVE_SCAN,
++	CONF_SG_BCN_HV3_COLLISION_THRESH_IN_PASSIVE_SCAN,
++	CONF_SG_TX_RX_PROTECTION_BWIDTH_IN_PASSIVE_SCAN,
+ 
+ 	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN PSM / BT master EDR
++	 * Defines whether the SG will force WLAN host to enter/exit PSM
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 1 - SG can force, 0 - host handles PSM
+ 	 */
+-	CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_EDR,
+-	CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_EDR,
++	CONF_SG_STA_FORCE_PS_IN_BT_SCO,
+ 
+ 	/*
+-	 * The time after it expires no new WLAN trigger frame is trasmitted
+-	 * in WLAN PSM / BT master EDR
++	 * Defines antenna configuration (single/dual antenna)
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - single antenna, 1 - dual antenna
+ 	 */
+-	CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_EDR,
++	CONF_SG_ANTENNA_CONFIGURATION,
+ 
+ 	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN PSM / BT slave EDR
++	 * The threshold (percent) of max consequtive beacon misses before
++	 * increasing priority of beacon reception.
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - 100 (%)
+ 	 */
+-	CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_EDR,
+-	CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_EDR,
++	CONF_SG_BEACON_MISS_PERCENT,
+ 
+ 	/*
+-	 * The time after it expires no new WLAN trigger frame is trasmitted
+-	 * in WLAN PSM / BT slave EDR
++	 * Protection time of the DHCP procedure.
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - 100000 (ms)
+ 	 */
+-	CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_EDR,
++	CONF_SG_DHCP_TIME,
+ 
+ 	/*
+ 	 * RX guard time before the beginning of a new BT voice frame during
+@@ -273,166 +276,57 @@ enum {
+ 	 */
+ 	CONF_SG_ADAPTIVE_RXT_TXT,
+ 
+-	/*
+-	 * The used WLAN legacy service period during active BT ACL link
+-	 *
+-	 * Range: 0 - 255 (ms)
+-	 */
+-	CONF_SG_PS_POLL_TIMEOUT,
++	/* ??? */
++	CONF_SG_GENERAL_USAGE_BIT_MAP,
+ 
+ 	/*
+-	 * The used WLAN UPSD service period during active BT ACL link
+-	 *
+-	 * Range: 0 - 255 (ms)
+-	 */
+-	CONF_SG_UPSD_TIMEOUT,
+-
+-	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN Active / BT master EDR
+-	 *
+-	 * Range: 0 - 255 (ms)
+-	 */
+-	CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MIN_EDR,
+-	CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MAX_EDR,
+-
+-	/*
+-	 * The maximum time WLAN can gain the antenna for
+-	 * in WLAN Active / BT master EDR
+-	 *
+-	 * Range: 0 - 255 (ms)
+-	 */
+-	CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_MASTER_EDR,
+-
+-	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN Active / BT slave EDR
+-	 *
+-	 * Range: 0 - 255 (ms)
+-	 */
+-	CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_EDR,
+-	CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_EDR,
+-
+-	/*
+-	 * The maximum time WLAN can gain the antenna for
+-	 * in WLAN Active / BT slave EDR
++	 * Number of consequent BT voice frames not interrupted by WLAN
+ 	 *
+-	 * Range: 0 - 255 (ms)
++	 * Range: 0 - 100
+ 	 */
+-	CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_EDR,
++	CONF_SG_HV3_MAX_SERVED,
+ 
+ 	/*
+-	 * Configure the min and max time BT gains the antenna
+-	 * in WLAN Active / BT basic rate
++	 * The used WLAN legacy service period during active BT ACL link
+ 	 *
+ 	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_WLAN_ACTIVE_BT_ACL_MIN_BR,
+-	CONF_SG_WLAN_ACTIVE_BT_ACL_MAX_BR,
++	CONF_SG_PS_POLL_TIMEOUT,
+ 
+ 	/*
+-	 * The maximum time WLAN can gain the antenna for
+-	 * in WLAN Active / BT basic rate
++	 * The used WLAN UPSD service period during active BT ACL link
+ 	 *
+ 	 * Range: 0 - 255 (ms)
+ 	 */
+-	CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_BR,
+-
+-	/*
+-	 * Compensation percentage of WLAN passive scan window if initiated
+-	 * during BT voice
+-	 *
+-	 * Range: 0 - 1000 (%)
+-	 */
+-	CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3,
+-
+-	/*
+-	 * Compensation percentage of WLAN passive scan window if initiated
+-	 * during BT A2DP
+-	 *
+-	 * Range: 0 - 1000 (%)
+-	 */
+-	CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP,
+-
+-	/*
+-	 * Fixed time ensured for BT traffic to gain the antenna during WLAN
+-	 * passive scan.
+-	 *
+-	 * Range: 0 - 1000 ms
+-	 */
+-	CONF_SG_PASSIVE_SCAN_A2DP_BT_TIME,
+-
+-	/*
+-	 * Fixed time ensured for WLAN traffic to gain the antenna during WLAN
+-	 * passive scan.
+-	 *
+-	 * Range: 0 - 1000 ms
+-	 */
+-	CONF_SG_PASSIVE_SCAN_A2DP_WLAN_TIME,
++	CONF_SG_UPSD_TIMEOUT,
+ 
+-	/*
+-	 * Number of consequent BT voice frames not interrupted by WLAN
+-	 *
+-	 * Range: 0 - 100
+-	 */
+-	CONF_SG_HV3_MAX_SERVED,
++	CONF_SG_CONSECUTIVE_CTS_THRESHOLD,
++	CONF_SG_STA_RX_WINDOW_AFTER_DTIM,
++	CONF_SG_STA_CONNECTION_PROTECTION_TIME,
+ 
+-	/*
+-	 * Protection time of the DHCP procedure.
+-	 *
+-	 * Range: 0 - 100000 (ms)
+-	 */
+-	CONF_SG_DHCP_TIME,
++	/* AP params */
++	CONF_AP_BEACON_MISS_TX,
++	CONF_AP_RX_WINDOW_AFTER_BEACON,
++	CONF_AP_BEACON_WINDOW_INTERVAL,
++	CONF_AP_CONNECTION_PROTECTION_TIME,
+ 
+-	/*
+-	 * Compensation percentage of WLAN active scan window if initiated
+-	 * during BT A2DP
+-	 *
+-	 * Range: 0 - 1000 (%)
+-	 */
+-	CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP,
+ 	CONF_SG_TEMP_PARAM_1,
+ 	CONF_SG_TEMP_PARAM_2,
+ 	CONF_SG_TEMP_PARAM_3,
+ 	CONF_SG_TEMP_PARAM_4,
+ 	CONF_SG_TEMP_PARAM_5,
+-
+-	/*
+-	 * AP beacon miss
+-	 *
+-	 * Range: 0 - 255
+-	 */
+-	CONF_SG_AP_BEACON_MISS_TX,
+-
+-	/*
+-	 * AP RX window length
+-	 *
+-	 * Range: 0 - 50
+-	 */
+-	CONF_SG_RX_WINDOW_LENGTH,
+-
+-	/*
+-	 * AP connection protection time
+-	 *
+-	 * Range: 0 - 5000
+-	 */
+-	CONF_SG_AP_CONNECTION_PROTECTION_TIME,
+-
+ 	CONF_SG_TEMP_PARAM_6,
+ 	CONF_SG_TEMP_PARAM_7,
+ 	CONF_SG_TEMP_PARAM_8,
+ 	CONF_SG_TEMP_PARAM_9,
+ 	CONF_SG_TEMP_PARAM_10,
+ 
+-	CONF_SG_STA_PARAMS_MAX = CONF_SG_TEMP_PARAM_5 + 1,
+-	CONF_SG_AP_PARAMS_MAX = CONF_SG_TEMP_PARAM_10 + 1,
+-
++	CONF_SG_PARAMS_MAX,
+ 	CONF_SG_PARAMS_ALL = 0xff
+ };
+ 
+ struct conf_sg_settings {
+-	u32 sta_params[CONF_SG_STA_PARAMS_MAX];
+-	u32 ap_params[CONF_SG_AP_PARAMS_MAX];
++	u32 params[CONF_SG_PARAMS_MAX];
+ 	u8 state;
+ };
+ 
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index c433101..2fdffa9 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -288,10 +288,7 @@ int wl1271_init_pta(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	if (wl->bss_type == BSS_TYPE_AP_BSS)
+-		ret = wl1271_acx_ap_sg_cfg(wl);
+-	else
+-		ret = wl1271_acx_sta_sg_cfg(wl);
++	ret = wl1271_acx_sg_cfg(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -362,11 +359,6 @@ static int wl1271_sta_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* FM WLAN coexistence */
+-	ret = wl1271_acx_fm_coex(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* Beacons and broadcast settings */
+ 	ret = wl1271_init_beacon_broadcast(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 569d74f..c3a7b25 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -51,110 +51,65 @@
+ 
+ static struct conf_drv_settings default_conf = {
+ 	.sg = {
+-		.sta_params = {
+-			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
+-			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
+-			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
+-			[CONF_SG_BT_LOAD_RATIO]                     = 200,
+-			[CONF_SG_AUTO_PS_MODE]                      = 1,
+-			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
+-			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
+-			[CONF_SG_ANTENNA_CONFIGURATION]             = 0,
+-			[CONF_SG_BEACON_MISS_PERCENT]               = 60,
+-			[CONF_SG_RATE_ADAPT_THRESH]                 = 12,
+-			[CONF_SG_RATE_ADAPT_SNR]                    = 0,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_BR]      = 10,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_BR]      = 30,
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_BR]      = 8,
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_BR]       = 20,
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_BR]       = 50,
+-			/* Note: with UPSD, this should be 4 */
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_BR]       = 8,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_EDR]     = 7,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_EDR]     = 25,
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_EDR]     = 20,
+-			/* Note: with UPDS, this should be 15 */
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_EDR]      = 8,
+-			/* Note: with UPDS, this should be 50 */
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_EDR]      = 40,
+-			/* Note: with UPDS, this should be 10 */
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_EDR]      = 20,
+-			[CONF_SG_RXT]                               = 1200,
+-			[CONF_SG_TXT]                               = 1000,
+-			[CONF_SG_ADAPTIVE_RXT_TXT]                  = 1,
+-			[CONF_SG_PS_POLL_TIMEOUT]                   = 10,
+-			[CONF_SG_UPSD_TIMEOUT]                      = 10,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MIN_EDR] = 7,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MAX_EDR] = 15,
+-			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_MASTER_EDR] = 15,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_EDR]  = 8,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_EDR]  = 20,
+-			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_EDR]  = 15,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MIN_BR]         = 20,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MAX_BR]         = 50,
+-			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_BR]         = 10,
+-			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3]  = 200,
+-			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP] = 800,
+-			[CONF_SG_PASSIVE_SCAN_A2DP_BT_TIME]         = 75,
+-			[CONF_SG_PASSIVE_SCAN_A2DP_WLAN_TIME]       = 15,
+-			[CONF_SG_HV3_MAX_SERVED]                    = 6,
+-			[CONF_SG_DHCP_TIME]                         = 5000,
+-			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP]  = 100,
+-		},
+-		.ap_params = {
+-			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
+-			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
+-			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
+-			[CONF_SG_BT_LOAD_RATIO]                     = 50,
+-			[CONF_SG_AUTO_PS_MODE]                      = 1,
+-			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
+-			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
+-			[CONF_SG_ANTENNA_CONFIGURATION]             = 0,
+-			[CONF_SG_BEACON_MISS_PERCENT]               = 60,
+-			[CONF_SG_RATE_ADAPT_THRESH]                 = 64,
+-			[CONF_SG_RATE_ADAPT_SNR]                    = 1,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_BR]      = 10,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_BR]      = 25,
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_BR]      = 25,
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_BR]       = 20,
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_BR]       = 25,
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_BR]       = 25,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_EDR]     = 7,
+-			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_EDR]     = 25,
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_EDR]     = 25,
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_EDR]      = 8,
+-			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_EDR]      = 25,
+-			[CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_EDR]      = 25,
+-			[CONF_SG_RXT]                               = 1200,
+-			[CONF_SG_TXT]                               = 1000,
+-			[CONF_SG_ADAPTIVE_RXT_TXT]                  = 1,
+-			[CONF_SG_PS_POLL_TIMEOUT]                   = 10,
+-			[CONF_SG_UPSD_TIMEOUT]                      = 10,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MIN_EDR] = 7,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MAX_EDR] = 15,
+-			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_MASTER_EDR] = 15,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_EDR]  = 8,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_EDR]  = 20,
+-			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_EDR]  = 15,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MIN_BR]         = 20,
+-			[CONF_SG_WLAN_ACTIVE_BT_ACL_MAX_BR]         = 50,
+-			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_BR]         = 10,
+-			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3]  = 200,
+-			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP] = 800,
+-			[CONF_SG_PASSIVE_SCAN_A2DP_BT_TIME]         = 75,
+-			[CONF_SG_PASSIVE_SCAN_A2DP_WLAN_TIME]       = 15,
+-			[CONF_SG_HV3_MAX_SERVED]                    = 6,
+-			[CONF_SG_DHCP_TIME]                         = 5000,
+-			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP]  = 100,
+-			[CONF_SG_TEMP_PARAM_1]                      = 0,
+-			[CONF_SG_TEMP_PARAM_2]                      = 0,
+-			[CONF_SG_TEMP_PARAM_3]                      = 0,
+-			[CONF_SG_TEMP_PARAM_4]                      = 0,
+-			[CONF_SG_TEMP_PARAM_5]                      = 0,
+-			[CONF_SG_AP_BEACON_MISS_TX]                 = 3,
+-			[CONF_SG_RX_WINDOW_LENGTH]                  = 6,
+-			[CONF_SG_AP_CONNECTION_PROTECTION_TIME]     = 50,
+-			[CONF_SG_TEMP_PARAM_6]                      = 1,
++		.params = {
++			[CONF_SG_ACL_BT_MASTER_MIN_BR] = 10,
++			[CONF_SG_ACL_BT_MASTER_MAX_BR] = 180,
++			[CONF_SG_ACL_BT_SLAVE_MIN_BR] = 10,
++			[CONF_SG_ACL_BT_SLAVE_MAX_BR] = 180,
++			[CONF_SG_ACL_BT_MASTER_MIN_EDR] = 10,
++			[CONF_SG_ACL_BT_MASTER_MAX_EDR] = 80,
++			[CONF_SG_ACL_BT_SLAVE_MIN_EDR] = 10,
++			[CONF_SG_ACL_BT_SLAVE_MAX_EDR] = 80,
++			[CONF_SG_ACL_WLAN_PS_MASTER_BR] = 8,
++			[CONF_SG_ACL_WLAN_PS_SLAVE_BR] = 8,
++			[CONF_SG_ACL_WLAN_PS_MASTER_EDR] = 20,
++			[CONF_SG_ACL_WLAN_PS_SLAVE_EDR] = 20,
++			[CONF_SG_ACL_WLAN_ACTIVE_MASTER_MIN_BR] = 20,
++			[CONF_SG_ACL_WLAN_ACTIVE_MASTER_MAX_BR] = 35,
++			[CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MIN_BR] = 16,
++			[CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MAX_BR] = 35,
++			[CONF_SG_ACL_WLAN_ACTIVE_MASTER_MIN_EDR] = 32,
++			[CONF_SG_ACL_WLAN_ACTIVE_MASTER_MAX_EDR] = 50,
++			[CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MIN_EDR] = 28,
++			[CONF_SG_ACL_WLAN_ACTIVE_SLAVE_MAX_EDR] = 50,
++			[CONF_SG_ACL_ACTIVE_SCAN_WLAN_BR] = 10,
++			[CONF_SG_ACL_ACTIVE_SCAN_WLAN_EDR] = 20,
++			[CONF_SG_ACL_PASSIVE_SCAN_BT_BR] = 75,
++			[CONF_SG_ACL_PASSIVE_SCAN_WLAN_BR] = 15,
++			[CONF_SG_ACL_PASSIVE_SCAN_BT_EDR] = 23,
++			[CONF_SG_ACL_PASSIVE_SCAN_WLAN_EDR] = 22,
++			/* active scan params */
++			[CONF_SG_AUTO_SCAN_PROBE_REQ] = 170,
++			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3] = 50,
++			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP] = 100,
++			/* passive scan params */
++			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP_BR] = 800,
++			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP_EDR] = 200,
++			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3] = 200,
++			/* passive scan in dual antenna params */
++			[CONF_SG_CONSECUTIVE_HV3_IN_PASSIVE_SCAN] = 0,
++			[CONF_SG_BCN_HV3_COLLISION_THRESH_IN_PASSIVE_SCAN] = 0,
++			[CONF_SG_TX_RX_PROTECTION_BWIDTH_IN_PASSIVE_SCAN] = 0,
++			/* general params */
++			[CONF_SG_STA_FORCE_PS_IN_BT_SCO] = 1,
++			[CONF_SG_ANTENNA_CONFIGURATION] = 0,
++			[CONF_SG_BEACON_MISS_PERCENT] = 60,
++			[CONF_SG_DHCP_TIME] = 5000,
++			[CONF_SG_RXT] = 1200,
++			[CONF_SG_TXT] = 1000,
++			[CONF_SG_ADAPTIVE_RXT_TXT] = 1,
++			[CONF_SG_GENERAL_USAGE_BIT_MAP] = 3,
++			[CONF_SG_HV3_MAX_SERVED] = 6,
++			[CONF_SG_PS_POLL_TIMEOUT] = 10,
++			[CONF_SG_UPSD_TIMEOUT] = 10,
++			[CONF_SG_CONSECUTIVE_CTS_THRESHOLD] = 2,
++			[CONF_SG_STA_RX_WINDOW_AFTER_DTIM] = 5,
++			[CONF_SG_STA_CONNECTION_PROTECTION_TIME] = 30,
++			/* AP params */
++			[CONF_AP_BEACON_MISS_TX] = 3,
++			[CONF_AP_RX_WINDOW_AFTER_BEACON] = 10,
++			[CONF_AP_BEACON_WINDOW_INTERVAL] = 2,
++			[CONF_AP_CONNECTION_PROTECTION_TIME] = 0,
+ 		},
+ 		.state = CONF_SG_PROTECTIVE,
+ 	},
+-- 
+1.7.0.4
+

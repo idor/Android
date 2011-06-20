@@ -1,0 +1,39 @@
+From e11c212dbebc58f41f43d9acc52275b0d4dc88bd Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Sun, 10 Apr 2011 12:46:35 +0300
+Subject: [PATCH 38/75] add dev_role_id param to cmd_roc
+
+---
+ drivers/net/wireless/wl12xx/cmd.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 653ed95..9e953be 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -1472,16 +1472,22 @@ out:
+ static int wl1271_cmd_roc(struct wl1271 *wl)
+ {
+ 	struct wl1271_cmd_roc *cmd;
++	/* TODO: get role_id as param */
++	u8 role_id = wl->dev_role_id;
+ 	int ret = 0;
+ 
+ 	wl1271_debug(DEBUG_CMD, "cmd roc %d (%d)", wl->channel, wl->band);
+ 
++	if (WARN_ON(role_id == WL1271_INVALID_ROLE_ID))
++		return -EINVAL;
++
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	if (!cmd) {
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+ 
++	cmd->role_id = role_id;
+ 	cmd->channel = wl->channel;
+ 	switch (wl->band) {
+ 	case IEEE80211_BAND_2GHZ:
+-- 
+1.7.0.4
+

@@ -1,0 +1,70 @@
+From 0a0b7570f90332ef545d598144c049f4eb6f4577 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Thu, 12 May 2011 20:59:37 +0300
+Subject: [PATCH 47/75] stop/start dev role along with ROC/CROC
+
+---
+ drivers/net/wireless/wl12xx/main.c |   22 +++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/scan.c |    1 +
+ 2 files changed, 22 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index fbfca18..4627947 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2596,6 +2596,7 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 			goto out_sleep;
+ 		}
+ 		wl1271_croc(wl, wl->dev_role_id);
++		wl1271_cmd_role_stop_dev(wl);
+ 	}
+ 
+ 	ret = wl1271_scan(hw->priv, ssid, len, req);
+@@ -3167,12 +3168,31 @@ sta_not_found:
+ 	}
+ 
+ 	if (do_join) {
+-		/* don't cancel ROC (on dev role) until interface is up */
++		/*
++		 * stop device role if started (we might already be in
++		 * STA role). TODO: make it better.
++		 */
++		if (wl->dev_role_id != WL1271_INVALID_ROLE_ID) {
++			ret = wl1271_croc(wl, wl->dev_role_id);
++			if (ret < 0)
++				goto out;
++
++			ret = wl1271_cmd_role_stop_dev(wl);
++			if (ret < 0)
++				goto out;
++		}
+ 		ret = wl1271_join(wl, set_assoc);
+ 		if (ret < 0) {
+ 			wl1271_warning("cmd join failed %d", ret);
+ 			goto out;
+ 		}
++
++		/* ROC until interface is up (after EAPOL exchange) */
++		if (!is_ibss) {
++			ret = wl1271_roc(wl, wl->role_id);
++			if (ret < 0)
++				goto out;
++		}
+ 	}
+ 
+ 	/* Handle new association with HT. Do this only after join. */
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index b357e60..2ac986a 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -61,6 +61,7 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
+ 	} else {
+ 		/* restore remain on channel */
++		wl1271_cmd_role_start_dev(wl);
+ 		wl1271_roc(wl, wl->dev_role_id);
+ 	}
+ 	wl1271_ps_elp_sleep(wl);
+-- 
+1.7.0.4
+

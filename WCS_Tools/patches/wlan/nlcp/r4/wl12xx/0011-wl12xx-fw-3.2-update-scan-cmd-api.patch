@@ -1,0 +1,109 @@
+From 724cc1b97287e293bc87db959d45de9e26e656af Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Mon, 4 Apr 2011 16:22:48 +0300
+Subject: [PATCH 11/75] wl12xx: fw 3.2 - update scan cmd api
+
+Update the scan command to use the new fw api.
+---
+ drivers/net/wireless/wl12xx/scan.c |    8 ++++----
+ drivers/net/wireless/wl12xx/scan.h |   23 +++++++++++++++--------
+ 2 files changed, 19 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index f37e5a3..9ffa827 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -156,6 +156,8 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 	if (passive || wl->scan.req->n_ssids == 0)
+ 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
+ 
++	if (wl->role_id != WL1271_INVALID_ROLE_ID)
++		cmd->params.role_id = wl->role_id;
+ 	cmd->params.scan_options = cpu_to_le16(scan_options);
+ 
+ 	cmd->params.n_ch = wl1271_get_scan_channels(wl, wl->scan.req,
+@@ -167,10 +169,6 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 	}
+ 
+ 	cmd->params.tx_rate = cpu_to_le32(basic_rate);
+-	cmd->params.rx_config_options = cpu_to_le32(CFG_RX_ALL_GOOD);
+-	cmd->params.rx_filter_options =
+-		cpu_to_le32(CFG_RX_PRSP_EN | CFG_RX_MGMT_EN | CFG_RX_BCN_EN);
+-
+ 	cmd->params.n_probe_reqs = wl->conf.scan.num_probe_reqs;
+ 	cmd->params.tx_rate = cpu_to_le32(basic_rate);
+ 	cmd->params.tid_trigger = 0;
+@@ -186,6 +184,8 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 		memcpy(cmd->params.ssid, wl->scan.ssid, wl->scan.ssid_len);
+ 	}
+ 
++	memcpy(cmd->addr, wl->mac_addr, ETH_ALEN);
++
+ 	ret = wl1271_cmd_build_probe_req(wl, wl->scan.ssid, wl->scan.ssid_len,
+ 					 wl->scan.req->ie, wl->scan.req->ie_len,
+ 					 band);
+diff --git a/drivers/net/wireless/wl12xx/scan.h b/drivers/net/wireless/wl12xx/scan.h
+index c833195..8de3fea 100644
+--- a/drivers/net/wireless/wl12xx/scan.h
++++ b/drivers/net/wireless/wl12xx/scan.h
+@@ -45,7 +45,10 @@ void wl1271_scan_sched_scan_results(struct wl1271 *wl);
+ #define WL1271_SCAN_CURRENT_TX_PWR     0
+ #define WL1271_SCAN_OPT_ACTIVE         0
+ #define WL1271_SCAN_OPT_PASSIVE	       1
++#define WL1271_SCAN_OPT_TRIGGERED_SCAN 2
+ #define WL1271_SCAN_OPT_PRIORITY_HIGH  4
++/* scan even if we fail to enter psm */
++#define WL1271_SCAN_OPT_FORCE          8
+ #define WL1271_SCAN_BAND_2_4_GHZ 0
+ #define WL1271_SCAN_BAND_5_GHZ 1
+ 
+@@ -61,27 +64,27 @@ enum {
+ };
+ 
+ struct basic_scan_params {
+-	__le32 rx_config_options;
+-	__le32 rx_filter_options;
+ 	/* Scan option flags (WL1271_SCAN_OPT_*) */
+ 	__le16 scan_options;
++	u8 role_id;
+ 	/* Number of scan channels in the list (maximum 30) */
+ 	u8 n_ch;
+ 	/* This field indicates the number of probe requests to send
+ 	   per channel for an active scan */
+ 	u8 n_probe_reqs;
+-	/* Rate bit field for sending the probes */
+-	__le32 tx_rate;
+ 	u8 tid_trigger;
+ 	u8 ssid_len;
+-	/* in order to align */
+-	u8 padding1[2];
++	u8 use_ssid_list;
++
++	/* Rate bit field for sending the probes */
++	__le32 tx_rate;
++
+ 	u8 ssid[IW_ESSID_MAX_SIZE];
+ 	/* Band to scan */
+ 	u8 band;
+-	u8 use_ssid_list;
++
+ 	u8 scan_tag;
+-	u8 padding2;
++	u8 padding2[2];
+ } __packed;
+ 
+ struct basic_scan_channel_params {
+@@ -104,6 +107,10 @@ struct wl1271_cmd_scan {
+ 
+ 	struct basic_scan_params params;
+ 	struct basic_scan_channel_params channels[WL1271_SCAN_MAX_CHANNELS];
++
++	/* src mac address */
++	u8 addr[ETH_ALEN];
++	u8 padding[2];
+ } __packed;
+ 
+ struct wl1271_cmd_trigger_scan_to {
+-- 
+1.7.0.4
+

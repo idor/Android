@@ -5,7 +5,7 @@ CROSS COMPILE: arm-none-linux-gnueabi-
 JAVA HOME: /usr/lib/jvm/java-6-sun
 
 BUILD PATH: /tmp/idor/27.x
-PACKAGE SOURCE: git -> local
+PACKAGE SOURCE: git -> 
 BUILD COMMAND: binaries-install
 
 KERNEL VERSION: android-2.6.35

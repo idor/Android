@@ -103,12 +103,12 @@ CONFIG_EAP_TTLS=y
 # functionality needed for EAP-FAST. If EAP-FAST is enabled with OpenSSL,
 # the OpenSSL library must be patched (openssl-0.9.9-session-ticket.patch)
 # to add the needed functions.
-#CONFIG_EAP_FAST=y
+CONFIG_EAP_FAST=y
 
 # Wi-Fi Protected Setup (WPS)
-#CONFIG_WPS=y
+CONFIG_WPS=y
 # Enable WSC 2.0 support
-#CONFIG_WPS2=y
+CONFIG_WPS2=y
 # Enable UPnP support for external WPS Registrars
 #CONFIG_WPS_UPNP=y
 

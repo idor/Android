@@ -1,0 +1,56 @@
+From 985a137be426ad1014e9e768bce556dfe54feab3 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Mon, 4 Apr 2011 16:49:40 +0300
+Subject: [PATCH 21/75] wl12xx: debug - add some debug prints
+
+1. ap rate policy configuration - print index and enabled rates
+2. configure command (acx) - print the acx number
+3. disconnection event
+---
+ drivers/net/wireless/wl12xx/acx.c   |    1 +
+ drivers/net/wireless/wl12xx/cmd.c   |    2 +-
+ drivers/net/wireless/wl12xx/event.c |    3 +++
+ 3 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 758c74c..fcbf4aa 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -839,6 +839,7 @@ int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
+ 		goto out;
+ 	}
+ 
++	wl1271_debug(DEBUG_ACX, "idx: %d, rate: 0x%x", idx, c->enabled_rates);
+ 	acx->rate_policy.enabled_rates = cpu_to_le32(c->enabled_rates);
+ 	acx->rate_policy.short_retry_limit = c->short_retry_limit;
+ 	acx->rate_policy.long_retry_limit = c->long_retry_limit;
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index d82b7e4..b7b700f 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -816,7 +816,7 @@ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len)
+ 	struct acx_header *acx = buf;
+ 	int ret;
+ 
+-	wl1271_debug(DEBUG_CMD, "cmd configure");
++	wl1271_debug(DEBUG_CMD, "cmd configure (%d)", id);
+ 
+ 	acx->id = cpu_to_le16(id);
+ 
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 9102443..eb17d68 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -272,6 +272,9 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 			wl1271_tx_dummy_packet(wl);
+ 	}
+ 
++	if (vector & DISCONNECT_EVENT_COMPLETE_ID)
++		wl1271_debug(DEBUG_EVENT, "disconnect event");
++
+ 	if (wl->vif && beacon_loss)
+ 		ieee80211_connection_loss(wl->vif);
+ 
+-- 
+1.7.0.4
+

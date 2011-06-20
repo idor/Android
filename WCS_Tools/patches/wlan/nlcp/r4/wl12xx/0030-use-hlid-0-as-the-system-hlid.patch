@@ -1,0 +1,83 @@
+From 300d8b7b0a9dc74dee70bdb47460f78c07c696fa Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 4 Apr 2011 15:58:54 +0300
+Subject: [PATCH 30/75] use hlid=0 as the system hlid
+
+indicate it as always allocated
+---
+ drivers/net/wireless/wl12xx/main.c   |   19 ++++++++++---------
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 2 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index c3a7b25..356fbb4 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1678,17 +1678,11 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
++		/* TODO: disable role here if failed */
+ 		ret = wl1271_hw_init(wl);
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+-		/* TODO: we should already disable role if failed... */
+-		ret = wl1271_allocate_link(wl, &wl->system_hlid);
+-		if (ret < 0)
+-			goto irq_disable;
+-		wl1271_info("system_hlid: %d", wl->system_hlid);
+-		WARN_ON(wl->system_hlid != 0);
+-
+ 		booted = true;
+ 		break;
+ 
+@@ -1844,10 +1838,12 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	wl->sched_scanning = false;
+ 	wl->role_id = WL1271_INVALID_ROLE_ID;
+ 	wl->dev_role_id = WL1271_INVALID_ROLE_ID;
+-	wl->system_hlid = WL1271_INVALID_LINK_ID;
+ 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
+ 	memset(wl->links_map, 0, sizeof(wl->links_map));
+ 
++	/* The system link is always allocated */
++	__set_bit(WL1271_SYSTEM_HLID, wl->links_map);
++
+ 	/*
+ 	 * this is performed after the cancel_work calls and the associated
+ 	 * mutex_lock, so that wl1271_op_add_interface does not accidentally
+@@ -4125,13 +4121,18 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->platform_quirks = 0;
+ 	wl->sched_scanning = false;
+ 	wl->role_id = WL1271_INVALID_ROLE_ID;
+-	wl->system_hlid = WL1271_INVALID_LINK_ID;
++	wl->system_hlid = WL1271_SYSTEM_HLID;
+ 	wl->sta_hlid = WL1271_INVALID_LINK_ID;
+ 	wl->dev_role_id = WL1271_INVALID_ROLE_ID;
+ 	wl->dev_hlid = WL1271_INVALID_LINK_ID;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+ 		    (unsigned long) wl);
+ 
++	memset(wl->links_map, 0, sizeof(wl->links_map));
++
++	/* The system link is always allocated */
++	__set_bit(WL1271_SYSTEM_HLID, wl->links_map);
++
+ 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		wl->tx_frames[i] = NULL;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 4b3fc45..8764246 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -159,6 +159,7 @@ extern u32 wl12xx_debug_level;
+ #define WL1271_MAX_LINKS           8
+ #define WL1271_INVALID_ROLE_ID     0xff
+ #define WL1271_INVALID_LINK_ID     0xff
++#define WL1271_SYSTEM_HLID         0
+ 
+ /* TODO: we can't use constant HLIDs in a real multirole */
+ #define WL1271_AP_GLOBAL_HLID      0
+-- 
+1.7.0.4
+

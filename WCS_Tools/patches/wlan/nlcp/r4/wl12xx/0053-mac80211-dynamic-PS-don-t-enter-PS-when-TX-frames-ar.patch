@@ -1,0 +1,37 @@
+From 9e507f06d124739f2f5cbb4c518e499669df2378 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 22 May 2011 13:40:34 +0300
+Subject: [PATCH 53/75] mac80211: dynamic PS - don't enter PS when TX frames are pending
+
+Use the tx_frames_pending() driver callback to determine if frames are
+pending for TX in its internal queues. If so postpone the dynamic PS
+timeout to avoid interrupting the TX traffic.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/mlme.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4f6b267..bebec6b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -760,6 +760,15 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
+ 		return;
+ 
++	/* don't enter PS if dynamic PS is enabled and TX frames are pending */
++	if (local->hw.conf.dynamic_ps_timeout > 0 &&
++	    !local->disable_dynamic_ps && drv_tx_frames_pending(local)) {
++		mod_timer(&local->dynamic_ps_timer, jiffies +
++			  msecs_to_jiffies(
++			  local->hw.conf.dynamic_ps_timeout));
++		return;
++	}
++
+ 	/*
+ 	 * transmission can be stopped by others which leads to
+ 	 * dynamic_ps_timer expiry. Postpond the ps timer if it
+-- 
+1.7.0.4
+

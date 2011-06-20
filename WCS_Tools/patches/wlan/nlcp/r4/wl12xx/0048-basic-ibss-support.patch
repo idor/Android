@@ -1,0 +1,163 @@
+From a28ac4be7805f66de0f72f13b4f302ffde873ca8 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Thu, 12 May 2011 13:06:27 +0300
+Subject: [PATCH 48/75] basic ibss support
+
+(still need to reflow the roc/croc stuff)
+---
+ drivers/net/wireless/wl12xx/cmd.c  |   66 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/cmd.h  |    1 +
+ drivers/net/wireless/wl12xx/main.c |   16 +++++---
+ 3 files changed, 77 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 431a380..a47490f 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -779,6 +779,72 @@ out:
+ 	return ret;
+ }
+ 
++int wl1271_cmd_role_start_ibss(struct wl1271 *wl)
++{
++	struct wl1271_cmd_role_start *cmd;
++	struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
++	int ret;
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	wl1271_debug(DEBUG_CMD, "cmd role start ibss %d", wl->role_id);
++
++	cmd->role_id = wl->role_id;
++	if (wl->band == IEEE80211_BAND_5GHZ)
++		cmd->band |= WL1271_BAND_5GHZ;
++	cmd->channel = wl->channel;
++	cmd->ibss.basic_rate_set = cpu_to_le32(wl->basic_rate_set);
++	cmd->ibss.beacon_interval = cpu_to_le16(wl->beacon_int);
++	cmd->ibss.dtim_interval = bss_conf->dtim_period;
++	cmd->ibss.ssid_type = WL1271_SSID_TYPE_ANY;
++	cmd->ibss.ssid_len = wl->ssid_len;
++	memcpy(cmd->ibss.ssid, wl->ssid, wl->ssid_len);
++	memcpy(cmd->ibss.bssid, wl->bssid, ETH_ALEN);
++
++	/*
++	 * TODO: 11n rates should not be allowed when encryption is WEP
++	 * or TKIP. For now allow all.
++	 */
++	cmd->sta.local_rates = cpu_to_le32(wl->rate_set);
++
++	if (wl->sta_hlid == WL1271_INVALID_LINK_ID) {
++		ret = wl1271_allocate_link(wl, &wl->sta_hlid);
++		if (ret)
++			goto out_free;
++	}
++	cmd->ibss.hlid = wl->sta_hlid;
++	cmd->ibss.remote_rates = cpu_to_le32(wl->rate_set);
++
++	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
++		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
++		     wl->role_id, cmd->sta.hlid, cmd->sta.session,
++		     wl->basic_rate_set, wl->rate_set);
++
++	wl1271_debug(DEBUG_CMD, "wl->bssid = %pM", wl->bssid);
++
++	ret = wl1271_cmd_send(wl, CMD_ROLE_START, cmd, sizeof(*cmd), 0);
++	if (ret < 0) {
++		wl1271_error("failed to initiate cmd role enable");
++		goto err_hlid;
++	}
++
++	goto out_free;
++
++err_hlid:
++	/* clear links on error. */
++	wl1271_free_link(wl, &wl->sta_hlid);
++
++out_free:
++	kfree(cmd);
++
++out:
++	return ret;
++}
++
+ 
+ /**
+  * send test command to firmware
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 7962a12..8ebe61f 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -44,6 +44,7 @@ int wl1271_cmd_role_start_sta(struct wl1271 *wl);
+ int wl1271_cmd_role_stop_sta(struct wl1271 *wl);
+ int wl1271_cmd_role_start_ap(struct wl1271 *wl);
+ int wl1271_cmd_role_stop_ap(struct wl1271 *wl);
++int wl1271_cmd_role_start_ibss(struct wl1271 *wl);
+ int wl1271_allocate_link(struct wl1271 *wl, u8 *hlid);
+ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
+ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4627947..607d1dc 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1584,6 +1584,9 @@ static u8 wl1271_get_role_type(struct wl1271 *wl)
+ 		else
+ 			return WL1271_ROLE_STA;
+ 
++	case BSS_TYPE_IBSS:
++		return WL1271_ROLE_IBSS;
++
+ 	default:
+ 		wl1271_info("invalid bss_type: %d", wl->bss_type);
+ 	}
+@@ -1628,14 +1631,10 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		wl->bss_type = BSS_TYPE_STA_BSS;
+ 		wl->set_bss_type = BSS_TYPE_STA_BSS;
+ 		break;
+-
+-	/* we don't support ad-hoc yet */
+-#if 0
+ 	case NL80211_IFTYPE_ADHOC:
+ 		wl->bss_type = BSS_TYPE_IBSS;
+ 		wl->set_bss_type = BSS_TYPE_STA_BSS;
+ 		break;
+-#endif
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		//wl->p2p = 1;
+ 		/* fall-through */
+@@ -1666,7 +1665,8 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+-		if (wl->bss_type == BSS_TYPE_STA_BSS) {
++		if (wl->bss_type == BSS_TYPE_STA_BSS ||
++		    wl->bss_type == BSS_TYPE_IBSS) {
+ 			ret = wl1271_cmd_role_enable(wl,
+ 							 WL1271_ROLE_DEVICE,
+ 							 &wl->dev_role_id);
+@@ -1919,6 +1919,7 @@ void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters)
+ static int wl1271_join(struct wl1271 *wl, bool set_assoc)
+ {
+ 	int ret;
++	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
+ 
+ 	/*
+ 	 * One of the side effects of the JOIN command is that is clears
+@@ -1935,7 +1936,10 @@ static int wl1271_join(struct wl1271 *wl, bool set_assoc)
+ 	if (set_assoc)
+ 		set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
+ 
+-	ret = wl1271_cmd_role_start_sta(wl);
++	if (is_ibss)
++		ret = wl1271_cmd_role_start_ibss(wl);
++	else
++		ret = wl1271_cmd_role_start_sta(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-- 
+1.7.0.4
+

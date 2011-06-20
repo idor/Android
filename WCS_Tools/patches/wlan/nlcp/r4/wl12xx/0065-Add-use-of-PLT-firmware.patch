@@ -1,0 +1,99 @@
+From 3d793b6e9b1bcf979f4b372084d4b324b6b5ec2a Mon Sep 17 00:00:00 2001
+From: Gery Kahn <geryk@ti.com>
+Date: Mon, 30 May 2011 19:11:23 +0300
+Subject: [PATCH 65/75] Add use of PLT firmware
+
+During calibration driver uses different firmware for PLT.
+
+Signed-off-by: Gery Kahn <geryk@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   25 ++++++++++++++++---------
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 ++
+ 2 files changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index abeaf6b..335829f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -970,16 +970,23 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(wl1271_irq);
+ 
+-static int wl1271_fetch_firmware(struct wl1271 *wl)
++static int wl1271_fetch_firmware(struct wl1271 *wl, bool plt)
+ {
+ 	const struct firmware *fw;
+ 	const char *fw_name;
+ 	int ret;
+ 
+-	if (wl->chip.id == CHIP_ID_1283_PG20)
+-		fw_name = WL128X_FW_NAME;
+-	else
+-		fw_name	= WL1271_FW_NAME;
++	if (plt) {
++		if (wl->chip.id == CHIP_ID_1283_PG20)
++			fw_name = WL128X_PLT_FW_NAME;
++		else
++			fw_name	= WL1271_PLT_FW_NAME;
++	} else {
++		if (wl->chip.id == CHIP_ID_1283_PG20)
++			fw_name = WL128X_FW_NAME;
++		else
++			fw_name	= WL1271_FW_NAME;
++	}
+ 
+ 	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
+ 
+@@ -1105,7 +1112,7 @@ static int wl1271_setup(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
+-static int wl1271_chip_wakeup(struct wl1271 *wl)
++static int wl1271_chip_wakeup(struct wl1271 *wl, bool plt)
+ {
+ 	struct wl1271_partition_set partition;
+ 	int ret = 0;
+@@ -1174,7 +1181,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	}
+ 
+ 	if (wl->fw == NULL) {
+-		ret = wl1271_fetch_firmware(wl);
++		ret = wl1271_fetch_firmware(wl, plt);
+ 		if (ret < 0)
+ 			goto out;
+ 	}
+@@ -1210,7 +1217,7 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 
+ 	while (retries) {
+ 		retries--;
+-		ret = wl1271_chip_wakeup(wl);
++		ret = wl1271_chip_wakeup(wl, true);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+@@ -1659,7 +1666,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 
+ 	while (retries) {
+ 		retries--;
+-		ret = wl1271_chip_wakeup(wl);
++		ret = wl1271_chip_wakeup(wl, false);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index e47c82d..68ac578 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -131,7 +131,9 @@ extern u32 wl12xx_debug_level;
+ 
+ 
+ #define WL1271_FW_NAME "ti-connectivity/wl1271-fw-multirole-roc.bin"
++#define WL1271_PLT_FW_NAME "ti-connectivity/wl1271-fw-multirole-plt.bin"
+ #define WL128X_FW_NAME "ti-connectivity/wl128x-fw-multirole-roc.bin"
++#define WL128X_PLT_FW_NAME "ti-connectivity/wl128x-fw-multirole-plt.bin"
+ 
+ /*
+  * wl127x and wl128x are using the same NVS file name. However, the
+-- 
+1.7.0.4
+

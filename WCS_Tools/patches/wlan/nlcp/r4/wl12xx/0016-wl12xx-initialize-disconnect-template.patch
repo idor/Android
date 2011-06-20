@@ -1,0 +1,33 @@
+From 053e1517d5d6253e9218441aa288b73b5e159ae4 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Mon, 4 Apr 2011 16:47:10 +0300
+Subject: [PATCH 16/75] wl12xx: initialize disconnect template
+
+we don't really need it, but we got an assertion when it wasn't initialized.
+
+TODO: check if it's still needed...
+---
+ drivers/net/wireless/wl12xx/init.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index a50bc3b..c433101 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -90,6 +90,13 @@ int wl1271_sta_init_templates_config(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_DISCONNECT, NULL,
++				      sizeof
++				      (struct wl12xx_disconn_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
+ 	for (i = 0; i < CMD_TEMPL_KLV_IDX_MAX; i++) {
+ 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_KLV, NULL,
+ 					      WL1271_CMD_TEMPL_DFLT_SIZE, i,
+-- 
+1.7.0.4
+

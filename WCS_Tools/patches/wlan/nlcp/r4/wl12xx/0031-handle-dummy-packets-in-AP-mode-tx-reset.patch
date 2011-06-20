@@ -1,0 +1,35 @@
+From 4333026de816fb6f4f4d6038f4606d1f04c5fa10 Mon Sep 17 00:00:00 2001
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 4 Apr 2011 17:33:59 +0300
+Subject: [PATCH 31/75] handle dummy packets in AP mode tx reset
+
+---
+ drivers/net/wireless/wl12xx/tx.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 88e2542..5c5c09f 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -792,10 +792,14 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
+ 	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
+ 			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
+-			info = IEEE80211_SKB_CB(skb);
+-			info->status.rates[0].idx = -1;
+-			info->status.rates[0].count = 0;
+-			ieee80211_tx_status(wl->hw, skb);
++
++			if (!wl12xx_is_dummy_packet(wl, skb)) {
++				info = IEEE80211_SKB_CB(skb);
++				info->status.rates[0].idx = -1;
++				info->status.rates[0].count = 0;
++				ieee80211_tx_status(wl->hw, skb);
++			}
++
+ 			total++;
+ 		}
+ 	}
+-- 
+1.7.0.4
+

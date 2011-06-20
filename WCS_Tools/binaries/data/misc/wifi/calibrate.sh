@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/system/bin/sh
 
 export NEW_MAC_ADDRESS=$1
 
@@ -11,7 +11,7 @@ echo Copy reference NVS file
 cat ./new-nvs.bin > /system/etc/firmware/ti-connectivity/wl1271-nvs.bin
 
 echo Insert wl12xx SDIO module
-insmod /system/lib/modules/wl12xx_sdio.ko
+/system/bin/insmod /system/lib/modules/wl12xx_sdio.ko
 
 echo Calibrate device
 calibrator wlan0 plt power_mode on
@@ -24,11 +24,11 @@ calibrator set nvs_mac ./new-nvs.bin $NEW_MAC_ADDRESS
 #calibrator set nvs_mac ./new-nvs.bin 08:00:28:00:64:87
 
 echo Remove wl12xx modules
-rmmod wl12xx_sdio wl12xx
-rmmod wl12xx
+/system/bin/rmmod wl12xx_sdio wl12xx
+/system/bin/rmmod wl12xx
 
 echo Copy calibrated NVS file
 cat ./new-nvs.bin > /system/etc/firmware/ti-connectivity/wl1271-nvs.bin
-insmod /system/lib/modules/wl12xx.ko
+/system/bin/insmod /system/lib/modules/wl12xx.ko
 
 
