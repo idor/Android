@@ -164,8 +164,6 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): $(PROGRESS_BRINGUP_MYDROID)
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/wifi_conf $(MYDROID)/hardware/wlan/wifi_conf
 	if [ -d $(MYDROID)/hardware/wlan/wpa_supplicant_lib ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wpa_supplicant_lib $(MYDROID)/hardware/wlan/wpa_supplicant_lib.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/wpa_supplicant_lib $(MYDROID)/hardware/wlan/wpa_supplicant_lib
-	if [ -d $(MYDROID)/hardware/wlan/compat ] ; then $(MOVE) $(MYDROID)/hardware/wlan/compat $(MYDROID)/hardware/wlan/compat ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/compat $(MYDROID)/hardware/wlan/compat
 	
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_MYDROID_PATCHES))
@@ -275,8 +273,6 @@ $(PROGRESS_NLCP_MYDROID_PATCHES)-distclean: $(PROGRESS_NLCP_MYDROID_PATCHES)
 	if [ -d $(MYDROID)/hardware/wlan/wifi_conf.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wifi_conf.org $(MYDROID)/hardware/wlan/wifi_conf ; fi
 	$(DEL) -rf $(MYDROID)/hardware/wlan/wpa_supplicant_lib
 	if [ -d $(MYDROID)/hardware/wlan/wpa_supplicant_lib.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wpa_supplicant_lib.org $(MYDROID)/hardware/wlan/wpa_supplicant_lib ; fi
-	$(DEL) -rf $(MYDROID)/hardware/wlan/compat
-	if [ -d $(MYDROID)/hardware/wlan/compat ] ; then $(MOVE) $(MYDROID)/hardware/wlan/compat $(MYDROID)/hardware/wlan/compat ; fi
 	@$(ECHO) "...done"
 	@$(DEL) $(PROGRESS_NLCP_MYDROID_PATCHES)
 	@$(call print, "android patches and packages removed")
