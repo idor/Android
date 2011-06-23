@@ -1383,7 +1383,7 @@ ifdef CONFIG_DRIVER_NL80211
 LOCAL_SHARED_LIBRARIES += libnl
 endif
 LOCAL_MODULE := p2p_supplicant
-LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_TAGS := debug
 LOCAL_CFLAGS := $(L_CFLAGS)
 LOCAL_SRC_FILES := $(OBJS)
 LOCAL_C_INCLUDES := bionic/libc/kernel/common $(INCLUDES)
