@@ -56,6 +56,7 @@ export GIT_TREE
 ################################################################################
 
 nlcp-private-pre-bringup-validation:
+	if [ -d $(MYDROID)/external ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant $(WORKSPACE_DIR) ; fi
 	@$(ECHO) "nlcp pre-bringup validation passed..."
 
 $(PROGRESS_NLCP_FETCH_WL12xx):
@@ -142,16 +143,20 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): $(PROGRESS_BRINGUP_MYDROID)
 	@$(ECHO) "...done"
 	
 	@$(ECHO) "copying additional packages to mydroid directory..."
-	if [ -d $(MYDROID)/external/crda ] ; then $(MOVE) $(MYDROID)/external/crda.org ; fi
+	if [ -d $(MYDROID)/external/crda ] ; then $(MOVE) $(MYDROID)/external/crda $(MOVE) $(MYDROID)/external/crda.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/crda $(MYDROID)/external/crda
-	if [ -d $(MYDROID)/external/hostap ] ; then $(MOVE) $(MYDROID)/external/hostap.org ; fi
+	if [ -d $(MYDROID)/external/hostap ] ; then $(MOVE) $(MYDROID)/external/hostap $(MYDROID)/external/hostap.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/hostap $(MYDROID)/external/hostap
-	if [ -d $(MYDROID)/external/iw ] ; then $(MOVE) $(MYDROID)/external/iw.org ; fi
+	if [ -d $(MYDROID)/external/iw ] ; then $(MOVE) $(MYDROID)/external/iw $(MYDROID)/external/iw.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/iw $(MYDROID)/external/iw
-	if [ -d $(MYDROID)/external/libnl ] ; then $(MOVE) $(MYDROID)/external/libnl.org ; fi
+	if [ -d $(MYDROID)/external/libnl ] ; then $(MOVE) $(MYDROID)/external/libnl $(MYDROID)/external/libnl.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/libnl $(MYDROID)/external/libnl
-	if [ -d $(MYDROID)/external/ti-utils ] ; then $(MOVE) $(MYDROID)/external/ti-utils.org ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/ti-utils $(MYDROID)/external/ti-utils
+	if [ -d $(MYDROID)/external/ti-utils ] ; then $(MOVE) $(MYDROID)/external/ti-utils $(MYDROID)/external/ti-utils.org ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/ti-utils $(MYDROID)/external/ti-utils	
+#	if [ -d $(MYDROID)/external/p2p_supplicant ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant $(MYDROID)/external/p2p_supplicant.org ; fi
+#	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/p2p_supplicant $(MYDROID)/external/p2p_supplicant
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/p2p_supplicant $(WORKSPACE_DIR)
+		
 	$(MKDIR) -p $(MYDROID)/hardware/wlan
 	if [ -f $(MYDROID)/hardware/wlan/Android.mk ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk
@@ -184,6 +189,11 @@ nlcp-make-private:
 	cd $(COMPAT_WIRELESS_DIR) ; sh ./scripts/admin-refresh.sh
 	cd $(COMPAT_WIRELESS_DIR) ; ./scripts/driver-select wl12xx
 	$(MAKE) -C $(COMPAT_WIRELESS_DIR) KLIB=$(KERNEL_DIR) KLIB_BUILD=$(KERNEL_DIR) -j$(NTHREADS)
+	
+	$(MOVE) $(WORKSPACE_DIR)/p2p_supplicant $(MYDROID)/external
+	cd $(MYDROID)/external/p2p_supplicant ; source $(MYDROID)/build/envsetup.sh ; mm
+	$(MOVE) $(MYDROID)/external/p2p_supplicant $(WORKSPACE_DIR)	
+	
 	@$(ECHO) "...done"
 	
 nlcp-install-private:
@@ -261,6 +271,8 @@ $(PROGRESS_NLCP_MYDROID_PATCHES)-distclean: $(PROGRESS_NLCP_MYDROID_PATCHES)
 	if [ -d $(MYDROID)/external/libnl.org ] ; then $(MOVE) $(MYDROID)/external/libnl.org $(MYDROID)/external/libnl ; fi
 	$(DEL) -rf $(MYDROID)/external/ti-utils
 	if [ -d $(MYDROID)/external/ti-utils.org ] ; then $(MOVE) $(MYDROID)/external/ti-utils.org $(MYDROID)/external/ti-utils ; fi
+#	$(DEL) -rf $(MYDROID)/external/p2p_supplicant
+#	if [ -d $(MYDROID)/external/p2p_supplicant.org ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant.org $(MYDROID)/external/p2p_supplicant ; fi	
 	$(MKDIR) -p $(MYDROID)/hardware/wlan
 	$(DEL) -rf $(MYDROID)/hardware/wlan/Android.mk
 	if [ -f $(MYDROID)/hardware/wlan/Android.mk.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk.org $(MYDROID)/hardware/wlan/Android.mk ; fi
