@@ -56,7 +56,7 @@ export GIT_TREE
 ################################################################################
 
 nlcp-private-pre-bringup-validation:
-	if [ -d $(MYDROID)/external ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant $(WORKSPACE_DIR) ; fi
+	if [ -d $(MYDROID)/external/p2p_supplicant ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant $(WORKSPACE_DIR) ; fi
 	@$(ECHO) "nlcp pre-bringup validation passed..."
 
 $(PROGRESS_NLCP_FETCH_WL12xx):
