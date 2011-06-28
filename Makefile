@@ -24,6 +24,7 @@ bringup:
 	@$(MAKE) fm-pre-bringup-validation
 	@$(MAKE) wlan-sta-pre-bringup-validation
 	@$(MAKE) wlan-softap-pre-bringup-validation
+	@$(MAKE) nlcp-softap-pre-bringup-validation
 	
 	@$(MAKE) mydroid-bringup
 	@$(MAKE) kernel-bringup

@@ -14,11 +14,15 @@
 #include $(PWD)/defs.mk
 include defs.mk
 
-NLCP_RELEASE_VERSION:=RLS_R4_01
+NLCP_RELEASE_VERSION:=RLS_R4_02
+NLCP_MAIN_REPO:=git://github.com/idor
 
+#WL12xx_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+WL12xx_REPO:=$(NLCP_MAIN_REPO)/wl12xx.git
 WL12xx_DIR:=$(WORKSPACE_DIR)/wl12xx
-WL12xx_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
-WL12xx_HASH:=842de05
+WL12xx_BRANCH:=releases
+WL12xx_TAG:=$(NLCP_RELEASE_VERSION)
+#WL12xx_HASH:=842de05
 
 COMPAT_DIR:=$(WORKSPACE_DIR)/compat
 COMPAT_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
@@ -56,8 +60,11 @@ export GIT_TREE
 ################################################################################
 
 nlcp-private-pre-bringup-validation:
-	if [ -d $(MYDROID)/external/p2p_supplicant ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant $(WORKSPACE_DIR) ; fi
 	@$(ECHO) "nlcp pre-bringup validation passed..."
+	
+nlcp-private-pre-make-validation:
+	cd $(HOSTAP_DIR) ; git checkout hostapd_vanilla
+	@$(ECHO) "nlcp pre-make validation passed..."
 
 $(PROGRESS_NLCP_FETCH_WL12xx):
 	@$(ECHO) "getting wl12xx repository..."
@@ -68,9 +75,7 @@ $(PROGRESS_NLCP_FETCH_WL12xx):
 	
 $(PROGRESS_NLCP_BRINGUP_WL12xx): $(PROGRESS_NLCP_FETCH_WL12xx)
 	@$(ECHO) "wl12xx bringup..."
-	cd $(WL12xx_DIR) ; git reset --hard $(WL12xx_HASH)
-	cd $(WL12xx_DIR) ; git branch "Vanilla" ; git checkout Vanilla
-	cd $(WL12xx_DIR) ; git am $(NLCP_WL12xx_PATCHES_DIR)/*patch
+	cd $($(WL12xx_DIR) ; git checkout $(WL12xx_TAG) -b vanilla
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_WL12xx))
 	@$(call print, "wl12xx bringup done")
@@ -121,7 +126,143 @@ $(PROGRESS_NLCP_KERNEL_PATCHES): $(PROGRESS_BRINGUP_KERNEL)
 	cd $(KERNEL_DIR) ; $(PATCH) -p1 < $(NLCP_KERNEL_PATCHES)/L27.INC1.13.1.kernel-config.nlcp-r3-rc5.patch
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_KERNEL_PATCHES))
-	@$(call print, "nlcp kernel patches done")
+	@$(call print, "nlcp kernel patches done")	
+	
+HOSTAP_REPO:=$(NLCP_MAIN_REPO)/hostap.git
+HOSTAP_DIR:=$(MYDROID)/external/hostap
+HOSTAP_BRANCH:=hostapd_android
+HOSTAP_TAG:=$(NLCP_RELEASE_VERSION)_hostapd
+SUPPLICANT_BRANCH:=supplicant_android
+SUPPLICANT_TAG:=$(NLCP_RELEASE_VERSION)_supplicant
+
+PROGRESS_NLCP_FETCH_HOSTAP:=$(PROGRESS_DIR)/nlcp.hostap.fetched
+PROGRESS_NLCP_BRINGUP_HOSTAP:=$(PROGRESS_DIR)/nlcp.hostap.bringup
+
+$(PROGRESS_NLCP_FETCH_HOSTAP): $(PROGRESS_BRINGUP_MYDROID)
+	@$(ECHO) "getting hostapd/supplicant repository..."
+	git clone $(HOSTAP_REPO) $(HOSTAP_DIR)
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_FETCH_HOSTAP))
+	@$(call print, "hostapd/supplicant repository fetched")
+	
+$(PROGRESS_NLCP_BRINGUP_HOSTAP): $(PROGRESS_NLCP_FETCH_HOSTAP)
+	@$(ECHO) "hostapd/supplicant bringup..."
+	$(MKDIR) -p $(HOSTAP_DIR)
+	cd $(HOSTAP_DIR) ; git checkout $(SUPPLICANT_TAG) -b supplicat_vanilla
+	cd $(HOSTAP_DIR) ; git checkout $(HOSTAP_TAG) -b hostapd_vanilla
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_HOSTAP))
+	@$(call print, "hostapd/supplicant bringup done")
+
+IW_REPO:=$(NLCP_MAIN_REPO)/iw.git
+IW_DIR:=$(MYDROID)/external/iw
+IW_BRANCH:=android
+IW_TAG:=$(NLCP_RELEASE_VERSION)
+
+PROGRESS_NLCP_FETCH_IW:=$(PROGRESS_DIR)/nlcp.iw.fetched
+PROGRESS_NLCP_BRINGUP_IW:=$(PROGRESS_DIR)/nlcp.iw.bringup
+
+$(PROGRESS_NLCP_FETCH_IW): $(PROGRESS_BRINGUP_MYDROID)
+	@$(ECHO) "getting iw repository..."
+	git clone $(IW_REPO) $(IW_DIR)
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_FETCH_IW))
+	@$(call print, "iw repository fetched")
+	
+$(PROGRESS_NLCP_BRINGUP_IW): $(PROGRESS_NLCP_FETCH_IW)
+	@$(ECHO) "iw bringup..."
+	cd $(IW_DIR) ; git checkout $(IW_TAG) -b vanilla
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_IW))
+	@$(call print, "iw bringup done")
+
+CRDA_REPO:=$(NLCP_MAIN_REPO)/crda.git
+CRDA_DIR:=$(MYDROID)/external/crda
+CRDA_BRANCH:=android
+CRDA_TAG:=$(NLCP_RELEASE_VERSION)
+
+PROGRESS_NLCP_FETCH_CRDA:=$(PROGRESS_DIR)/nlcp.crda.fetched
+PROGRESS_NLCP_BRINGUP_CRDA:=$(PROGRESS_DIR)/nlcp.crda.bringup
+
+$(PROGRESS_NLCP_FETCH_CRDA): $(PROGRESS_BRINGUP_MYDROID)
+	@$(ECHO) "getting crda repository..."
+	git clone $(CRDA_REPO) $(CRDA_DIR)
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_FETCH_CRDA))
+	@$(call print, "crda repository fetched")
+	
+$(PROGRESS_NLCP_BRINGUP_CRDA): $(PROGRESS_NLCP_FETCH_CRDA)
+	@$(ECHO) "crda bringup..."
+	cd $(CRDA_DIR) ; git checkout $(CRDA_TAG) -b vanilla
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_CRDA))
+	@$(call print, "crda bringup done")
+
+LIBNL_REPO:=$(NLCP_MAIN_REPO)/libnl.git
+LIBNL_DIR:=$(MYDROID)/external/libnl
+LIBNL_BRANCH:=android_froyo
+LIBNL_TAG:=$(NLCP_RELEASE_VERSION)
+
+PROGRESS_NLCP_FETCH_LIBNL:=$(PROGRESS_DIR)/nlcp.libnl.fetched
+PROGRESS_NLCP_BRINGUP_LIBNL:=$(PROGRESS_DIR)/nlcp.libnl.bringup
+
+$(PROGRESS_NLCP_FETCH_LIBNL): $(PROGRESS_BRINGUP_MYDROID)
+	@$(ECHO) "getting libnl repository..."
+	git clone $(LIBNL_REPO) $(LIBNL_DIR)
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_FETCH_LIBNL))
+	@$(call print, "libnl repository fetched")
+	
+$(PROGRESS_NLCP_BRINGUP_LIBNL): $(PROGRESS_NLCP_FETCH_LIBNL)
+	@$(ECHO) "libnl bringup..."
+	cd $(LIBNL_DIR) ; git checkout $(LIBNL_TAG) -b vanilla
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_LIBNL))
+	@$(call print, "libnl bringup done")
+
+OPENSSL_REPO:=$(NLCP_MAIN_REPO)/openssl.git
+OPENSSL_DIR:=$(MYDROID)/external/openssl
+OPENSSL_BRANCH:=android_froyo
+OPENSSL_TAG:=$(NLCP_RELEASE_VERSION)
+
+PROGRESS_NLCP_FETCH_OPENSSL:=$(PROGRESS_DIR)/nlcp.openssl.fetched
+PROGRESS_NLCP_BRINGUP_OPENSSL:=$(PROGRESS_DIR)/nlcp.openssl.bringup
+
+$(PROGRESS_NLCP_FETCH_OPENSSL): $(PROGRESS_BRINGUP_MYDROID)
+	@$(ECHO) "getting openssl repository..."
+	git clone $(OPENSSL_REPO) $(OPENSSL_DIR)
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_FETCH_OPENSSL))
+	@$(call print, "openssl repository fetched")
+	
+$(PROGRESS_NLCP_BRINGUP_OPENSSL): $(PROGRESS_NLCP_FETCH_OPENSSL)
+	@$(ECHO) "openssl bringup..."
+	cd $(OPENSSL_DIR) ; git checkout $(OPENSSL_TAG) -b vanilla
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_OPENSSL))
+	@$(call print, "openssl bringup done")
+
+TI_UTILS_REPO:=$(NLCP_MAIN_REPO)/ti-utils.git
+TI_UTILS_DIR:=$(MYDROID)/external/ti-utils
+TI_UTILS_BRANCH:=android_froyo
+TI_UTILS_TAG:=$(NLCP_RELEASE_VERSION)
+
+PROGRESS_NLCP_FETCH_TI_UTILS:=$(PROGRESS_DIR)/nlcp.ti-utils.fetched
+PROGRESS_NLCP_BRINGUP_TI_UTILS:=$(PROGRESS_DIR)/nlcp.ti-utils.bringup
+
+$(PROGRESS_NLCP_FETCH_TI_UTILS): $(PROGRESS_BRINGUP_MYDROID)
+	@$(ECHO) "getting ti-utils repository..."
+	git clone $(TI_UTILS_REPO) $(TI_UTILS_DIR)
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_FETCH_TI_UTILS))
+	@$(call print, "ti-utils repository fetched")
+	
+$(PROGRESS_NLCP_BRINGUP_TI_UTILS): $(PROGRESS_NLCP_FETCH_TI_UTILS)
+	@$(ECHO) "ti-utils bringup..."
+	cd $(TI_UTILS_DIR) ; git checkout $(TI_UTILS_TAG) -b vanilla
+	@$(ECHO) "...done"
+	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_TI_UTILS))
+	@$(call print, "ti-utils bringup done")
 
 $(PROGRESS_NLCP_MYDROID_PATCHES): $(PROGRESS_BRINGUP_MYDROID)
 	@$(ECHO) "patching android for nlcp..."
@@ -142,21 +283,7 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): $(PROGRESS_BRINGUP_MYDROID)
 	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0004*
 	@$(ECHO) "...done"
 	
-	@$(ECHO) "copying additional packages to mydroid directory..."
-	if [ -d $(MYDROID)/external/crda ] ; then $(MOVE) $(MYDROID)/external/crda $(MOVE) $(MYDROID)/external/crda.org ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/crda $(MYDROID)/external/crda
-	if [ -d $(MYDROID)/external/hostap ] ; then $(MOVE) $(MYDROID)/external/hostap $(MYDROID)/external/hostap.org ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/hostap $(MYDROID)/external/hostap
-	if [ -d $(MYDROID)/external/iw ] ; then $(MOVE) $(MYDROID)/external/iw $(MYDROID)/external/iw.org ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/iw $(MYDROID)/external/iw
-	if [ -d $(MYDROID)/external/libnl ] ; then $(MOVE) $(MYDROID)/external/libnl $(MYDROID)/external/libnl.org ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/libnl $(MYDROID)/external/libnl
-	if [ -d $(MYDROID)/external/ti-utils ] ; then $(MOVE) $(MYDROID)/external/ti-utils $(MYDROID)/external/ti-utils.org ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/ti-utils $(MYDROID)/external/ti-utils	
-#	if [ -d $(MYDROID)/external/p2p_supplicant ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant $(MYDROID)/external/p2p_supplicant.org ; fi
-#	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/p2p_supplicant $(MYDROID)/external/p2p_supplicant
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/external/p2p_supplicant $(WORKSPACE_DIR)
-		
+	@$(ECHO) "copying additional packages to mydroid directory..."		
 	$(MKDIR) -p $(MYDROID)/hardware/wlan
 	if [ -f $(MYDROID)/hardware/wlan/Android.mk ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk.org ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk
@@ -190,9 +317,9 @@ nlcp-make-private:
 	cd $(COMPAT_WIRELESS_DIR) ; ./scripts/driver-select wl12xx
 	$(MAKE) -C $(COMPAT_WIRELESS_DIR) KLIB=$(KERNEL_DIR) KLIB_BUILD=$(KERNEL_DIR) -j$(NTHREADS)
 	
-	$(MOVE) $(WORKSPACE_DIR)/p2p_supplicant $(MYDROID)/external
-	cd $(MYDROID)/external/p2p_supplicant ; source $(MYDROID)/build/envsetup.sh ; mm
-	$(MOVE) $(MYDROID)/external/p2p_supplicant $(WORKSPACE_DIR)	
+	cd $(HOSTAP_DIR) ; git checkout supplicant_vanilla
+	cd $(HOSTAP_DIR) ; source $(MYDROID)/build/envsetup.sh ; mm
+	cd $(HOSTAP_DIR) ; git checkout hostapd_vanilla	
 	
 	@$(ECHO) "...done"
 	
@@ -220,9 +347,6 @@ nlcp-distclean-private:
 	@$(ECHO) "nlcp distclean..."
 	$(MAKE) $(PROGRESS_NLCP_MYDROID_PATCHES)-distclean
 	$(MAKE) $(PROGRESS_NLCP_KERNEL_PATCHES)-distclean
-#	cd $(WL12xx_DIR) ; git reset --hard $(WL12xx_HASH)
-#	cd $(COMPAT_DIR) ; git reset --hard $(COMPAT_HASH)
-#	cd $(COMPAT_WIRELESS_DIR) ; git reset --hard $(COMPAT_WIRELESS_HASH)
 	@$(ECHO) "removing wl12xx..."
 	$(DEL) -rf $(WL12xx_DIR) $(PROGRESS_NLCP_FETCH_WL12xx) $(PROGRESS_NLCP_BRINGUP_WL12xx)
 	@$(ECHO) "...done"
@@ -262,17 +386,10 @@ $(PROGRESS_NLCP_MYDROID_PATCHES)-distclean: $(PROGRESS_NLCP_MYDROID_PATCHES)
 	@$(ECHO) "...done"	
 	@$(ECHO) "removing additional packages from mydroid directory..."
 	$(DEL) -rf $(MYDROID)/external/crda
-	if [ -d $(MYDROID)/external/crda.org ] ; then $(MOVE) $(MYDROID)/external/crda.org $(MYDROID)/external/crda ; fi	
 	$(DEL) -rf $(MYDROID)/external/hostap
-	if [ -d $(MYDROID)/external/hostap.org ] ; then $(MOVE) $(MYDROID)/external/hostap.org $(MYDROID)/external/hostap ; fi
 	$(DEL) -rf $(MYDROID)/external/iw
-	if [ -d $(MYDROID)/external/iw.org ] ; then $(MOVE) $(MYDROID)/external/iw.org $(MYDROID)/external/iw ; fi	
 	$(DEL) -rf $(MYDROID)/external/libnl
-	if [ -d $(MYDROID)/external/libnl.org ] ; then $(MOVE) $(MYDROID)/external/libnl.org $(MYDROID)/external/libnl ; fi
 	$(DEL) -rf $(MYDROID)/external/ti-utils
-	if [ -d $(MYDROID)/external/ti-utils.org ] ; then $(MOVE) $(MYDROID)/external/ti-utils.org $(MYDROID)/external/ti-utils ; fi
-#	$(DEL) -rf $(MYDROID)/external/p2p_supplicant
-#	if [ -d $(MYDROID)/external/p2p_supplicant.org ] ; then $(MOVE) $(MYDROID)/external/p2p_supplicant.org $(MYDROID)/external/p2p_supplicant ; fi	
 	$(MKDIR) -p $(MYDROID)/hardware/wlan
 	$(DEL) -rf $(MYDROID)/hardware/wlan/Android.mk
 	if [ -f $(MYDROID)/hardware/wlan/Android.mk.org ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk.org $(MYDROID)/hardware/wlan/Android.mk ; fi

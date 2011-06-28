@@ -477,6 +477,7 @@ nlcp-bringup: nlcp-pre-bringup-validation
 nlcp-make: $(PROGRESS_BRINGUP_NLCP)
 	@$(MAKE) nlcp-test-config
 ifeq ($(CONFIG_NLCP), y)
+	@$(MAKE) nlcp-private-pre-make-validation
 	@$(MAKE) nlcp-make-private
 	@$(call print, "nlcp make done")
 else
