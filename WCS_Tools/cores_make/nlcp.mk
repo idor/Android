@@ -75,7 +75,7 @@ $(PROGRESS_NLCP_FETCH_WL12xx):
 	
 $(PROGRESS_NLCP_BRINGUP_WL12xx): $(PROGRESS_NLCP_FETCH_WL12xx)
 	@$(ECHO) "wl12xx bringup..."
-	cd $($(WL12xx_DIR) ; git checkout $(WL12xx_TAG) -b vanilla
+	cd $(WL12xx_DIR) ; git checkout $(WL12xx_TAG) -b vanilla
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_WL12xx))
 	@$(call print, "wl12xx bringup done")
