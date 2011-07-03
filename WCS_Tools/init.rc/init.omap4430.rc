@@ -209,7 +209,6 @@ service pvrsrvinit /system/bin/pvrsrvinit
 
 #Load IVA firmware
 service baseimage /system/bin/syslink_daemon.out -f /data/base_image_sys_m3.xem3 /data/base_image_app_m3.xem3
-    critical
     user media
     group media
 

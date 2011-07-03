@@ -1,4 +1,0 @@
-#!/system/bin/sh
-
-p2p_cli -ip2p_wlan0 $@
-

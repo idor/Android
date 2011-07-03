@@ -17,6 +17,7 @@ include $(WIIST_PATH)/repo.mk
 .PHONY: all install clean distclean
 
 bringup:
+	@$(MKDIR) -p $(TRASH_DIR)
 	@$(MKDIR) -p $(PROGRESS_DIR)
 	@$(MAKE) ti-st-pre-bringup-validation
 	@$(MAKE) bt-pre-bringup-validation
@@ -142,7 +143,7 @@ distclean:
 	@if [ -d $(MANIFEST) ] ; then $(ECHO) removing $(MANIFEST) directory ; $(DEL) -rf $(MANIFEST) ; fi
 	@if [ -d $(WORKSPACE_DIR) ] ; then $(ECHO) removing $(WORKSPACE_DIR) directory ; $(DEL) -rf $(WORKSPACE_DIR) ; fi
 	@$(ECHO) synchronizing...
-#	@sync
+	@sync &
 	@$(call print, "DISTCLEAN DONE")
 	@$(call print, "The distclean process took $$(( $(call GET_TIME)-$(MAKE_START_TIME) )) seconds")
 
