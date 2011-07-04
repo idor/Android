@@ -95,7 +95,7 @@ $(PROGRESS_NLCP_BRINGUP_COMPAT): $(PROGRESS_NLCP_FETCH_COMPAT)
 	cd $(COMPAT_DIR) ; git reset --hard $(COMPAT_HASH)
 	cd $(COMPAT_DIR) ; git checkout -b vanilla
 	cd $(COMPAT_DIR) ; git am $(NLCP_COMPAT_PATCHES_DIR)/create_freezable_workqueue.patch
-	cd $(COMPAT_WIRELESS_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
+#	cd $(COMPAT_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_COMPAT))
 	@$(call print, "compat bringup done")
