@@ -352,6 +352,7 @@ nlcp-install-private:
 	cd $(MYFS_PATH) ; $(PATCH) -p1 < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch
 	@$(ECHO) "copying additinal binaries to file system"
 	$(COPY) -rf $(NLCP_BINARIES_PATH)/* $(MYFS_PATH)
+	$(CHMOD) -R 777 $(MYFS_PATH)/data/misc/wifi/*
 	@$(ECHO) "...done"
 	
 nlcp-clean-private:
