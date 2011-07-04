@@ -1,1 +1,1 @@
-/data/misc/wifi/sta/stop_sta.sh
+/data/misc/wifi/sta/sta_stop.sh

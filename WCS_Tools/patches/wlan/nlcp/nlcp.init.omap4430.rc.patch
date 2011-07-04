@@ -67,11 +67,11 @@
 -service ifcfg_softap /system/bin/ifconfig tiap0 up
 +########################## wl12xx addition - start
 +
-+service ifcfg_softap /system/bin/ifconfig wlan1 1.2.3.4 netmask 255.255.255.0 up
++service ifcfg_softap /system/bin/ifconfig wlan1 192.168.43.1 netmask 255.255.255.0 up
 +    disabled
 +    oneshot
 +    
-+service dhcpd_softap /data/busybox/udhcpd -f /data/misc/wifi/udhcpd.wlan1.conf
++service dhcpd_softap /data/busybox/udhcpd -f /etc/dhcpcd.conf
 +    disabled
 +    oneshot
 +
@@ -95,7 +95,7 @@
 +on property:init.svc.hostapd_bin=running
 +    start initial_regdom
 +
-+service p2p_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 -c/system/etc/wifi/p2p_supplicant.conf -dt
++service p2p_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 -c/data/misc/wifi/p2p_supplicant.conf -dt
 +    socket wpa_p2p_wlan0 dgram 660 wifi wifi
 +    disabled
 +    oneshot

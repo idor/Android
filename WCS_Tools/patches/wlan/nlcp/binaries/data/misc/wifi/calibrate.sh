@@ -1,11 +1,13 @@
 #!/data/busybox/sh
 
 export NEW_MAC_ADDRESS=$1
+export INI_FILE=$2
 
-if [ $NEW_MAC_ADDRESS == "" ] ; then export NEW_MAC_ADDRESS=08:00:28:12:34:56 ; fi
+if [ "$NEW_MAC_ADDRESS" == "" ] ; then export NEW_MAC_ADDRESS=08:00:28:12:34:56 ; fi
+if [ "$INI_FILE" == "" ] ; then export INI_FILE=/data/TQS_D_1.7.ini ; fi
 
 echo Create reference NVS
-calibrator set ref_nvs /data/TQS_D_1.7.ini
+calibrator set ref_nvs $INI_FILE
 
 echo Copy reference NVS file
 cat ./new-nvs.bin > /system/etc/firmware/ti-connectivity/wl1271-nvs.bin
@@ -30,5 +32,4 @@ rmmod wl12xx
 echo Copy calibrated NVS file
 cat ./new-nvs.bin > /system/etc/firmware/ti-connectivity/wl1271-nvs.bin
 insmod /system/lib/modules/wl12xx.ko
-
 

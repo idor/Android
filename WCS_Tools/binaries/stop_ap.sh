@@ -1,1 +1,1 @@
-/data/misc/wifi/ap/stop_ap.sh
+/data/misc/wifi/ap/ap_stop.sh
