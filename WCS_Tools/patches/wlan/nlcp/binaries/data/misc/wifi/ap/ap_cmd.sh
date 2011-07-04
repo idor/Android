@@ -1,3 +1,3 @@
 #!/system/bin/sh
 
-hostapd_cli -iwlan1 $@
+hostapd_cli -iwlan0 $@
