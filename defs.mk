@@ -31,6 +31,7 @@ INITRC_PATH:=$(WIIST_PATH)/init.rc
 # 
 ################################################################################
 
+TRASH_DIR:=$(PWD)/.trash
 WORKSPACE_DIR=$(PWD)/workspace
 
 MANIFEST:=$(WORKSPACE_DIR)/omapmanifest

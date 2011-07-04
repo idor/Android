@@ -1,0 +1,36 @@
+From 3cf9cac7b18606326d3350b97d7083879d8c2ac9 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 30 Jun 2011 13:03:59 +0300
+Subject: [PATCH] add pm_runtime_enabled function
+
+---
+ include/linux/pm_runtime.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
+index 6e81888..ef08940 100644
+--- a/include/linux/pm_runtime.h
++++ b/include/linux/pm_runtime.h
+@@ -70,6 +70,11 @@ static inline bool pm_runtime_suspended(struct device *dev)
+ 	return dev->power.runtime_status == RPM_SUSPENDED;
+ }
+ 
++static inline bool pm_runtime_enabled(struct device *dev)
++{
++        return !dev->power.disable_depth;
++}
++
+ #else /* !CONFIG_PM_RUNTIME */
+ 
+ static inline int pm_runtime_idle(struct device *dev) { return -ENOSYS; }
+@@ -92,6 +97,7 @@ static inline void pm_runtime_allow(struct device *dev) {}
+ static inline void pm_runtime_forbid(struct device *dev) {}
+ 
+ static inline bool pm_children_suspended(struct device *dev) { return false; }
++static inline bool pm_runtime_enabled(struct device *dev) { return false; }
+ static inline void pm_suspend_ignore_children(struct device *dev, bool en) {}
+ static inline void pm_runtime_get_noresume(struct device *dev) {}
+ static inline void pm_runtime_put_noidle(struct device *dev) {}
+-- 
+1.7.0.4
+

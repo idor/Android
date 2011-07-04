@@ -1,0 +1,22 @@
+From: Eliad Peller <eliad@wizery.com>
+
+create_freezeable_workqueue() was changed into
+create_freezable_workqueue().
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/linux/compat-2.6.38.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
+index 004fe27..2dd1910 100644
+--- a/include/linux/compat-2.6.38.h
++++ b/include/linux/compat-2.6.38.h
+@@ -39,6 +39,7 @@ static inline unsigned long ewma_read(const struct ewma *avg)
+ }
+
+ #define pr_warn pr_warning
++#define create_freezable_workqueue create_freezeable_workqueue
+
+ static inline int skb_checksum_start_offset(const struct sk_buff *skb)
+ {

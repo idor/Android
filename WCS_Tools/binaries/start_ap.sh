@@ -1,1 +1,1 @@
-/data/misc/wifi/ap/start_ap.sh
+/data/misc/wifi/ap/ap_start.sh

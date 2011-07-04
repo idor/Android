@@ -21,7 +21,7 @@ index e2a4415..4386a0c 100755
 +else
 +BOARD_WLAN_DEVICE           := wl12xx_mac80211
 +BOARD_SOFTAP_DEVICE         := wl12xx_mac80211
-+WPA_SUPPLICANT_VERSION      := VER_0_6_X
++WPA_SUPPLICANT_VERSION      := VER_0_8_X
 +WIFI_DRIVER_MODULE_PATH     := "/system/lib/modules/wl12xx_sdio.ko"
 +WIFI_DRIVER_MODULE_NAME     := "wl12xx_sdio"
 +WIFI_FIRMWARE_LOADER        := ""
@@ -104,7 +104,7 @@ index 7e931aa..c3bf517 100755
  
 -service wpa_supplicant /system/bin/wpa_supplicant -Dtiwlan0 -itiwlan0 -c/data/misc/wifi/wpa_supplicant.conf -dd
 -    socket wpa_tiwlan0 dgram 660 wifi wifi
-+service wpa_supplicant /system/bin/wpa_supplicant -Dmac80211_wext -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf -dd
++service wpa_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf -dd
 +    socket wpa_wlan0:0 dgram 660 wifi wifi
      disabled
      oneshot
