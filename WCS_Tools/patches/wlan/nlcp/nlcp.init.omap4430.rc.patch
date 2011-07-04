@@ -71,7 +71,7 @@
 +    disabled
 +    oneshot
 +    
-+service dhcpd_softap /data/busybox/udhcpd -f /etc/dhcpcd.conf
++service dhcpd_softap /data/busybox/udhcpd -f /etc/dhcpcd/dhcpd.conf
 +    disabled
 +    oneshot
 +
