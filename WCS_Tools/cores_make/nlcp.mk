@@ -155,7 +155,7 @@ $(PROGRESS_NLCP_BRINGUP_HOSTAP): $(PROGRESS_NLCP_FETCH_HOSTAP)
 	$(MKDIR) -p $(HOSTAP_DIR)
 	cd $(HOSTAP_DIR) ; git checkout remotes/origin/$(HOSTAP_BRANCH) -b vanilla
 	cd $(HOSTAP_DIR) ; git reset --hard $(HOSTAP_TAG)
-	cd $(HOSTAP_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
+#	cd $(HOSTAP_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_HOSTAP))
 	@$(call print, "hostapd/supplicant bringup done")
