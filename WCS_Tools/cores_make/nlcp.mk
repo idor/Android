@@ -299,23 +299,22 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0004*
 	@$(ECHO) "...done"
 	
-#	latest firmwares are managed at the wl12xx project: wl12xx/firmware/ti-connectivity, we move it to the android fs
-	$(ECHO) "Updating latest firmware binaries from wl12xx project..."
-	$(COPY) -f $(WL12xx_DIR)/firmware/ti-connectivity/* $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/fw/
-	$(ECHO) "...done"
-	
 	@$(ECHO) "copying additional packages to mydroid directory..."
 	$(MKDIR) -p $(TRASH_DIR)/hardware/wlan
 	$(MKDIR) -p $(MYDROID)/hardware/wlan
 	if [ -f $(MYDROID)/hardware/wlan/Android.mk ] ; then $(MOVE) $(MYDROID)/hardware/wlan/Android.mk $(TRASH_DIR)/hardware/wlan/ ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk	
-	if [ -d $(MYDROID)/hardware/wlan/fw ] ; then $(MOVE) $(MYDROID)/hardware/wlan/fw $(TRASH_DIR)/hardware/wlan/ ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/fw $(MYDROID)/hardware/wlan/fw	
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/Android.mk $(MYDROID)/hardware/wlan/Android.mk		
 	if [ -d $(MYDROID)/hardware/wlan/initial_regdom ] ; then $(MOVE) $(MYDROID)/hardware/wlan/initial_regdom $(TRASH_DIR)/hardware/wlan/ ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/initial_regdom $(MYDROID)/hardware/wlan/initial_regdom	
 	if [ -d $(MYDROID)/hardware/wlan/wifi_conf ] ; then $(MOVE) $(MYDROID)/hardware/wlan/wifi_conf $(TRASH_DIR)/hardware/wlan/ ; fi
-	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/wifi_conf $(MYDROID)/hardware/wlan/wifi_conf	
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/wifi_conf $(MYDROID)/hardware/wlan/wifi_conf
 	@$(ECHO) "...done"
+	if [ -d $(MYDROID)/hardware/wlan/fw ] ; then $(MOVE) $(MYDROID)/hardware/wlan/fw $(TRASH_DIR)/hardware/wlan/ ; fi
+	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/fw $(MYDROID)/hardware/wlan/fw
+#	latest firmwares are managed at the wl12xx project: wl12xx/firmware/ti-connectivity, we move it to the android fs
+	$(ECHO) "Updating latest firmware binaries from wl12xx project..."
+	$(COPY) -f $(WL12xx_DIR)/firmware/ti-connectivity/* $(MYDROID)/hardware/wlan/fw
+	$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_MYDROID_PATCHES))
 	@$(call print, "android patches and packages done")
 
