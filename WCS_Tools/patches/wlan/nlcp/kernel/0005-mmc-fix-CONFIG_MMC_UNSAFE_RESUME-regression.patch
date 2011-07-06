@@ -1,0 +1,42 @@
+From 8da690ea12a16093d7a2b5a4dab7eef25a51cd0d Mon Sep 17 00:00:00 2001
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 8 Mar 2011 23:32:02 +0200
+Subject: [PATCH 5/9] mmc: fix CONFIG_MMC_UNSAFE_RESUME regression
+
+30201e7f3 ("mmc: skip detection of nonremovable cards on rescan")
+allowed skipping detection of nonremovable cards on mmc_rescan().
+The intention was to only skip detection of hardwired cards that
+cannot be removed, so make sure this is indeed the case by directly
+checking for (lack of) MMC_CAP_NONREMOVABLE, instead of using
+mmc_card_is_removable(), which is overloaded with
+CONFIG_MMC_UNSAFE_RESUME semantics.
+
+The user-visible symptom of the bug this patch fixes is that no
+"mmc: card XXXX removed" message appears in dmesg when a card is
+removed and CONFIG_MMC_UNSAFE_RESUME=y.
+
+Reported-and-tested-by: Dmitry Shmidt <dimitrysh@google.com>
+Reported-and-tested-by: Maxim Levitsky <maximlevitsky@gmail.com>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Chris Ball <cjb@laptop.org>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/mmc/core/core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index 69d7fc4..e7af1c9 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -1136,7 +1136,7 @@ void mmc_rescan(struct work_struct *work)
+ 	if ((host->bus_ops != NULL) && host->bus_ops->detect && !host->bus_dead)
+ #else
+ 	if ((host->bus_ops != NULL) && host->bus_ops->detect && !host->bus_dead
+-					&& mmc_card_is_removable(host))
++					&& !(host->caps & MMC_CAP_NONREMOVABLE))
+ #endif
+ 		host->bus_ops->detect(host);
+ 
+-- 
+1.7.0.4
+

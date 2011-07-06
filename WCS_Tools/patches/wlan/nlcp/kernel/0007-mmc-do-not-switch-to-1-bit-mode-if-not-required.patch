@@ -1,0 +1,39 @@
+From a01e8aca57981671a2d909c21e1bfcb24af3f072 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 7 Jul 2011 00:03:14 +0300
+Subject: [PATCH 7/9] mmc: do not switch to 1-bit mode if not required
+
+6b5eda36 followed SDIO spec part E1 section 8, which states that
+in case SDIO interrupts are being used to wake up a suspended host,
+then it is required to switch to 1-bit mode before stopping the clock.
+
+Before switching to 1-bit mode (or back to 4-bit mode on resume),
+make sure that SDIO interrupts are really being used to wake the host.
+
+This is helpful for devices which have an external irq line (e.g.
+wl1271), and do not use SDIO interrupts to wake up the host.
+
+In this case, switching to 1-bit mode (and back to 4-bit mode on resume)
+is not necessary.
+
+Based on patch made by Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index f11b3ba..479c068 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -541,7 +541,7 @@ static int mmc_sdio_resume(struct mmc_host *host)
+ 	if (mmc_card_is_removable(host) || !mmc_card_keep_power(host))
+ 		err = mmc_sdio_init_card(host, host->ocr, host->card,
+ 					mmc_card_keep_power(host));
+-	else if (mmc_card_keep_power(host)) {
++	else if (mmc_card_keep_power(host) && mmc_card_wake_sdio_irq(host)) {
+ 		/* We may have switched to 1-bit mode during suspend */
+ 		err = sdio_enable_wide(host->card);
+ 		if (err > 0) {
+-- 
+1.7.0.4
+

@@ -1,0 +1,27 @@
+From f5e9fa9e1035dc4fa6d7fef89c8d5aab90cbb8a9 Mon Sep 17 00:00:00 2001
+From: Eliad Peller <eliad@wizery.com>
+Date: Wed, 27 Apr 2011 10:17:46 +0300
+Subject: [PATCH 8/9] set wakeup enable for blaze
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ arch/arm/mach-omap2/board-4430sdp.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
+index 22ea002..9f3afc6 100644
+--- a/arch/arm/mach-omap2/board-4430sdp.c
++++ b/arch/arm/mach-omap2/board-4430sdp.c
+@@ -1793,7 +1793,8 @@ static struct omap_uart_port_info omap_serial_platform_data[] = {
+ static struct omap_board_mux board_mux[] __initdata = {
+ #ifndef CONFIG_TIWLAN_SDIO
+ 	/* WLAN IRQ - GPIO 53 */
+-	OMAP4_MUX(GPMC_NCS3, OMAP_MUX_MODE3 | OMAP_PIN_INPUT),
++	OMAP4_MUX(GPMC_NCS3, OMAP_MUX_MODE3 | OMAP_PIN_INPUT |
++		  OMAP_PIN_OFF_WAKEUPENABLE),
+ 	/* WLAN_EN - GPIO 54 */
+ 	OMAP4_MUX(GPMC_NWP, OMAP_MUX_MODE3 | OMAP_PIN_OUTPUT),
+ 	/* WLAN SDIO: MMC5 CMD */
+-- 
+1.7.0.4
+

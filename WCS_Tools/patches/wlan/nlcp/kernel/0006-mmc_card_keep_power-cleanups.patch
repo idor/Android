@@ -1,0 +1,60 @@
+From 4a5cdcc4f68ce5c90c79ececfda9a616972bc4df Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Wed, 6 Jul 2011 23:56:24 +0300
+Subject: [PATCH 6/9] mmc_card_keep_power cleanups
+
+mmc_card_is_powered_resumed is a mouthful; instead, simply use
+mmc_card_keep_power, which also better explains the purpose of
+the macro.
+
+Employ mmc_card_keep_power() where possible.
+
+Based on Ohad Ben-Cohen <ohad@wizery.com> original patch.
+---
+ drivers/mmc/core/sdio.c  |    8 ++++----
+ include/linux/mmc/host.h |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index c9e020d..f11b3ba 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -538,10 +538,10 @@ static int mmc_sdio_resume(struct mmc_host *host)
+ 	mmc_claim_host(host);
+ 
+ 	/* No need to reinitialize powered-resumed nonremovable cards */
+-	if (mmc_card_is_removable(host) || !mmc_card_is_powered_resumed(host))
++	if (mmc_card_is_removable(host) || !mmc_card_keep_power(host))
+ 		err = mmc_sdio_init_card(host, host->ocr, host->card,
+-				(host->pm_flags & MMC_PM_KEEP_POWER));
+-	else if (mmc_card_is_powered_resumed(host)) {
++					mmc_card_keep_power(host));
++	else if (mmc_card_keep_power(host)) {
+ 		/* We may have switched to 1-bit mode during suspend */
+ 		err = sdio_enable_wide(host->card);
+ 		if (err > 0) {
+@@ -586,7 +586,7 @@ static int mmc_sdio_power_restore(struct mmc_host *host)
+ 
+ 	mmc_claim_host(host);
+ 	ret = mmc_sdio_init_card(host, host->ocr, host->card,
+-			(host->pm_flags & MMC_PM_KEEP_POWER));
++				mmc_card_keep_power(host));
+ 	if (!ret && host->sdio_irqs)
+ 		mmc_signal_sdio_irq(host);
+ 	mmc_release_host(host);
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index f1a2b7f..ed676e7 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -323,7 +323,7 @@ static inline int mmc_card_is_removable(struct mmc_host *host)
+ 	return !(host->caps & MMC_CAP_NONREMOVABLE) && mmc_assume_removable;
+ }
+ 
+-static inline int mmc_card_is_powered_resumed(struct mmc_host *host)
++static inline int mmc_card_keep_power(struct mmc_host *host)
+ {
+ 	return host->pm_flags & MMC_PM_KEEP_POWER;
+ }
+-- 
+1.7.0.4
+

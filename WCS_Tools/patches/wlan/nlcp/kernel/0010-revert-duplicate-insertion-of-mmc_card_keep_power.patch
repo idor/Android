@@ -1,0 +1,28 @@
+From c5e377f632eff02514c87e6d9339ab9f0fe7fcb3 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 7 Jul 2011 00:21:55 +0300
+Subject: [PATCH] revert duplicate insertion of mmc_card_keep_power function in include/linux/mmc/host.h
+
+---
+ include/linux/mmc/host.h |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index ed676e7..0fa2ad3 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -328,11 +328,6 @@ static inline int mmc_card_keep_power(struct mmc_host *host)
+ 	return host->pm_flags & MMC_PM_KEEP_POWER;
+ }
+ 
+-static inline int mmc_card_keep_power(struct mmc_host *host)
+-{
+-	return host->pm_flags & MMC_PM_KEEP_POWER;
+-}
+-
+ static inline int mmc_card_wake_sdio_irq(struct mmc_host *host)
+ {
+ 	return host->pm_flags & MMC_PM_WAKE_SDIO_IRQ;
+-- 
+1.7.0.4
+
