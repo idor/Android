@@ -89,10 +89,13 @@ install-only:
 	$(MAKE) wlan-sta-install
 	$(MAKE) wlan-softap-install
 
-	@cd $(OUTPUT_PATH_SD) ; $(TAR) cf $(OUTPUT_PATH_SD)/$(VERSION).sd.tar *
-	@cd $(OUTPUT_PATH_SD)/rootfs ; tar cf $(OUTPUT_PATH_SD)/rootfs.tar *
-	@cd $(OUTPUT_PATH_SD)/boot ; tar cf $(OUTPUT_PATH_SD)/boot.tar *
+	$(MAKE) pack-sd-fs
 	@$(call print, "INSTALL DONE")
+
+pack-sd-fs:
+        @cd $(OUTPUT_PATH_SD) ; $(TAR) cf $(OUTPUT_PATH_SD)/$(VERSION).sd.tar *
+        @cd $(OUTPUT_PATH_SD)/rootfs ; tar cf $(OUTPUT_PATH_SD)/rootfs.tar *
+        @cd $(OUTPUT_PATH_SD)/boot ; tar cf $(OUTPUT_PATH_SD)/boot.tar *
 	
 $(OUTPUT_PATH_SD)/$(VERSION).sd.tar:
 	$(MAKE) install
