@@ -7,6 +7,7 @@ export GO_INTENT=7
 
 stop
 setprop ctl.stop wpa_supplicant
+mkdir -p /data/misc/wifi/sockets
 insmod /system/lib/modules/wl12xx_sdio.ko
 setprop ctl.start p2p_supplicant
 sleep 5
