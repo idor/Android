@@ -89,8 +89,6 @@ install-only:
 	$(MAKE) wlan-sta-install
 	$(MAKE) wlan-softap-install
 
-	$(CHMOD) -R 777 $(OUTPUT_PATH_SD)/rootfs/*
-
 	$(MAKE) pack-sd-fs
 	@$(call print, "INSTALL DONE")
 
