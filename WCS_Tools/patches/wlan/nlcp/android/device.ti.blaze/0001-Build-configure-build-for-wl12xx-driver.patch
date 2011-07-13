@@ -145,12 +145,13 @@ diff --git a/system.prop b/system.prop
 index ffb4697..3d8a2ed 100644
 --- a/system.prop
 +++ b/system.prop
-@@ -6,7 +6,7 @@
+@@ -6,7 +6,8 @@
  com.ti.omap_enhancement=true
  opencore.asmd=1
  keyguard.no_require_sim=1
 -wifi.interface=tiwlan0
 +wifi.interface=wlan0:0
++ap.interface=wlan1
  dalvik.vm.heapsize=32m
  ro.sf.lcd_density=240
  ro.opengles.version=131072
