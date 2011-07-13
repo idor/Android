@@ -316,6 +316,16 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_MYDROID_PATCHES))
 	@$(call print, "android patches and packages done")
 
+nlcp-sync-ver-private:	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
+						$(PROGRESS_NLCP_KERNEL_PATCHES) \
+						$(PROGRESS_NLCP_MYDROID_PATCHES)
+	cd $(CRDA_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(LIBNL_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(TI_UTILS_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(IW_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(HOSTAP_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(WL12xx_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+
 nlcp-bringup-private: 	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 						$(PROGRESS_NLCP_BRINGUP_COMPAT) \
 						$(PROGRESS_NLCP_BRINGUP_COMPAT_WIRELESS) \
