@@ -1,6 +1,7 @@
 #!/system/bin/sh
-mkdir -p /data/misc/wifi/sockets
+
 insmod /system/lib/modules/wl12xx_sdio.ko
-hostapd_bin -B /data/misc/wifi/ap/hostapd.conf
-ifconfig wlan0 192.168.43.1 up
-udhcpd -f /data/misc/wifi/ap/udhcpd.conf &
+/system/bin/logwrapper /system/bin/hostapd_bin -dd -B /data/misc/wifi/ap/hostapd.conf
+sleep 2
+ifconfig wlan0 192.168.43.1 netmask 255.255.255.0 up
+udhcpd -f /data/misc/wifi/ap/dhcpd.conf &
