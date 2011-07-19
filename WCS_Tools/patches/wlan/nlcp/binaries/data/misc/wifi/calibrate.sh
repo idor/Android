@@ -1,4 +1,4 @@
-#!/data/busybox/sh
+#!/system/bin/sh
 
 export NEW_MAC_ADDRESS=$1
 export INI_FILE=$2
