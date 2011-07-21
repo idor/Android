@@ -14,7 +14,7 @@
 #include $(PWD)/defs.mk
 include defs.mk
 
-NLCP_RELEASE_VERSION:=RLS_R4_06
+NLCP_RELEASE_VERSION:=RLS_R4_07
 NLCP_MAIN_REPO:=git://github.com/idor
 
 #WL12xx_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
@@ -114,8 +114,8 @@ $(PROGRESS_NLCP_BRINGUP_COMPAT_WIRELESS): $(PROGRESS_NLCP_FETCH_COMPAT_WIRELESS)
 	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/03-*
 	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/35-*
 	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/40-*
-	cd $(COMPAT_WIRELESS_DIR) ; patch --dry-run -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
-	cd $(COMPAT_WIRELESS_DIR) ; patch -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
+	cd $(COMPAT_WIRELESS_DIR) ; $(PATCH) --dry-run -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
+	cd $(COMPAT_WIRELESS_DIR) ; $(PATCH) -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
 	cp $(KERNEL_DIR)/.gitignore $(COMPAT_WIRELESS_DIR)
 	cd $(COMPAT_WIRELESS_DIR) ; git add .
 	cd $(COMPAT_WIRELESS_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
@@ -291,10 +291,7 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0001*
 	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0002*
 	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0003-revert-android-dhcp-service-name-device-name-usage.patch
-	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0001*
-	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0002*
-	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0003*
-	cd $(MYDROID)/system/netd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.netd/0004*
+	cd $(MYDROID)/system/netd ; git am $(NLCP_ANDROID_PATCHES)/system.netd/*.patch
 	@$(ECHO) "...done"
 	
 	@$(ECHO) "copying additional packages to mydroid directory..."
