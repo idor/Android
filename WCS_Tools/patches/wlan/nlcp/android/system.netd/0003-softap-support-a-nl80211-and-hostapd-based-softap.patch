@@ -514,7 +514,7 @@ index 8715eb4..1de311e 100644
 +
 +    stopHostapd();
 +    switchInterface(false);
-+    release_wake_lock(AP_WAKE_LOCK);
++    /*release_wake_lock(AP_WAKE_LOCK);*/
 +    return 0;
 +}
 +
@@ -656,7 +656,7 @@ index 8715eb4..1de311e 100644
 +    fclose(fp2);
 +
 +    // we take the wakelock here because the stop/start is lengthy
-+    acquire_wake_lock(PARTIAL_WAKE_LOCK, AP_WAKE_LOCK);
++    /*acquire_wake_lock(PARTIAL_WAKE_LOCK, AP_WAKE_LOCK);*/
 +
 +    // switch interface to wlan1
 +    ret = switchInterface(true);
@@ -678,7 +678,7 @@ index 8715eb4..1de311e 100644
 +fail:
 +    switchInterface(false);
 +fail_switch:
-+    release_wake_lock(AP_WAKE_LOCK);
++    /*release_wake_lock(AP_WAKE_LOCK);*/
 +    LOGD("hostapd set - failed. AP is off.");
 +
      return ret;
