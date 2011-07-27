@@ -1,0 +1,27 @@
+From c44765a72edf086ac84abf8a7b13d6d84dbe7bdf Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 21 Jul 2011 22:28:59 +0300
+Subject: [PATCH 5/5] add 2 seconds delay between if and dhcpd services invokation
+
+Change-Id: I09a2b5ecefc19d94baeabe2ea531359d4b10ffb9
+---
+ SoftapController.cpp |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/SoftapController.cpp b/SoftapController.cpp
+index ebe470a..7c6b23c 100644
+--- a/SoftapController.cpp
++++ b/SoftapController.cpp
+@@ -329,6 +329,9 @@ int SoftapController::startHostapd() {
+         return -1;
+     }
+ 
++    // give some time to make the device available for dhcpd service (connect to device)
++    sleep(2);
++
+     if (property_set("ctl.start", HOSTAPD_DHCPD_SERVICE_NAME) < 0) {
+             LOGE("Failed to start dhcpd");
+             return -1;
+-- 
+1.7.0.4
+
