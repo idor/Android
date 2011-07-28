@@ -1,3 +1,13 @@
+From a5ffb0214ceb9d679232fae7a2ac3fc2dcc7d27d Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 28 Jul 2011 13:13:58 +0300
+Subject: [PATCH] remove build from package
+
+Change-Id: Id8bd94f8c85ef3408a0b3d98fa6c5d1960695d2a
+---
+ Android.mk |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
 diff --git a/Android.mk b/Android.mk
 index 37ee1e4..dff6346 100644
 --- a/Android.mk
@@ -17,3 +27,6 @@ index 37ee1e4..dff6346 100644
  
 -endif # VER_0_6_X
 +endif # wl12xx_mac80211
+-- 
+1.7.0.4
+

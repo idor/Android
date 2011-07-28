@@ -1,3 +1,14 @@
+From 8f2b5a73f22ab29e83d8b616ce14819a4b8d03b1 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 28 Jul 2011 13:21:11 +0300
+Subject: [PATCH] Revert libhardware_legacy Hotsopt SoftAP loading driver
+
+Change-Id: I86020c3c954ac1362492e173183f9ae850fe4d20
+---
+ include/hardware_legacy/wifi.h |   16 ----
+ wifi/wifi.c                    |  155 +---------------------------------------
+ 2 files changed, 1 insertions(+), 170 deletions(-)
+
 diff --git a/include/hardware_legacy/wifi.h b/include/hardware_legacy/wifi.h
 index c7b5922..23cc92a 100644
 --- a/include/hardware_legacy/wifi.h
@@ -205,3 +216,6 @@ index c5ed2bc..ec73053 100644
  static int check_driver_loaded() {
      char driver_status[PROPERTY_VALUE_MAX];
      FILE *proc;
+-- 
+1.7.0.4
+

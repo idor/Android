@@ -1,5 +1,18 @@
+From 3f8d10165250f87299274a790d7fc18a23c36937 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 28 Jul 2011 13:10:30 +0300
+Subject: [PATCH] Configure build for wl12xx driver
+
+Change-Id: Icdb833c797cf2c556607cdb60464f61a31f3fe05
+---
+ BoardConfig.mk   |   11 +++++++++--
+ blaze.mk         |    9 ++-------
+ init.omap4430.rc |   54 ++++++++++++++++++++++++++++++++++++++++++++++++------
+ system.prop      |    3 ++-
+ 4 files changed, 61 insertions(+), 16 deletions(-)
+
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index e2a4415..4386a0c 100755
+index e2a4415..e14d164 100755
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
 @@ -66,17 +66,24 @@ BOARD_USERDATAIMAGE_PARTITION_SIZE := 536870912
@@ -55,7 +68,7 @@ index fac353d..4fcfc3d 100644
  
  # Misc other modules
 diff --git a/init.omap4430.rc b/init.omap4430.rc
-index 7e931aa..c3bf517 100755
+index 7e931aa..2d6f4dc 100755
 --- a/init.omap4430.rc
 +++ b/init.omap4430.rc
 @@ -24,12 +24,37 @@ on boot
@@ -142,7 +155,7 @@ index 7e931aa..c3bf517 100755
 +
 +########################## wl12xx addition - end
 diff --git a/system.prop b/system.prop
-index ffb4697..3d8a2ed 100644
+index ffb4697..8b7204d 100644
 --- a/system.prop
 +++ b/system.prop
 @@ -6,7 +6,8 @@
@@ -155,3 +168,6 @@ index ffb4697..3d8a2ed 100644
  dalvik.vm.heapsize=32m
  ro.sf.lcd_density=240
  ro.opengles.version=131072
+-- 
+1.7.0.4
+

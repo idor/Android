@@ -1,6 +1,18 @@
---- a/libnetutils/dhcp_utils.c	2011-05-30 13:37:01.000000000 +0300
-+++ b/libnetutils/dhcp_utils.c	2011-06-01 19:48:08.000000000 +0300
-@@ -140,19 +140,18 @@
+From 2417cc626dae228336610abd00f1bafc18369239 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Thu, 28 Jul 2011 11:00:47 +0300
+Subject: [PATCH] revert android dhcp service names that include device name
+
+Change-Id: I093ce2c5b9d0dd118716fa928d603698b57482ca
+---
+ libnetutils/dhcp_utils.c |   27 ++++++++++++---------------
+ 1 files changed, 12 insertions(+), 15 deletions(-)
+
+diff --git a/libnetutils/dhcp_utils.c b/libnetutils/dhcp_utils.c
+index dc71bab..089848a 100644
+--- a/libnetutils/dhcp_utils.c
++++ b/libnetutils/dhcp_utils.c
+@@ -140,19 +140,18 @@ int dhcp_do_request(const char *interface,
              DHCP_PROP_NAME_PREFIX,
              interface);
  
@@ -24,7 +36,7 @@
      memset(prop_value, '\0', PROPERTY_VALUE_MAX);
      property_set(ctrl_prop, daemon_cmd);
      if (wait_for_property(daemon_prop_name, desired_status, 10) < 0) {
-@@ -195,11 +194,10 @@
+@@ -195,11 +194,10 @@ int dhcp_stop(const char *interface)
              DHCP_PROP_NAME_PREFIX,
              interface);
  
@@ -39,7 +51,7 @@
  
      /* Stop the daemon and wait until it's reported to be stopped */
      property_set(ctrl_prop, daemon_cmd);
-@@ -220,11 +218,10 @@
+@@ -220,11 +218,10 @@ int dhcp_release_lease(const char *interface)
      const char *ctrl_prop = "ctl.stop";
      const char *desired_status = "stopped";
  
@@ -54,7 +66,7 @@
  
      /* Stop the daemon and wait until it's reported to be stopped */
      property_set(ctrl_prop, daemon_cmd);
-@@ -264,7 +261,7 @@
+@@ -264,7 +261,7 @@ int dhcp_do_request_renew(const char *interface,
      property_set(result_prop_name, "");
  
      /* Start the renew daemon and wait until it's ready */
@@ -63,10 +75,13 @@
      memset(prop_value, '\0', PROPERTY_VALUE_MAX);
      property_set(ctrl_prop, daemon_cmd);
  
-@@ -286,4 +283,4 @@
+@@ -286,4 +283,4 @@ int dhcp_do_request_renew(const char *interface,
          snprintf(errmsg, sizeof(errmsg), "DHCP Renew result was %s", prop_value);
          return -1;
      }
 -}
 \ No newline at end of file
 +}
+-- 
+1.7.0.4
+

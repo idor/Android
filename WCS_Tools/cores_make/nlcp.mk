@@ -251,7 +251,7 @@ $(PROGRESS_NLCP_BRINGUP_LIBNL): $(PROGRESS_NLCP_FETCH_LIBNL)
 
 TI_UTILS_REPO:=$(NLCP_MAIN_REPO)/ti-utils.git
 TI_UTILS_DIR:=$(MYDROID)/external/ti-utils
-TI_UTILS_BRANCH:=android_froyo
+TI_UTILS_BRANCH:=master
 TI_UTILS_TAG:=$(NLCP_RELEASE_VERSION)
 
 PROGRESS_NLCP_FETCH_TI_UTILS:=$(PROGRESS_DIR)/nlcp.ti-utils.fetched
@@ -271,6 +271,16 @@ $(PROGRESS_NLCP_BRINGUP_TI_UTILS): $(PROGRESS_NLCP_FETCH_TI_UTILS)
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_TI_UTILS))
 	@$(call print, "ti-utils bringup done")
+	
+nlcp-update-firmware-files:			$(PROGRESS_BRINGUP_MYDROID) \
+									$(PROGRESS_NLCP_BRINGUP_WL12xx)
+#	latest firmwares are managed at the wl12xx project: wl12xx/firmware/ti-connectivity, we move it to the android fs
+	$(MKDIR) -p $(MYDROID)/hardware/wlan/fw
+	$(ECHO) "Updating latest firmware binaries from wl12xx project..."
+	$(COPY) -f $(WL12xx_DIR)/firmware/ti-connectivity/* $(MYDROID)/hardware/wlan/fw
+	$(ECHO) "...done"
+	
+.PHONY += nlcp-update-firmware-files
 
 $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 									$(PROGRESS_NLCP_BRINGUP_HOSTAP) \
@@ -281,17 +291,14 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 									$(PROGRESS_NLCP_BRINGUP_WL12xx)
 	@$(ECHO) "patching android for nlcp..."
 	cd $(MYDROID)/build ; git am $(NLCP_ANDROID_PATCHES)/build/*
-	cd $(MYDROID)/device/ti/blaze ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/device.ti.blaze/*
-	cd $(MYDROID)/external/hostapd ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.hostapd/*
-	cd $(MYDROID)/external/openssl ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.openssl/*
+	cd $(MYDROID)/device/ti/blaze ; git am $(NLCP_ANDROID_PATCHES)/device.ti.blaze/*.patch
+	cd $(MYDROID)/external/hostapd ; git am $(NLCP_ANDROID_PATCHES)/external.hostapd/*.patch
+	cd $(MYDROID)/external/openssl ; git am $(NLCP_ANDROID_PATCHES)/external.openssl/*.patch
 	cd $(MYDROID)/external/ti-utils ; git am $(NLCP_ANDROID_PATCHES)/external.ti-utils/*.patch
-	cd $(MYDROID)/external/wpa_supplicant_6 ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/external.wpa_supplicant_6/*
-	cd $(MYDROID)/frameworks/base ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/frameworks.base/0001*
-	cd $(MYDROID)/frameworks/base ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/frameworks.base/0002*
-	cd $(MYDROID)/hardware/libhardware_legacy ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/0001-Revert*
-	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0001*
-	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0002*
-	cd $(MYDROID)/system/core ; $(PATCH) -p1 < $(NLCP_ANDROID_PATCHES)/system.core/0003-revert-android-dhcp-service-name-device-name-usage.patch
+	cd $(MYDROID)/external/wpa_supplicant_6 ; git am $(NLCP_ANDROID_PATCHES)/external.wpa_supplicant_6/*.patch
+	cd $(MYDROID)/frameworks/base ; git am $(NLCP_ANDROID_PATCHES)/frameworks.base/*.patch
+	cd $(MYDROID)/hardware/libhardware_legacy ; git am $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/*.patch
+	cd $(MYDROID)/system/core ; git am $(NLCP_ANDROID_PATCHES)/system.core/*.patch
 	cd $(MYDROID)/system/netd ; git am $(NLCP_ANDROID_PATCHES)/system.netd/*.patch
 	@$(ECHO) "...done"
 	
@@ -307,22 +314,29 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 	@$(ECHO) "...done"
 	if [ -d $(MYDROID)/hardware/wlan/fw ] ; then $(MOVE) $(MYDROID)/hardware/wlan/fw $(TRASH_DIR)/hardware/wlan/ ; fi
 	$(COPY) -r $(NLCP_ANDROID_PATCHES)/packages/hardware/wlan/fw $(MYDROID)/hardware/wlan/fw
-#	latest firmwares are managed at the wl12xx project: wl12xx/firmware/ti-connectivity, we move it to the android fs
-	$(ECHO) "Updating latest firmware binaries from wl12xx project..."
-	$(COPY) -f $(WL12xx_DIR)/firmware/ti-connectivity/* $(MYDROID)/hardware/wlan/fw
-	$(ECHO) "...done"
+	$(MAKE) nlcp-update-firmware-files
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_MYDROID_PATCHES))
 	@$(call print, "android patches and packages done")
 
 nlcp-sync-ver-private:	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 						$(PROGRESS_NLCP_KERNEL_PATCHES) \
 						$(PROGRESS_NLCP_MYDROID_PATCHES)
-	cd $(CRDA_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
-	cd $(LIBNL_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
-	cd $(TI_UTILS_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
-	cd $(IW_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
-	cd $(HOSTAP_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
-	cd $(WL12xx_DIR) ; git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(CRDA_DIR); 	git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(LIBNL_DIR); 	git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(TI_UTILS_DIR); git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(IW_DIR); 		git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(HOSTAP_DIR); 	git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	cd $(WL12xx_DIR); 	git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	
+nlcp-sync-repo-latest:	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
+						$(PROGRESS_NLCP_KERNEL_PATCHES) \
+						$(PROGRESS_NLCP_MYDROID_PATCHES)
+	cd $(CRDA_DIR); 	git fetch origin ; git merge remotes/origin/$(CRDA_BRANCH)
+	cd $(LIBNL_DIR); 	git fetch origin ; git merge remotes/origin/$(LIBNL_BRANCH)
+	cd $(TI_UTILS_DIR); git fetch origin ; git merge remotes/origin/$(TI_UTILS_BRANCH)
+	cd $(IW_DIR); 		git fetch origin ; git merge remotes/origin/$(IW_BRANCH)
+	cd $(HOSTAP_DIR); 	git fetch origin ; git merge remotes/origin/$(HOSTAP_BRANCH)
+	cd $(WL12xx_DIR); 	git fetch origin ; git merge remotes/origin/$(WL12xx_BRANCH)
 
 nlcp-bringup-private: 	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 						$(PROGRESS_NLCP_BRINGUP_COMPAT) \
@@ -335,7 +349,7 @@ nlcp-bringup-private: 	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 	@$(ECHO) "...done"
 
 	
-nlcp-make-private:
+nlcp-make-private:		nlcp-update-firmware-files
 	@$(ECHO) "nlcp make..."
 	cd $(COMPAT_WIRELESS_DIR) ; sh ./scripts/admin-refresh.sh
 	cd $(COMPAT_WIRELESS_DIR) ; ./scripts/driver-select wl12xx
@@ -359,6 +373,8 @@ nlcp-install-private:
 	@$(ECHO) "copying additinal binaries to file system"
 	$(COPY) -rf $(NLCP_BINARIES_PATH)/* $(MYFS_PATH)
 	$(CHMOD) -R 777 $(MYFS_PATH)/data/misc/wifi/*
+#	@$(ECHO) "copying firmware binaries to file system"
+#	$(COPY) -rf $(WL12xx_DIR)/firmware/ti-connectivity/* $(MYFS_PATH)/system/etc/firmware/ti-connectivity
 	@$(ECHO) "...done"
 	
 nlcp-clean-private:

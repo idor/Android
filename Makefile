@@ -35,8 +35,7 @@ bringup:
 	@$(MAKE) nlcp-bringup
 	@$(MAKE) ti-st-bringup
 	@$(MAKE) bt-bringup
-	@$(MAKE) gps-bringup
-	
+	@$(MAKE) gps-bringup	
 	
 	@$(MAKE) fm-bringup
 	@$(MAKE) wlan-sta-bringup
@@ -53,9 +52,9 @@ all: bringup
 	$(MAKE) u-boot-make
 	$(MAKE) x-loader-make
 	$(MAKE) kernel-make
+	$(MAKE) nlcp-make
 	$(MAKE) mydroid-make
-
-	$(MAKE) nlcp-make	
+	
 	$(MAKE) ti-st-make
 	$(MAKE) bt-make
 	$(MAKE) gps-make
