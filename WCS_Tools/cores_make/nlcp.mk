@@ -14,7 +14,7 @@
 #include $(PWD)/defs.mk
 include defs.mk
 
-NLCP_RELEASE_VERSION:=RLS_R4_07
+NLCP_RELEASE_VERSION:=RLS_R4_08
 NLCP_MAIN_REPO:=git://github.com/idor
 
 #WL12xx_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
