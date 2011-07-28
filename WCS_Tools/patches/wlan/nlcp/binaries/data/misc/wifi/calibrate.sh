@@ -4,7 +4,7 @@ export NEW_MAC_ADDRESS=$1
 export INI_FILE=$2
 
 if [ "$NEW_MAC_ADDRESS" == "" ] ; then export NEW_MAC_ADDRESS=08:00:28:12:34:56 ; fi
-if [ "$INI_FILE" == "" ] ; then export INI_FILE=/data/TQS_D_1.7.ini ; fi
+if [ "$INI_FILE" == "" ] ; then export INI_FILE=/system/etc/wifi/ini_files/128x/TQS_D_1.7.ini ; fi
 
 echo Create reference NVS
 calibrator set ref_nvs $INI_FILE

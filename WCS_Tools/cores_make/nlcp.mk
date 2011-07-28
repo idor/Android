@@ -327,6 +327,7 @@ nlcp-sync-ver-private:	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 	cd $(IW_DIR); 		git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
 	cd $(HOSTAP_DIR); 	git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
 	cd $(WL12xx_DIR); 	git fetch ; git reset --hard $(NLCP_RELEASE_VERSION)
+	$(MAKE) nlcp-update-firmware-files
 	
 nlcp-sync-repo-latest:	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 						$(PROGRESS_NLCP_KERNEL_PATCHES) \
@@ -337,6 +338,7 @@ nlcp-sync-repo-latest:	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 	cd $(IW_DIR); 		git fetch origin ; git merge remotes/origin/$(IW_BRANCH)
 	cd $(HOSTAP_DIR); 	git fetch origin ; git merge remotes/origin/$(HOSTAP_BRANCH)
 	cd $(WL12xx_DIR); 	git fetch origin ; git merge remotes/origin/$(WL12xx_BRANCH)
+	$(MAKE) nlcp-update-firmware-files
 
 nlcp-bringup-private: 	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 						$(PROGRESS_NLCP_BRINGUP_COMPAT) \
@@ -365,8 +367,6 @@ nlcp-install-private:
 	@$(ECHO) "copy modules from kernel"
 	$(FIND) $(KERNEL_DIR)/drivers/staging -name "*.ko" -exec cp -v {} $(MYFS_PATH) \;
 	@$(ECHO) "copy TQS_D_1.7.ini"
-	$(MKDIR) -p $(MYFS_PATH)/data
-	$(COPY) $(NLCP_PATCHES_PATH)/TQS_D_1.7.ini $(MYFS_PATH)/data
 	@$(ECHO) "patching init.omap4430.rc"
 	cd $(MYFS_PATH) ; $(PATCH) -p1 --dry-run < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch
 	cd $(MYFS_PATH) ; $(PATCH) -p1 < $(NLCP_PATCHES_PATH)/nlcp.init.omap4430.rc.patch
