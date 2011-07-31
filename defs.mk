@@ -60,7 +60,7 @@ ARCH=arm
 export ARCH
 
 CROSS_COMPILE_PATH:=/apps/android/arm-2010q1
-PATH:=/usr/lib/jvm/java-6-sun/bin:$(UBOOT_DIR)/tools:$(CROSS_COMPILE_PATH)/bin:$(PATH)
+PATH:=$(JAVA_HOME)/bin:$(UBOOT_DIR)/tools:$(CROSS_COMPILE_PATH)/bin:$(PATH)
 export PATH
 
 ifndef NTHREADS
