@@ -14,7 +14,10 @@ include defs.mk
 include $(WIIST_PATH)/utils.mk
 include $(WIIST_PATH)/repo.mk
 
-.PHONY: all install clean distclean
+.PHONY: all install clean distclean help
+
+help:
+	@cat $(WIIST_PATH)/README
 
 bringup:
 	@$(MKDIR) -p $(TRASH_DIR)
