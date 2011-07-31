@@ -290,16 +290,16 @@ $(PROGRESS_NLCP_MYDROID_PATCHES): 	$(PROGRESS_BRINGUP_MYDROID) \
 									$(PROGRESS_NLCP_BRINGUP_TI_UTILS) \
 									$(PROGRESS_NLCP_BRINGUP_WL12xx)
 	@$(ECHO) "patching android for nlcp..."
-	cd $(MYDROID)/build ; git am $(NLCP_ANDROID_PATCHES)/build/*
-	cd $(MYDROID)/device/ti/blaze ; git am $(NLCP_ANDROID_PATCHES)/device.ti.blaze/*.patch
-	cd $(MYDROID)/external/hostapd ; git am $(NLCP_ANDROID_PATCHES)/external.hostapd/*.patch
-	cd $(MYDROID)/external/openssl ; git am $(NLCP_ANDROID_PATCHES)/external.openssl/*.patch
-	cd $(MYDROID)/external/ti-utils ; git am $(NLCP_ANDROID_PATCHES)/external.ti-utils/*.patch
-	cd $(MYDROID)/external/wpa_supplicant_6 ; git am $(NLCP_ANDROID_PATCHES)/external.wpa_supplicant_6/*.patch
-	cd $(MYDROID)/frameworks/base ; git am $(NLCP_ANDROID_PATCHES)/frameworks.base/*.patch
-	cd $(MYDROID)/hardware/libhardware_legacy ; git am $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/*.patch
-	cd $(MYDROID)/system/core ; git am $(NLCP_ANDROID_PATCHES)/system.core/*.patch
-	cd $(MYDROID)/system/netd ; git am $(NLCP_ANDROID_PATCHES)/system.netd/*.patch
+	cd $(MYDROID)/build; 						git am $(NLCP_ANDROID_PATCHES)/build/*
+	cd $(MYDROID)/device/ti/blaze; 				git am $(NLCP_ANDROID_PATCHES)/device.ti.blaze/*.patch
+	cd $(MYDROID)/external/hostapd; 			git am $(NLCP_ANDROID_PATCHES)/external.hostapd/*.patch
+	cd $(MYDROID)/external/openssl; 			git am $(NLCP_ANDROID_PATCHES)/external.openssl/*.patch
+	cd $(MYDROID)/external/ti-utils; 			git am $(NLCP_ANDROID_PATCHES)/external.ti-utils/*.patch
+	cd $(MYDROID)/external/wpa_supplicant_6; 	git am $(NLCP_ANDROID_PATCHES)/external.wpa_supplicant_6/*.patch
+	cd $(MYDROID)/frameworks/base;				git am $(NLCP_ANDROID_PATCHES)/frameworks.base/*.patch
+	cd $(MYDROID)/hardware/libhardware_legacy;	git am $(NLCP_ANDROID_PATCHES)/hardware.libhardware_legacy/*.patch
+	cd $(MYDROID)/system/core; 					git am $(NLCP_ANDROID_PATCHES)/system.core/*.patch
+	cd $(MYDROID)/system/netd; 					git am $(NLCP_ANDROID_PATCHES)/system.netd/*.patch
 	@$(ECHO) "...done"
 	
 	@$(ECHO) "copying additional packages to mydroid directory..."

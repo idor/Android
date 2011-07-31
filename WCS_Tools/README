@@ -1,0 +1,39 @@
+Command		Description				Notes
+--------------------------------------------------------------------------------
+help		Shows this messagea 			Default makes command
+bringup		Prepare the entire solution workspace	To be ran once
+		Invoked automatically when 'make all'
+		and 'make install' commands are called
+all		Builds all package's components		Dependent on 'bringup'
+							process.
+Install		Install all build binaries to output 	Dependent on 'all'
+		folder 					process.
+create-binaries	Create eMMC binaries using the install 	Must be called after 
+		outputs					(manual) 'install' or 
+							'install-only' make 
+							commands.
+clean		Cleans all build components		N/A
+distclean	Deletes all workspace and output folder	This option is for 
+							"start from scratch"
+							All cloned projects,
+							local changes and
+							imtermittiates are
+							deleted.
+							Should be used with
+							cautious.
+install-only	Repeat the install process without	Useful when building
+		running the complete build		manually a single module
+							and there is no need for
+							the entire workspace
+							build.
+nlcp-make	Build the wl12xx driver only
+nlcp-install	Install the wl12xx only
+
+* Advanced commands
+
+Command         	Description
+--------------------------------------------------------------------------------
+nlcp-sync-repo-latest   Get latest nlcp code from the git repositories.
+			Uses 'git fetch' and 'git merge' commands 
+			on nlcp related projects.
+
