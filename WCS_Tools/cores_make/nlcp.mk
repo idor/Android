@@ -26,7 +26,7 @@ WL12xx_TAG:=$(NLCP_RELEASE_VERSION)
 
 COMPAT_DIR:=$(WORKSPACE_DIR)/compat
 COMPAT_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
-COMPAT_HASH:=d08656f
+COMPAT_HASH:=c03570efe213adbab12e869a2426cf95b6d2b45b
 
 COMPAT_WIRELESS_DIR:=$(WORKSPACE_DIR)/compat-wireless-2.6
 COMPAT_WIRELESS_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
@@ -94,8 +94,6 @@ $(PROGRESS_NLCP_BRINGUP_COMPAT): $(PROGRESS_NLCP_FETCH_COMPAT)
 	@$(ECHO) "compat bringup..."
 	cd $(COMPAT_DIR) ; git reset --hard $(COMPAT_HASH)
 	cd $(COMPAT_DIR) ; git checkout -b vanilla
-	cd $(COMPAT_DIR) ; git am $(NLCP_COMPAT_PATCHES_DIR)/create_freezable_workqueue.patch
-#	cd $(COMPAT_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_COMPAT))
 	@$(call print, "compat bringup done")
