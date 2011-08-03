@@ -1,7 +1,0 @@
-service ifcfg_softap /system/bin/ifconfig wlan1 1.2.3.4 netmask 255.255.255.0 up
-    disabled
-    oneshot
-    
-service dhcpd_softap /data/busybox/udhcpd -f /data/misc/wifi/udhcpd.wlan1.conf
-    disabled
-    oneshot

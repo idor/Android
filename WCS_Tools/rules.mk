@@ -140,7 +140,7 @@ mydroid-install:
 	@$(COPY) -rf $(MYDROID)/out/target/product/blaze/data/ $(MYFS_PATH)
 	@$(MKDIR) -p $(MYFS_PATH)/data/busybox
 	@$(CHMOD) 777 $(MYFS_PATH)/data/busybox
-	cd $(MYFS_PATH)/data/busybox ; source $(WIIST_PATH)/misc/scripts/mcp_create_busybox_symlink
+	cd $(MYFS_PATH)/data/busybox ; source $(WIIST_PATH)/misc/scripts/create_busybox_symlink.sh
 
 	@$(ECHO) extract graphics...
 	@$(COPY) -rf $(MYDROID)/device/ti/proprietary-open/graphics/omap4/* $(MYFS_PATH)/
