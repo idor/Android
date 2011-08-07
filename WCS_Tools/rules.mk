@@ -1,9 +1,27 @@
 ################################################################################
 #
-#	Makefile for Android project integrated with NLCP/MCP2x
-#	Android Version	   	:	L27.INC1.13.1 OMAP4 GingerBread ES2
-#	Platform	     	:	Blaze platform es2.2
-#	Date				:	May. 2011
+# rules.mk
+#
+# Makefile for Android project integrated with NLCP
+# Based on OMAP's L27.INC1.13.1 instructions
+#
+# Android Version	:	L27.INC1.13.1 OMAP4 GingerBread ES2
+# Platform	     	:	Blaze platform es2.2
+# Date				:	July 2011
+#
+# Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and  
+# limitations under the License.
 #
 ################################################################################
 
@@ -160,22 +178,6 @@ binaries-install:
 	@$(ECHO) "OMAP's RELEASE: $(VERSION)" >$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "http://omapedia.org/wiki/L27.INC1.13.1_OMAP4430_GingerBread_ES2.2_Release_Notes" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(ECHO) "WLAN Station version : MCP2.6.XX" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "WLAN Station project name: $(WLAN_PROJ_NAME)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "HOST PLATFORM: $(HOST_PLATFORM)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
-endif
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(ECHO) "WLAN AP project name: $(WLAN_PROJ_NAME)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "WLAN AP version : AP.2.0.9.XX" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "HOST PLATFORM: $(HOST_PLATFORM)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
-endif
-ifeq ($(CONFIG_BTIPS), y)
-	@$(ECHO) "BTIPS version : 2.24.03" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
-endif
 ifeq ($(CONFIG_GPS), y)
 	@$(ECHO) "GPS version : NaviLink_MCP2.6_RC1.5" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
@@ -201,8 +203,6 @@ endif
 	@$(ECHO) "CONFIG_BT: $(CONFIG_BT)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "CONFIG_FM: $(CONFIG_FM)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "CONFIG_NLCP: $(CONFIG_NLCP)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "CONFIG_MCP_WLAN_STA: $(CONFIG_MCP_WLAN_STA)" >>$(BINARIES_PATH)/version_ti.txt
-	@$(ECHO) "CONFIG_MCP_WLAN_SOFTAP: $(CONFIG_MCP_WLAN_SOFTAP)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "" >>$(BINARIES_PATH)/version_ti.txt
 	@$(COPY) -rf $(BINARIES_PATH)/* $(MYFS_PATH)

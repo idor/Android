@@ -1,9 +1,26 @@
 ################################################################################
 #
-#	Makefile for Android project integrated with NLCP/MCP2x
-#	Android Version	   	:	L27.INC1.13.1 OMAP4 GingerBread ES2
-#	Platform	     	:	Blaze platform es2.2
-#	Date				:	May. 2011
+# defs.mk
+#
+# Makefile for Android project integrated with NLCP (general definitions)
+#
+# Android Version	:	L27.INC1.13.1 OMAP4 GingerBread ES2
+# Platform	     	:	Blaze platform es2.2
+# Date				:	July 2011
+#
+# Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and  
+# limitations under the License.
 #
 ################################################################################
 # general project definitions
@@ -26,6 +43,7 @@ PATCHES_PATH:=$(WIIST_PATH)/patches
 BINARIES_PATH=$(WIIST_PATH)/binaries
 MAKEFILES_PATH:=$(WIIST_PATH)/cores_make
 INITRC_PATH:=$(WIIST_PATH)/init.rc
+FIRMWARE_PATH:=$(WIIST_PATH)/firmware
 
 ################################################################################
 # 
@@ -93,26 +111,12 @@ EMMC_PATH:=$(OUTPUT_PATH)/eMMC
 
 CONFIG_NLCP?=y
 CONFIG_BT?=y
-CONFIG_MCP_WLAN_STA?=n
-CONFIG_MCP_WLAN_SOFTAP?=n
-
-#vic - Unnecessary flags should be removed?
 CONFIG_TIST?=y
 CONFIG_FM?=y
-CONFIG_BT_TYPE?=btips
-#vic end
-
-#Default BlueZ !
-CONFIG_BTIPS?=n
-
-
-#Default No GPS !
 CONFIG_GPS?=n
-
 
 WLAN_STA_SOURCE_PATH?=
 WLAN_SOFTAP_SOURCE_PATH?=
-
 # TODO: remove default value for bt/gps/fm source path
 BT_SOURCE_PATH?=$(WLAN_STA_SOURCE_PATH)
 GPS_SOURCE_PATH?=$(WLAN_STA_SOURCE_PATH)
@@ -141,8 +145,6 @@ PROGRESS_BRINGUP_TIST:=$(PROGRESS_DIR)/ti-st.bringup
 PROGRESS_BRINGUP_GPS:=$(PROGRESS_DIR)/gps.bringup
 PROGRESS_BRINGUP_BT:=$(PROGRESS_DIR)/bt.bringup
 PROGRESS_BRINGUP_FM:=$(PROGRESS_DIR)/fm.bringup
-PROGRESS_BRINGUP_WLAN_STA:=$(PROGRESS_DIR)/wlan_sta.bringup
-PROGRESS_BRINGUP_WLAN_SOFTAP:=$(PROGRESS_DIR)/wlan_softap.bringup
 PROGRESS_BRINGUP_NLCP:=$(PROGRESS_DIR)/nlcp.bringup
 
 ################################################################################
@@ -159,11 +161,7 @@ SNAPSHOT_PATH ?= $(WLAN_STA_SOURCE_PATH)
 MCP_SNAPVIEW_ROOT:=$(SNAPSHOT_PATH)/../
 ANDROID_HOME:=$(WORKSPACE_DIR)
 
-ifeq ($(WLAN_STA_SOURCE_PATH), )
 SCRIPT_FOLDER_ROOT:=$(BINARIES_PATH)/firmware/init_script
-else
-SCRIPT_FOLDER_ROOT:=$(SNAPSHOT_PATH)/MCP_Common/Platform/scripts
-endif
 
 export MCP_SNAPVIEW_ROOT
 export ANDROID_HOME

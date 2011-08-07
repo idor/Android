@@ -6,7 +6,7 @@ bringup		Prepare the entire solution workspace	To be ran once
 		and 'make install' commands are called
 all		Builds all package's components		Dependent on 'bringup'
 							process.
-Install		Install all build binaries to output 	Dependent on 'all'
+install		Install all build binaries to output 	Dependent on 'all'
 		folder 					process.
 create-binaries	Create eMMC binaries using the install 	Must be called after 
 		outputs					(manual) 'install' or 

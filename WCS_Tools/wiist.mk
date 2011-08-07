@@ -1,9 +1,26 @@
 ################################################################################
 #
-#	Makefile for Android project integrated with NLCP/MCP2x
-#	Android Version	   	:	L27.INC1.13.1 OMAP4 GingerBread ES2
-#	Platform	     	:	Blaze platform es2.2
-#	Date				:	May. 2011
+# wiist.mk
+#
+# Makefile for Android project integrated with NLCP
+#
+# Android Version	:	L27.INC1.13.1 OMAP4 GingerBread ES2
+# Platform	     	:	Blaze platform es2.2
+# Date				:	July 2011
+#
+# Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and  
+# limitations under the License.
 #
 ################################################################################
 
@@ -205,158 +222,6 @@ ifeq ($(CONFIG_GPS), y)
 	@$(call print, "gps clean done")
 else
 	@$(call print, "gps clean excluded")
-endif
-
-###############################################################################
-# wlan station
-###############################################################################
-
-.PHONY += wlan-sta-test-config
-.PHONY += wlan-sta-err-bringup
-.PHONY += wlan-sta-err-config
-.PHONY += wlan-sta-pre-bringup-validation
-
-wlan-sta-test-config:
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@if [ ! -f $(PROGRESS_BRINGUP_WLAN_STA) ] ; then $(MAKE) wlan-sta-err-bringup ; fi
-else
-	@if [ -f $(PROGRESS_BRINGUP_WLAN_STA) ] ; then $(MAKE) wlan-sta-err-config ; fi
-endif
-
-wlan-sta-err-bringup:
-	$(error "wlan station configured, but bringup was not performed")
-	
-wlan-sta-err-config:
-	$(error "wlan station not configured, but bringup was performed")
-	
-$(PROGRESS_BRINGUP_WLAN_STA):
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(MAKE) wlan-sta-bringup-private
-	@$(call echo-to-file, "INCLUDED", $(PROGRESS_BRINGUP_WLAN_STA))
-	@$(call print, "wlan station bringup done")
-else
-	@$(call print, "wlan station bringup excluded")
-endif
-
-wlan-sta-pre-bringup-validation:
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(MAKE) wlan-sta-private-pre-bringup-validation
-endif
-
-wlan-sta-bringup: wlan-sta-pre-bringup-validation
-	@$(MAKE) $(PROGRESS_BRINGUP_WLAN_STA)
-
-wlan-sta-make: $(PROGRESS_BRINGUP_WLAN_STA)
-	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(MAKE) wlan-sta-make-private
-	@$(call print, "wlan station make done")
-else
-	@$(call print, "wlan station make excluded")
-endif
-
-wlan-sta-install: $(PROGRESS_BRINGUP_WLAN_STA)
-	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(MAKE) wlan-sta-install-private
-	@$(call print, "wlan station install done")
-else
-	@$(call print, "wlan station install excluded")
-endif
-
-wlan-sta-clean: $(PROGRESS_BRINGUP_WLAN_STA)
-	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(MAKE) wlan-sta-clean-private
-	@$(call print, "wlan station clean done")
-else
-	@$(call print, "wlan station clean excluded")
-endif
-
-wlan-sta-distclean:
-#	@$(MAKE) wlan-sta-test-config
-ifeq ($(CONFIG_MCP_WLAN_STA), y)
-	@$(MAKE) wlan-sta-distclean-private
-	@if [ -f $(PROGRESS_BRINGUP_WLAN_STA) ] ; then $(DEL) $(PROGRESS_BRINGUP_WLAN_STA) ; fi
-	@$(call print, "wlan station distclean done")
-else
-	@$(call print, "wlan station distclean excluded")
-endif
-
-###############################################################################
-# wlan softap
-###############################################################################
-
-.PHONY += wlan-softap-test-config
-.PHONY += wlan-softap-err-bringup
-.PHONY += wlan-softap-err-config
-.PHONY += wlan-softap-pre-bringup-validation
-
-wlan-softap-test-config:
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@if [ ! -f $(PROGRESS_BRINGUP_WLAN_SOFTAP) ] ; then $(MAKE) wlan-softap-err-bringup ; fi
-else
-	@if [ -f $(PROGRESS_BRINGUP_WLAN_SOFTAP) ] ; then $(MAKE) wlan-softap-err-config ; fi
-endif
-
-wlan-softap-err-bringup:
-	$(error "wlan softap configured, but bringup was not performed")
-	
-wlan-softap-err-config:
-	$(error "wlan softap not configured, but bringup was performed")
-	
-$(PROGRESS_BRINGUP_WLAN_SOFTAP):
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(MAKE) wlan-softap-bringup-private
-	@$(call echo-to-file, "INCLUDED", $(PROGRESS_BRINGUP_WLAN_SOFTAP))
-	@$(call print, "wlan softap bringup done")
-else
-	@$(call print, "wlan softap bringup excluded")
-endif
-
-wlan-softap-pre-bringup-validation:
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(MAKE) wlan-softap-private-pre-bringup-validation
-endif
-
-wlan-softap-bringup: wlan-softap-pre-bringup-validation
-	@$(MAKE) $(PROGRESS_BRINGUP_WLAN_SOFTAP)
-
-wlan-softap-make: $(PROGRESS_BRINGUP_WLAN_SOFTAP)
-	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(MAKE) wlan-softap-make-private
-	@$(call print, "wlan softap make done")
-else
-	@$(call print, "wlan softap make excluded")
-endif
-
-wlan-softap-install: $(PROGRESS_BRINGUP_WLAN_SOFTAP)
-	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(MAKE) wlan-softap-install-private
-	@$(call print, "wlan softap install done")
-else
-	@$(call print, "wlan softap install excluded")
-endif
-
-wlan-softap-clean: $(PROGRESS_BRINGUP_WLAN_SOFTAP)
-	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(MAKE) wlan-softap-clean-private
-	@$(call print, "wlan softap clean done")
-else
-	@$(call print, "wlan softap clean excluded")
-endif
-
-wlan-softap-distclean:
-	@$(MAKE) wlan-softap-test-config
-ifeq ($(CONFIG_MCP_WLAN_SOFTAP), y)
-	@$(MAKE) wlan-softap-distclean-private
-	@if [ -f $(PROGRESS_BRINGUP_WLAN_SOFTAP) ] ; then $(DEL) $(PROGRESS_BRINGUP_WLAN_SOFTAP) ; fi
-	@$(call print, "wlan softap distclean done")
-else
-	@$(call print, "wlan softap distclean excluded")
 endif
 
 ###############################################################################
