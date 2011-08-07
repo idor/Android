@@ -31,12 +31,18 @@ include defs.mk
 include $(WIIST_PATH)/utils.mk
 include $(WIIST_PATH)/repo.mk
 
-.PHONY: all install clean distclean help
+.PHONY: all install clean distclean help update-internals
 
 help:
 	@cat $(WIIST_PATH)/README
+	
+update-internals:
+ifneq (INTERNALS_PATH, "")
+	@$(ECHO) "updating $(WIIST_PATH) with internals..."
+	@$(COPY) -rf $(INTERNALS_PATH)/* $(WIIST_PATH)/
+endif
 
-bringup:
+bringup: update-internals
 	@$(MKDIR) -p $(TRASH_DIR)
 	@$(MKDIR) -p $(PROGRESS_DIR)
 	@$(MAKE) ti-st-pre-bringup-validation

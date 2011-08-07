@@ -38,6 +38,7 @@ export YOUR_PATH
 # specific WIIST definitions
 ################################################################################
 
+INTERNALS_PATH?=
 WIIST_PATH:=$(PWD)/WCS_Tools
 PATCHES_PATH:=$(WIIST_PATH)/patches
 BINARIES_PATH=$(WIIST_PATH)/binaries
