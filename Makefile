@@ -1,9 +1,26 @@
 ################################################################################
 #
-#	Makefile for Android project integrated with MCP2.x
-#	Android Version	   	:	L27.INC1.13.1 OMAP4 GingerBread ES2
-#	Platform	     	:	Blaze platform es2.2
-#	Date				:	March. 2011
+# Makefile
+#
+# Makefile for Android project integrated with NLCP
+#
+# Android Version	:	L27.INC1.13.1 OMAP4 GingerBread ES2
+# Platform	     	:	Blaze platform es2.2
+# Date				:	July 2011
+#
+# Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and  
+# limitations under the License.
 #
 ################################################################################
 
@@ -14,20 +31,24 @@ include defs.mk
 include $(WIIST_PATH)/utils.mk
 include $(WIIST_PATH)/repo.mk
 
-.PHONY: all install clean distclean help
+.PHONY: all install clean distclean help update-internals
 
 help:
 	@cat $(WIIST_PATH)/README
+	
+update-internals:
+ifneq (INTERNALS_PATH, "")
+	@$(ECHO) "updating $(WIIST_PATH) with internals..."
+	@$(COPY) -rf $(INTERNALS_PATH)/* $(WIIST_PATH)/
+endif
 
-bringup:
+bringup: update-internals
 	@$(MKDIR) -p $(TRASH_DIR)
 	@$(MKDIR) -p $(PROGRESS_DIR)
 	@$(MAKE) ti-st-pre-bringup-validation
 	@$(MAKE) bt-pre-bringup-validation
 	@$(MAKE) gps-pre-bringup-validation
 	@$(MAKE) fm-pre-bringup-validation
-	@$(MAKE) wlan-sta-pre-bringup-validation
-	@$(MAKE) wlan-softap-pre-bringup-validation
 	@$(MAKE) nlcp-pre-bringup-validation
 	
 	@$(MAKE) mydroid-bringup
@@ -39,10 +60,7 @@ bringup:
 	@$(MAKE) ti-st-bringup
 	@$(MAKE) bt-bringup
 	@$(MAKE) gps-bringup	
-	
 	@$(MAKE) fm-bringup
-	@$(MAKE) wlan-sta-bringup
-	@$(MAKE) wlan-softap-bringup
 	
 	@$(call echo-to-file, "BRINGUP DONE", bringup)
 	@$(call print, "BRINGUP DONE")
@@ -57,13 +75,10 @@ all: bringup
 	$(MAKE) kernel-make
 	$(MAKE) nlcp-make
 	$(MAKE) mydroid-make
-	
 	$(MAKE) ti-st-make
 	$(MAKE) bt-make
 	$(MAKE) gps-make
 	$(MAKE) fm-make
-	$(MAKE) wlan-sta-make
-	$(MAKE) wlan-softap-make
 	
 	@$(call print, "MAKE ALL DONE")
 	@$(call print, "The build process took $$(( $(call GET_TIME)-$(MAKE_START_TIME) )) seconds")
@@ -82,14 +97,11 @@ install-only:
 	$(MAKE) x-loader-install
 	$(MAKE) kernel-install
 	$(MAKE) mydroid-install
-	
 	$(MAKE) nlcp-install
 	$(MAKE) ti-st-install
 	$(MAKE) bt-install
 	$(MAKE) gps-install
 	$(MAKE) fm-install
-	$(MAKE) wlan-sta-install
-	$(MAKE) wlan-softap-install
 
 	$(MAKE) pack-sd-fs
 	@$(call print, "INSTALL DONE")
@@ -132,13 +144,11 @@ clean: bringup
 	$(MAKE) x-loader-clean
 	$(MAKE) kernel-clean
 	$(MAKE) mydroid-clean
-	
+	$(MAKE) nlcp-clean
 	$(MAKE) ti-st-clean
 	$(MAKE) bt-clean
 	$(MAKE) gps-clean
 	$(MAKE) fm-clean
-	$(MAKE) wlan-sta-clean
-	$(MAKE) wlan-softap-clean
 	
 	@$(call print, "CLEAN DONE")
 	@$(call print, "The clean process took $$(( $(call GET_TIME)-$(MAKE_START_TIME) )) seconds")
@@ -161,6 +171,4 @@ include $(MAKEFILES_PATH)/ti-st.mk
 include $(MAKEFILES_PATH)/bt.mk
 include $(MAKEFILES_PATH)/gps.mk
 include $(MAKEFILES_PATH)/fm.mk
-include $(MAKEFILES_PATH)/wlan_sta.mk
-include $(MAKEFILES_PATH)/wlan_softap.mk
 include $(MAKEFILES_PATH)/nlcp.mk

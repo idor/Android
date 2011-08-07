@@ -1,9 +1,0 @@
---- Kconfig	2011-04-05 09:09:10.863163000 +0300
-+++ HCI_Kconfig	2011-04-05 09:56:39.324930000 +0300
-@@ -429,5 +429,6 @@
- source "drivers/misc/cb710/Kconfig"
- source "drivers/misc/iwmc3200top/Kconfig"
- source "drivers/misc/ti-st/Kconfig"
-+source "drivers/misc/ti-hci/Kconfig"
- 
- endif # MISC_DEVICES

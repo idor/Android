@@ -1,17 +1,28 @@
+#
+# ap_stop.sh
+#
+# hostap termination script
+#
+# Copyright (C) {2011} Texas Instruments Incorporated - http://www.ti.com/
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and  
+# limitations under the License.
+#
+
 #!/system/bin/sh
 
-killall udhcpd
-ifconfig wlan0 down
-killall logwrapper
-killall hostapd_bin
+setprop ctl.stop dhcpd_softap
+ifconfig wlan1 down
+sleep 1
+setprop ctl.stop hostapd_bin
 sleep 2
 #rmmod wl12xx_sdio
-
-#setprop ctl.stop dhcpd_softap
-#ifconfig wlan1 down
-#sleep 1
-#setprop ctl.stop hostapd_bin
-#sleep 2
-#rmmod wl12xx_sdio
-
-

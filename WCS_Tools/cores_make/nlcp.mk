@@ -1,12 +1,27 @@
-###############################################################################
+################################################################################
 #
-#	Makefile for Android project integrated with NLCP
-#	Android Version	   	:	L27.INC1.13.1 OMAP4430 GingerBread ES2.2
-#	Platform	     	:	Blaze platform es2.2
-#	Date				:	May. 2011
+# nlcp.mk
 #
-###############################################################################
-
+# Makefile for Android project integrated with NLCP
+#
+# Android Version	:	L27.INC1.13.1 OMAP4 GingerBread ES2
+# Platform	     	:	Blaze platform es2.2
+# Date				:	July 2011
+#
+# Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and  
+# limitations under the License.
+#
 ################################################################################
 # nlcp make arguments
 ################################################################################
@@ -270,13 +285,16 @@ $(PROGRESS_NLCP_BRINGUP_TI_UTILS): $(PROGRESS_NLCP_FETCH_TI_UTILS)
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_TI_UTILS))
 	@$(call print, "ti-utils bringup done")
 	
-nlcp-update-firmware-files:			$(PROGRESS_BRINGUP_MYDROID) \
-									$(PROGRESS_NLCP_BRINGUP_WL12xx)
-#	latest firmwares are managed at the wl12xx project: wl12xx/firmware/ti-connectivity, we move it to the android fs
-	$(MKDIR) -p $(MYDROID)/hardware/wlan/fw
-	$(ECHO) "Updating latest firmware binaries from wl12xx project..."
-	$(COPY) -f $(WL12xx_DIR)/firmware/ti-connectivity/* $(MYDROID)/hardware/wlan/fw
-	$(ECHO) "...done"
+nlcp-update-firmware-files:			$(PROGRESS_NLCP_BRINGUP_TI_UTILS)
+#	latest firmwares are managed at the ti-utils project: mydroid/external/ti-utils/firmware,
+#	we move it to the android fw hardware project (which installs it)
+	@$(MKDIR) -p $(MYDROID)/hardware/wlan/fw
+	@$(ECHO) "Updating latest firmware binaries from ti-utils project..."
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1271-fw-multirole-plt.bin $(MYDROID)/hardware/wlan/fw
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1271-fw-multirole-roc.bin $(MYDROID)/hardware/wlan/fw
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl128x-fw-multirole-plt.bin $(MYDROID)/hardware/wlan/fw
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl128x-fw-multirole-roc.bin $(MYDROID)/hardware/wlan/fw
+	@$(ECHO) "...done"
 	
 .PHONY += nlcp-update-firmware-files
 
