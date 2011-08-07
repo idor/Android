@@ -23,8 +23,6 @@
 # limitations under the License.
 #
 ################################################################################
-
-################################################################################
 # nlcp make arguments
 ################################################################################
 
@@ -289,14 +287,14 @@ $(PROGRESS_NLCP_BRINGUP_TI_UTILS): $(PROGRESS_NLCP_FETCH_TI_UTILS)
 	
 nlcp-update-firmware-files:			$(PROGRESS_NLCP_BRINGUP_TI_UTILS)
 #	latest firmwares are managed at the ti-utils project: mydroid/external/ti-utils/firmware,
-# 	we move it to the android fw hardware project (which installs it)
-	$(MKDIR) -p $(MYDROID)/hardware/wlan/fw
-	$(ECHO) "Updating latest firmware binaries from wl12xx project..."
-	$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1271-fw-multirole-plt.bin $(MYDROID)/hardware/wlan/fw
-	$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1271-fw-multirole-roc.bin $(MYDROID)/hardware/wlan/fw
-	$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1283-fw-multirole-plt.bin $(MYDROID)/hardware/wlan/fw
-	$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1283-fw-multirole-roc.bin $(MYDROID)/hardware/wlan/fw
-	$(ECHO) "...done"
+#	we move it to the android fw hardware project (which installs it)
+	@$(MKDIR) -p $(MYDROID)/hardware/wlan/fw
+	@$(ECHO) "Updating latest firmware binaries from ti-utils project..."
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1271-fw-multirole-plt.bin $(MYDROID)/hardware/wlan/fw
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl1271-fw-multirole-roc.bin $(MYDROID)/hardware/wlan/fw
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl128x-fw-multirole-plt.bin $(MYDROID)/hardware/wlan/fw
+	@$(COPY) -f $(TI_UTILS_DIR)/firmware/wl128x-fw-multirole-roc.bin $(MYDROID)/hardware/wlan/fw
+	@$(ECHO) "...done"
 	
 .PHONY += nlcp-update-firmware-files
 
