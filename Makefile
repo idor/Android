@@ -31,18 +31,29 @@ include defs.mk
 include $(WIIST_PATH)/utils.mk
 include $(WIIST_PATH)/repo.mk
 
-.PHONY: all install clean distclean help update-internals
+.PHONY: all install clean distclean help update-internals test
 
 help:
 	@cat $(WIIST_PATH)/README
-	
-update-internals:
-ifneq (INTERNALS_PATH, "")
-	@$(ECHO) "updating $(WIIST_PATH) with internals..."
-	@$(COPY) -rf $(INTERNALS_PATH)/* $(WIIST_PATH)/
-endif
 
-bringup: update-internals
+/data/git/repositories/wiist/Android/R4.xx/internals:
+	$(error, "internal repository does not exist, are you sure you're in TI's IL network?"
+	
+update-internals: /data/git/repositories/wiist/Android/R4.xx/internals
+	@$(ECHO) getting internals from local repository
+	@if [ -d ./.internals ] ; then $(DEL) -rf ./.internals ; fi
+	git clone /data/git/repositories/wiist/Android/R4.xx/internals ./.internals
+	@$(ECHO) "updating $(WIIST_PATH) with internals..."
+	@$(COPY) -rf ./.internals/* $(WIIST_PATH)/
+	@$(ECHO) "deleting local internals repository..."
+	@$(DEL) -rf ./.internals
+
+bringup:
+ifdef USE_INTERNALS
+ifeq ($(USE_INTERNALS),yes)
+	$(MAKE) update-internals
+endif
+endif
 	@$(MKDIR) -p $(TRASH_DIR)
 	@$(MKDIR) -p $(PROGRESS_DIR)
 	@$(MAKE) ti-st-pre-bringup-validation
@@ -69,7 +80,11 @@ bringup: update-internals
 all: bringup
 	@$(MKDIR) -p $(PROGRESS_DIR)
 	@if [ -d $(OUTPUT_PATH) ] ; then $(ECHO) removing $(OUTPUT_PATH) directory ; $(DEL) -rf $(OUTPUT_PATH) ; fi
-
+ifdef USE_INTERNALS
+ifeq ($(USE_INTERNALS),yes)
+	$(MAKE) update-internals
+endif
+endif
 	$(MAKE) u-boot-make
 	$(MAKE) x-loader-make
 	$(MAKE) kernel-make
@@ -89,6 +104,11 @@ install: all
 
 install-only:
 	@if [ -d $(OUTPUT_PATH) ] ; then $(ECHO) removing $(OUTPUT_PATH) directory ; $(DEL) -rf $(OUTPUT_PATH) ; fi
+ifdef USE_INTERNALS
+ifeq ($(USE_INTERNALS),yes)
+	$(MAKE) update-internals
+endif
+endif
 	@$(MKDIR) -p $(BOOT_PATH)
 	@$(MKDIR) -p $(MYFS_PATH)
 	@$(MKDIR) -p $(EMMC_PATH)
