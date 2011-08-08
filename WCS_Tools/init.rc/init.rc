@@ -282,7 +282,7 @@ on boot
 service ueventd /sbin/ueventd
     critical
 
-service console /data/busybox/sh
+service console /system/bin/sh
     console
     disabled
 #    user shell
