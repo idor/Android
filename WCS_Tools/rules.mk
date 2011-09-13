@@ -184,6 +184,7 @@ ifeq ($(CONFIG_GPS), y)
 endif
 ifeq ($(CONFIG_NLCP), y)
 	@$(ECHO) "NLCP version : $(NLCP_RELEASE_VERSION)" >>$(BINARIES_PATH)/version_ti.txt
+	@$(ECHO) "SP Version: $(NLCP_SP_VERSION)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "wl12xx commit id : $(WL12xx_HASH)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "compat commit id : $(COMPAT_HASH)" >>$(BINARIES_PATH)/version_ti.txt
 	@$(ECHO) "compat-wireless-2.6 commit id : $(COMPAT_WIRELESS_HASH)" >>$(BINARIES_PATH)/version_ti.txt
