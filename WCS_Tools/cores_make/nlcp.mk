@@ -33,25 +33,28 @@ NLCP_RELEASE_VERSION:=RLS_R4_10
 NLCP_SP_VERSION:=1
 NLCP_MAIN_REPO:=git://github.com/idor
 
-#WL12xx_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
 WL12xx_REPO:=$(NLCP_MAIN_REPO)/wl12xx.git
 WL12xx_DIR:=$(WORKSPACE_DIR)/wl12xx
-WL12xx_BRANCH:=releases
-WL12xx_TAG:=$(NLCP_RELEASE_VERSION)
-#WL12xx_HASH:=842de05
+WL12xx_BRANCH:=R4-kernel-3.0.4
+WL12xx_TAG:=a971bbd2d41c5836b8885fff06c16f8ac7102b48
 
 COMPAT_DIR:=$(WORKSPACE_DIR)/compat
 COMPAT_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
 COMPAT_HASH:=c03570efe213adbab12e869a2426cf95b6d2b45b
+COMPAT_PULL_BRANCH:=linux-3.0.y
 
-COMPAT_WIRELESS_DIR:=$(WORKSPACE_DIR)/compat-wireless-2.6
-COMPAT_WIRELESS_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
-COMPAT_WIRELESS_HASH:=6f4e670
+COMPAT_WIRELESS_DIR:=$(WORKSPACE_DIR)/compat-wireless
+COMPAT_WIRELESS_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless.git
+COMPAT_WIRELESS_BRANCH:=linux-3.0.y
+COMPAT_WIRELESS_HASH:=
+#COMPAT_WIRELESS_DIR:=$(WORKSPACE_DIR)/compat-wireless-2.6
+#COMPAT_WIRELESS_REPO:=git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
+#COMPAT_WIRELESS_HASH:=6f4e670
 
 NLCP_PATCHES_PATH:=$(PATCHES_PATH)/wlan/nlcp
 NLCP_WL12xx_PATCHES_DIR:=$(NLCP_PATCHES_PATH)/r4/wl12xx
 NLCP_COMPAT_PATCHES_DIR:=$(NLCP_PATCHES_PATH)/r4/compat
-NLCP_COMPAT_WIRELESS_PATCHES_DIR:=$(NLCP_PATCHES_PATH)/r4/compat-wireless-2.6
+NLCP_COMPAT_WIRELESS_PATCHES_DIR:=$(NLCP_PATCHES_PATH)/r4/compat-wireless
 NLCP_KERNEL_PATCHES:=$(NLCP_PATCHES_PATH)/kernel
 NLCP_ANDROID_PATCHES:=$(NLCP_PATCHES_PATH)/android
 
@@ -94,7 +97,7 @@ $(PROGRESS_NLCP_FETCH_WL12xx):
 	
 $(PROGRESS_NLCP_BRINGUP_WL12xx): $(PROGRESS_NLCP_FETCH_WL12xx)
 	@$(ECHO) "wl12xx bringup..."
-	cd $(WL12xx_DIR) ; git checkout $(WL12xx_TAG) -b vanilla
+	cd $(WL12xx_DIR) ; git checkout origin/$(WL12xx_BRANCH) -b $(WL12xx_BRANCH)
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_WL12xx))
 	@$(call print, "wl12xx bringup done")
@@ -108,8 +111,11 @@ $(PROGRESS_NLCP_FETCH_COMPAT):
 	
 $(PROGRESS_NLCP_BRINGUP_COMPAT): $(PROGRESS_NLCP_FETCH_COMPAT)
 	@$(ECHO) "compat bringup..."
-	cd $(COMPAT_DIR) ; git reset --hard $(COMPAT_HASH)
-	cd $(COMPAT_DIR) ; git checkout -b vanilla
+	cd $(COMPAT_DIR) ; git checkout $(COMPAT_HASH) -b vanilla
+	cd $(COMPAT_DIR) ; git pull origin $(COMPAT_PULL_BRANCH)
+	$(COPY) $(WL12xx_DIR)/include/linux/if.h $(COMPAT_DIR)/include/linux/if.h
+#	cd $(COMPAT_DIR) ; git reset --hard $(COMPAT_HASH)
+#	cd $(COMPAT_DIR) ; git checkout -b vanilla
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_COMPAT))
 	@$(call print, "compat bringup done")
@@ -123,16 +129,19 @@ $(PROGRESS_NLCP_FETCH_COMPAT_WIRELESS):
 	
 $(PROGRESS_NLCP_BRINGUP_COMPAT_WIRELESS): $(PROGRESS_NLCP_FETCH_COMPAT_WIRELESS)
 	@$(ECHO) "compat wireless bringup..."
-	cd $(COMPAT_WIRELESS_DIR) ; git reset --hard $(COMPAT_WIRELESS_HASH)
-	cd $(COMPAT_WIRELESS_DIR) ; git checkout -b vanilla
-	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/03-*
-	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/35-*
-	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/40-*
-	cd $(COMPAT_WIRELESS_DIR) ; $(PATCH) --dry-run -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
-	cd $(COMPAT_WIRELESS_DIR) ; $(PATCH) -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
-	cp $(KERNEL_DIR)/.gitignore $(COMPAT_WIRELESS_DIR)
-	cd $(COMPAT_WIRELESS_DIR) ; git add .
-	cd $(COMPAT_WIRELESS_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
+	cd $(COMPAT_WIRELESS_DIR) ; git checkout origin/$(COMPAT_WIRELESS_BRANCH) -b $(COMPAT_WIRELESS_BRANCH)
+	cd $(COMPAT_WIRELESS_DIR) ; git am $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/*.patch
+	
+#	cd $(COMPAT_WIRELESS_DIR) ; git reset --hard $(COMPAT_WIRELESS_HASH)
+#	cd $(COMPAT_WIRELESS_DIR) ; git checkout -b vanilla
+#	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/03-*
+#	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/35-*
+#	cd $(COMPAT_WIRELESS_DIR) ; rm ./patches/40-*
+#	cd $(COMPAT_WIRELESS_DIR) ; $(PATCH) --dry-run -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
+#	cd $(COMPAT_WIRELESS_DIR) ; $(PATCH) -p1 < $(NLCP_COMPAT_WIRELESS_PATCHES_DIR)/compat-wireless.09.patch
+#	cp $(KERNEL_DIR)/.gitignore $(COMPAT_WIRELESS_DIR)
+#	cd $(COMPAT_WIRELESS_DIR) ; git add .
+#	cd $(COMPAT_WIRELESS_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_COMPAT_WIRELESS))
 	@$(call print, "compat wireless bringup done")
@@ -165,8 +174,8 @@ $(PROGRESS_NLCP_FETCH_HOSTAP): $(PROGRESS_BRINGUP_MYDROID)
 $(PROGRESS_NLCP_BRINGUP_HOSTAP): $(PROGRESS_NLCP_FETCH_HOSTAP)
 	@$(ECHO) "hostapd/supplicant bringup..."
 	$(MKDIR) -p $(HOSTAP_DIR)
-	cd $(HOSTAP_DIR) ; git checkout remotes/origin/$(HOSTAP_BRANCH) -b vanilla
-	cd $(HOSTAP_DIR) ; git reset --hard $(HOSTAP_TAG)
+	cd $(HOSTAP_DIR) ; git checkout remotes/origin/$(HOSTAP_BRANCH) -b $(HOSTAP_BRANCH)
+#	cd $(HOSTAP_DIR) ; git reset --hard $(HOSTAP_TAG)
 #	cd $(HOSTAP_DIR) ; git commit -a -m "initial modifications for wl12xx R4 release has been made"
 	@$(ECHO) "...done"
 	@$(call echo-to-file, "DONE", $(PROGRESS_NLCP_BRINGUP_HOSTAP))
@@ -368,7 +377,10 @@ nlcp-bringup-private: 	$(PROGRESS_NLCP_BRINGUP_WL12xx) \
 	@$(ECHO) "...done"
 
 	
-nlcp-make-private:		nlcp-update-firmware-files
+nlcp-make-private:		nlcp-update-firmware-files \
+						$(PROGRESS_NLCP_BRINGUP_COMPAT) \
+						$(PROGRESS_NLCP_BRINGUP_COMPAT_WIRELESS) \
+						$(PROGRESS_NLCP_BRINGUP_WL12xx)
 	@$(ECHO) "nlcp make..."
 	cd $(COMPAT_WIRELESS_DIR) ; sh ./scripts/admin-refresh.sh
 	cd $(COMPAT_WIRELESS_DIR) ; ./scripts/driver-select wl12xx
