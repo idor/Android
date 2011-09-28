@@ -1,0 +1,38 @@
+From 7ffc6aa5965bb75cb10ed1d5f95c86d97ee31fb7 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Tue, 20 Sep 2011 17:13:43 +0300
+Subject: [PATCH 1/2] netdev: fix if and net setup functions
+
+---
+ patches/01-netdev.patch |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
+index 762cb11..7b519c0 100644
+--- a/patches/01-netdev.patch
++++ b/patches/01-netdev.patch
+@@ -46,9 +46,9 @@ without creating a headache on maintenance of the pathes.
+ --- a/net/mac80211/iface.c
+ +++ b/net/mac80211/iface.c
+ @@ -699,7 +699,12 @@ static const struct net_device_ops ieee8
+- static void ieee80211_if_setup(struct net_device *dev)
+  {
+  	ether_setup(dev);
++	dev->priv_flags &= ~IFF_TX_SKB_SHARING;
+ -	dev->netdev_ops = &ieee80211_dataif_ops;
+ +	netdev_attach_ops(dev, &ieee80211_dataif_ops);
+ +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+@@ -315,9 +315,9 @@ without creating a headache on maintenance of the pathes.
+  	struct bnep_session *s = netdev_priv(dev);
+  	struct sock *sk = s->sock->sk;
+ @@ -231,7 +235,7 @@ void bnep_net_setup(struct net_device *d
+- 	dev->addr_len = ETH_ALEN;
+  
+  	ether_setup(dev);
++	dev->priv_flags &= ~IFF_TX_SKB_SHARING;
+ -	dev->netdev_ops = &bnep_netdev_ops;
+ +	netdev_attach_ops(dev, &bnep_netdev_ops);
+  
+-- 
+1.7.0.4
+

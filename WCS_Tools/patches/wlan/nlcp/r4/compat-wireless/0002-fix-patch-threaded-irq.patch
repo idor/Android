@@ -1,0 +1,36 @@
+From 64a7f88dbb9786fb7d0f68fe79393ca9a3e3bce7 Mon Sep 17 00:00:00 2001
+From: Ido Reis <idor@ti.com>
+Date: Wed, 28 Sep 2011 13:51:40 +0300
+Subject: [PATCH 2/2] fix patch threaded-irq
+
+Signed-off-by: Ido Reis <idor@ti.com>
+---
+ patches/09-threaded-irq.patch |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index acfe043..40eea89 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -122,7 +122,7 @@ thread in process context as well.
+  	return 0;
+ --- a/drivers/net/wireless/wl12xx/wl12xx.h
+ +++ b/drivers/net/wireless/wl12xx/wl12xx.h
+-@@ -593,6 +593,10 @@ struct wl1271 {
++@@ -612,6 +612,10 @@ struct wl1271 {
+  
+  	/* Platform limitations */
+  	unsigned int platform_quirks;
+@@ -130,6 +130,6 @@ thread in process context as well.
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +	struct compat_threaded_irq irq_compat;
+ +#endif
+- };
+- 
+- struct wl1271_station {
++
++	/* number of currently active RX BA sessions */
++	int ba_rx_session_count;
+-- 
+1.7.0.4
+
