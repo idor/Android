@@ -1,3 +1,5 @@
+#!/system/bin/sh
+
 #
 # ap_cmd.sh
 #
@@ -17,7 +19,5 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 hostapd_cli -iwlan1 -p/data/misc/wifi/sockets $@

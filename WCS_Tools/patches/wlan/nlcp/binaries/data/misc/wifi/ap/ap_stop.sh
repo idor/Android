@@ -1,3 +1,5 @@
+#!/system/bin/sh
+
 #
 # ap_stop.sh
 #
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 setprop ctl.stop dhcpd_softap
 ifconfig wlan1 down

@@ -1,3 +1,5 @@
+#!/system/bin/sh
+
 #
 # p2p_cmd.sh
 #
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 wpa_cli -ip2p_wlan0 $@
 

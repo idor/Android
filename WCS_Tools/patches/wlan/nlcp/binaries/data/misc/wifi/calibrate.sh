@@ -1,10 +1,12 @@
+#!/system/bin/sh
+
 #
 # calibrate.sh
 #
 # calibration of the wlan device over Blaze platform
 # Script takes two arguments:
-# 1. MAC address (e.g 08:00:28:12:34:56)
-# 2. INI file for calibration (depend on device and FEM, full path required)
+# 1. INI file for calibration (depend on device and FEM, full path required)
+# 2. MAC address (e.g 08:00:28:12:34:56)
 #
 # Copyright (C) {2011} Texas Instruments Incorporated - http://www.ti.com/
 #
@@ -20,8 +22,6 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 echo "Going to stop GUI"
 stop

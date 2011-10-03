@@ -1,3 +1,5 @@
+#!/system/bin/sh
+
 #
 # p2p_start.sh
 #
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 export IP_ADDR=10.0.0.1
 export IP_MASK=255.0.0.0

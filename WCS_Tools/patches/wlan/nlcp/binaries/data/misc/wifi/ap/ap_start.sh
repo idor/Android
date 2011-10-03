@@ -1,3 +1,5 @@
+#!/system/bin/sh
+
 #
 # ap_start.sh
 #
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 insmod /system/lib/modules/wl12xx_sdio.ko
 iw reg set `grep country_code= /data/misc/wifi/hostapd.conf | sed "s:country_code=::"`

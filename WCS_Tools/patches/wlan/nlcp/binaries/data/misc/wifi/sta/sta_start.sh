@@ -1,3 +1,5 @@
+#!/system/bin/sh
+
 #
 # ap_start.sh
 #
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and  
 # limitations under the License.
 #
-
-#!/system/bin/sh
 
 mkdir -p /data/misc/wifi/sockets
 insmod /system/lib/modules/wl12xx_sdio.ko
